@@ -38,6 +38,7 @@ android {
         }
         debug {
             buildConfigField("String", "API_KEY", "\"${localProps.getProperty("API_KEY")}\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${localProps.getProperty("GOOGLE_CLIENT_ID")}\"")
 
         }
     }
@@ -121,5 +122,9 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation(libs.java.jwt)
+    implementation ("com.google.android.gms:play-services-auth:20.6.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+    implementation ("androidx.browser:browser:1.5.0")
+
 }
 

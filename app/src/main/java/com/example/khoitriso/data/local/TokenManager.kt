@@ -1,6 +1,7 @@
 package com.example.khoitriso.data.local
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -8,15 +9,18 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.Date
 import java.util.concurrent.atomic.AtomicReference
+import javax.inject.Inject
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_tokens")
 
-class TokenManager(private val context: Context) {
+
+class TokenManager @Inject constructor(@ApplicationContext val context: Context) {
     private val dataStore = context.dataStore
     private val lock = Mutex()
     private val latestAccessToken =

@@ -10,18 +10,19 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import javax.inject.Inject
 
 
-class TokenAuthenticator(
+class TokenAuthenticator @Inject constructor(
     private val tokenManager: TokenManager,
     private val authApi: AuthApi
 ) : Authenticator {
 
     private val lock = Mutex()
-    private lateinit var refreshDeferred: CompletableDeferred<String?>
+    private var refreshDeferred: CompletableDeferred<String?>? = null
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        return runBlocking(Dispatchers.IO) { // Blocks only inside authenticate()
+        return runBlocking(Dispatchers.IO) {
             val newToken = getUpdatedToken()
             newToken?.let {
                 response.request.newBuilder()
@@ -32,22 +33,32 @@ class TokenAuthenticator(
     }
 
     private suspend fun getUpdatedToken(): String? {
-        lock.withLock {
-            if (!::refreshDeferred.isInitialized || refreshDeferred.isCompleted) {
+        // Không chạy refresh trong lock, chỉ tạo deferred trong lock
+        val deferred = lock.withLock {
+            if (refreshDeferred?.isCompleted != false) {
                 refreshDeferred = CompletableDeferred()
-                refreshDeferred.complete(refreshToken()) // Start refresh
+                refreshDeferred
+            } else {
+                refreshDeferred
             }
         }
-        return refreshDeferred.await() // All requests will wait for the refreshed token
+
+        // Chỉ 1 coroutine sẽ refresh
+        if (deferred?.isActive == true && deferred.getCompletedOrNull() == null) {
+            val token = refreshToken()
+            deferred.complete(token)
+        }
+
+        return deferred?.await()
     }
 
     private suspend fun refreshToken(): String? {
         val refreshToken = tokenManager.getRefreshToken() ?: return null
         return try {
-            val response = authApi.refreshToken(refreshToken)
+            val response = authApi.refreshToken(refreshToken, "Bearer $refreshToken")
             if (response.isSuccessful) {
-                val newAccessToken = response.body()?.result?.token ?: return null
-                val newRefreshToken = response.body()?.result?.token ?: return null
+                val newAccessToken = response.body()?.Result?.Token ?: return null
+                val newRefreshToken = response.body()?.Result?.RefreshToken ?: return null
                 tokenManager.saveTokens(newAccessToken, newRefreshToken)
                 newAccessToken
             } else {
@@ -55,9 +66,12 @@ class TokenAuthenticator(
                 null
             }
         } catch (e: Exception) {
-            null
-        } finally {
-            lock.withLock { refreshDeferred.complete(null) } // Ensure waiting calls get a result
+            return ""
+
         }
+    }
+
+    private fun CompletableDeferred<String?>.getCompletedOrNull(): String? {
+        return if (isCompleted) getCompleted() else null
     }
 }
