@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.loginscreen
 
+import android.R
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +40,12 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             _token.value = authUsecase.authGoogleSDK(id,tokenManager)
+        }
+    }
+
+    fun refresh(){
+        viewModelScope.launch {
+            authUsecase.refresh(tokenManager)
         }
     }
 

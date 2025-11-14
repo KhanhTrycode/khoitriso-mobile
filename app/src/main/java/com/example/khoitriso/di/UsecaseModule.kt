@@ -6,6 +6,7 @@ import com.example.khoitriso.domain.repository.AuthRepository
 import com.example.khoitriso.domain.repository.BookRepository
 import com.example.khoitriso.domain.usecase.auth.AuthGoogleSDK
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
+import com.example.khoitriso.domain.usecase.auth.RefreshToken
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.book.GetBook
 import dagger.Module
@@ -27,7 +28,10 @@ object UsecaseModule {
     @Provides
     @Singleton
     fun provideAuthUsecase(authRepository: AuthRepository): AuthUsecase {
-        return AuthUsecase(authGoogleSDK = AuthGoogleSDK(authRepository))
+        return AuthUsecase(
+            authGoogleSDK = AuthGoogleSDK(authRepository),
+            refresh = RefreshToken(authRepository)
+        )
     }
 }
 
