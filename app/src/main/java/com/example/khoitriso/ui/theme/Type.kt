@@ -1,10 +1,41 @@
 package com.example.khoitriso.ui.theme
 
+import com.example.khoitriso.R
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+
+val Inter = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Bold),
+    Font(R.font.inter_black, FontWeight.Normal),
+)
+
+val MyTypography = Typography(
+    titleMedium = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    )
+)
 
 // Set of Material typography styles to start with
 val Typography = Typography(
@@ -32,3 +63,4 @@ val Typography = Typography(
     )
     */
 )
+

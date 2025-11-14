@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">KhoiTriSo</string>
+    <string name="slider_1">Khởi đầu trí tuệ trong kỷ nguyên số</string>
+    <string name="slider_1_desc">Nền tảng học tập trực tuyến hàng đầu Việt Nam</string>
+    <string name="slider_2">Học tập hiệu quả mọi lúc mọi nơi</string>
+    <string name="slider_2_desc">Đội ngũ giảng viên với nhiều năm kinh nghiệm giảng dạy và bằng cấp cao</string>
+
+    <string name="slider_3">Giảng viên chuyên nghiệp hàng đầu</string>
+    <string name="slider_3_desc">Học hỏi từ những chuyên gia giàu kinh nghiệm</string>
+
+    <string name="slider_4">Chứng chỉ được công nhận</string>
+    <string name="slider_4_desc">Nâng cao giá trị bản thân với chứng chỉ uy tín</string>
 </resources>
