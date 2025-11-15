@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.R
 import com.example.khoitriso.ui.theme.KhoiTriSoTheme
+import com.example.khoitriso.utils.NavRoute
 
 data class IntroSlide(
     val title: Int,
@@ -50,7 +51,13 @@ fun SignInButton(
     iconVector: Int
 ) {
     Button(
-        onClick = { navController.navigate("homeScreen") },
+        onClick = {
+            navController.navigate(NavRoute.home) {
+                popUpTo(NavRoute.login) {
+                    inclusive = true
+                } // optional: remove login from backstack
+            }
+        },
         modifier = modifier
             .fillMaxWidth(0.9f)
             .height(50.dp),
@@ -107,7 +114,11 @@ fun SliderPage(page: Int, modifier: Modifier = Modifier) {
                 contentDescription = stringResource(slide.title),
                 modifier = Modifier.size(200.dp)
             )
-            Text(text = stringResource(slide.title), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = stringResource(slide.title),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge
+            )
             Text(
                 text = stringResource(slide.title),
                 style = MaterialTheme.typography.bodyMedium,
@@ -204,7 +215,7 @@ fun LoginScreen(
 
 
 
-            LoginArea(navController,modifier.weight(0.3f))
+            LoginArea(navController, modifier.weight(0.3f))
 
         }
 
@@ -222,9 +233,11 @@ fun LoginScreenPreview(
     KhoiTriSoTheme {
         Column(modifier = modifier.fillMaxSize()) {
 
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.7f))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.7f)
+            )
 
 //            LoginArea(modifier.weight(0.3f))
 

@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.homescreen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,12 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingCart
@@ -31,25 +30,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.khoitriso.R
-import com.example.khoitriso.ui.theme.KhoiTriSoTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.navigation.NavDestination
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.test.MockData
-import java.nio.file.WatchEvent
+import com.example.khoitriso.utils.Constants
 
 @Composable
 fun HeaderScreen(
@@ -104,74 +98,49 @@ fun HeaderScreen(
     }
 }
 
-//@Preview(showBackground = true)
+
+@SuppressLint("FrequentlyChangingValue")
 @Composable
-fun PreviewScreen() {
-    KhoiTriSoTheme {
-        val bottomNavItems = listOf("Home", "Search", "Profile") // sample
+fun HomeScreen(lazyListState: LazyListState) {
+    LazyColumn(
+        state = lazyListState, modifier = Modifier
+            .fillMaxSize()
+    )
+    {
+        item { SectionTitle("Try Free Course") }
+        item {
+            FreeCourseCard(
+                R.drawable.ic_launcher_background,
+                "Try this free",
+                MockData.mockCourses[0]
+            )
+        }
 
-        Scaffold(
-            topBar = {
-                HeaderScreen(
-                    avatarUrl = R.drawable.ic_launcher_background,
-                    displayName = "KhoiTriSo"
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(items = bottomNavItems)
-            }
-        ) { innerPadding ->
-            // Content scrollable
-            LazyColumn(
-                contentPadding = innerPadding,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF0F0F0))
-            ) {
-                item {
-                    SectionTitle("Try Free Course")
-                    FreeCourseCard(
-                        R.drawable.ic_launcher_background,
-                        "Try this free",
-                        MockData.mockCourses[0]
-                    )
-                }
+        item { SectionTitle("Recommended") }
+        item { RowCourseCard(MockData.recommendedCourses) }
 
-                item {
-                    SectionTitle("Recommended")
-                    RowCourseCard(MockData.recommendedCourses)
-                }
+        item { SectionTitle("Categories") }
+        item { RowCategoryCard(MockData.categories) }
 
-                item {
-                    SectionTitle("Categories")
-                    RowCategoryCard(MockData.categories)
-                }
-
-
-                item {
-                    SectionTitle("Trending Courses")
-                    MockData.trendingCourses.forEach { course ->
-                        CourseCard(course)
-                    }
-                }
-
-            }
+        item {
+            SectionTitle("Trending Courses")
+            MockData.trendingCourses.forEach { CourseCard(it) }
         }
     }
+
+    // Header
 }
 
 
 @Composable
-fun HomeScreen() {
+fun NavigationBar(modifier: Modifier = Modifier) {
+    val bottomNavItems = listOf("Home", "Search", "Profile") // sample
 
-}
-
-@Composable
-fun BottomNavigationBar(items: List<String>) {
     NavigationBar(
-        containerColor = Color.White
+        containerColor = Color.White,
+        modifier = modifier
     ) {
-        items.forEach { item ->
+        bottomNavItems.forEach { item ->
             NavigationBarItem(
                 icon = { Icon(Icons.Outlined.ShoppingCart, contentDescription = item) },
                 label = { Text(item) },
@@ -308,7 +277,7 @@ fun RowCategoryCard(categoryList: List<Category>) {
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
     ) {
         items(categoryList.size) { index ->
-                CategoryCard(name = categoryList[index].Name)
+            CategoryCard(name = categoryList[index].Name)
 
         }
     }
@@ -320,7 +289,7 @@ fun RowCourseCard(courseList: List<Course>) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(courseList.size) { index ->
-           CourseCard(courseList[index])
+            CourseCard(courseList[index])
         }
     }
 }
