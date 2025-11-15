@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.khoitriso.R
 import com.example.khoitriso.ui.theme.KhoiTriSoTheme
 
@@ -43,13 +44,13 @@ val slides = listOf(
 
 @Composable
 fun SignInButton(
-    startGoogleSignIn: () -> Unit,
+    navController: NavController,
     modifier: Modifier = Modifier,
     txtButton: String,
     iconVector: Int
 ) {
     Button(
-        onClick = { startGoogleSignIn },
+        onClick = { navController.navigate("homeScreen") },
         modifier = modifier
             .fillMaxWidth(0.9f)
             .height(50.dp),
@@ -155,7 +156,7 @@ fun PageIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginArea(modifier: Modifier = Modifier) {
+fun LoginArea(navController: NavController, modifier: Modifier = Modifier) {
     Divider(color = Color.LightGray, thickness = 1.dp)
 
     Column(
@@ -171,20 +172,21 @@ fun LoginArea(modifier: Modifier = Modifier) {
         }
 
         SignInButton(
-            startGoogleSignIn = {},
+            navController = navController,
             txtButton = "Google",
             iconVector = R.drawable.icon_google,
         )
         SignInButton(
-            startGoogleSignIn = {},
-            txtButton = "Facebook",
-            iconVector = R.drawable.icon_fb
+            navController = navController,
+            txtButton = "Google",
+            iconVector = R.drawable.icon_google,
         )
     }
 }
 
 @Composable
 fun LoginScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -202,7 +204,7 @@ fun LoginScreen(
 
 
 
-            LoginArea(modifier.weight(0.3f))
+            LoginArea(navController,modifier.weight(0.3f))
 
         }
 
@@ -224,7 +226,7 @@ fun LoginScreenPreview(
                 .fillMaxWidth()
                 .weight(0.7f))
 
-            LoginArea(modifier.weight(0.3f))
+//            LoginArea(modifier.weight(0.3f))
 
 
         }
