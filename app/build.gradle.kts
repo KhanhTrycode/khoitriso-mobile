@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
+
 }
 
 android {
@@ -92,6 +94,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.paging)
 
     // --- DataStore (Preferences) ---
     implementation(libs.androidx.datastore.preferences)
@@ -108,6 +111,7 @@ dependencies {
 
     // --- Paging Compose ---
     implementation(libs.androidx.paging.compose)
+    implementation (libs.androidx.paging.runtime)
 
     // --- Accompanist (animation/nav/permission/insets) ---
     implementation(libs.accompanist.navigation.animation)

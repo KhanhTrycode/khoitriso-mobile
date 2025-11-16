@@ -19,134 +19,105 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.khoitriso.R
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Course
-import com.example.khoitriso.test.MockData
-import com.example.khoitriso.utils.Constants
-
-@Composable
-fun HeaderScreen(
-    avatarUrl: Int,
-    displayName: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = Color.White.copy(alpha = 0.4f)
-            )
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Avatar
-        Image(
-            painter = painterResource(id = avatarUrl),
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Display Name
-        Text(
-            text = displayName,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)    // <-- đẩy tên chiếm không gian còn lại
-        )
-
-        IconButton(modifier = Modifier, onClick = {}) {
-            Icon(
-                imageVector = Icons.Outlined.ShoppingCart,
-                contentDescription = "Cart",
-                tint = Color.White
-
-            )
-        }
-        // Notification button
-        IconButton(modifier = Modifier, onClick = { }) {
-            Icon(
-                imageVector = Icons.Outlined.Notifications,
-                contentDescription = "Notification",
-                tint = Color.White
-            )
-        }
-
-    }
-}
+import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.utils.UiState
 
 
 @SuppressLint("FrequentlyChangingValue")
 @Composable
-fun HomeScreen(lazyListState: LazyListState) {
+fun HomeScreen(
+    lazyListState: LazyListState,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val booksState by viewModel.books.collectAsState()
+    val coursesState by viewModel.courses.collectAsState()
+    val categoriesState by viewModel.categories.collectAsState()
+
     LazyColumn(
-        state = lazyListState, modifier = Modifier
-            .fillMaxSize()
-    )
-    {
+        state = lazyListState,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // ===== Try Free Course =====
         item { SectionTitle("Try Free Course") }
-        item {
-            FreeCourseCard(
-                R.drawable.ic_launcher_background,
-                "Try this free",
-                MockData.mockCourses[0]
-            )
+            item {
+                FreeCourse(coursesState)
+
         }
 
-        item { SectionTitle("Recommended") }
-        item { RowCourseCard(MockData.recommendedCourses) }
-
+        // ===== Categories =====
         item { SectionTitle("Categories") }
-        item { RowCategoryCard(MockData.categories) }
-
         item {
-            SectionTitle("Trending Courses")
-            MockData.trendingCourses.forEach { CourseCard(it) }
+            CategoryList(categoriesState)
+        }
+
+        // ===== Trending Courses =====
+        item { SectionTitle("Trending Courses") }
+        item {
+            TrendingCourse(coursesState)
         }
     }
 
-    // Header
 }
 
+@Composable
+fun CategoryList(categoriesState: UiState<List<Category>>) {
+    when (categoriesState) {
+        is UiState.Loading -> CircularProgressIndicator()
+        is UiState.Error -> Text(categoriesState.message)
+        is UiState.Success -> {
+            val categories = categoriesState.data
+            RowCategoryCard(categories)
+        }
+    }
+}
 
 @Composable
-fun NavigationBar(modifier: Modifier = Modifier) {
-    val bottomNavItems = listOf("Home", "Search", "Profile") // sample
+fun TrendingCourse(coursesState: UiState<List<Course>>) {
+    when (coursesState) {
+        is UiState.Loading -> CircularProgressIndicator()
+        is UiState.Error -> Text(coursesState.message)
+        is UiState.Success -> {
+            val courses = coursesState.data
+            RowCourseCard(courses)
+        }
+    }
+}
 
-    NavigationBar(
-        containerColor = Color.White,
-        modifier = modifier
-    ) {
-        bottomNavItems.forEach { item ->
-            NavigationBarItem(
-                icon = { Icon(Icons.Outlined.ShoppingCart, contentDescription = item) },
-                label = { Text(item) },
-                selected = false,
-                onClick = {}
-            )
+@Composable
+fun FreeCourse(coursesState: UiState<List<Course>>) {
+
+    when (coursesState) {
+        is UiState.Loading -> CircularProgressIndicator()
+        is UiState.Error -> Text(coursesState.message)
+        is UiState.Success -> {
+            val courses = coursesState.data
+            if (courses.isNotEmpty()) {
+                FreeCourseCard(
+                    thumbnailUrl = R.drawable.ic_launcher_background,
+                    destination = "Try this free",
+                    course = courses[0]
+                )
+            }
         }
     }
 }
@@ -167,7 +138,7 @@ fun FreeCourseCard(
     thumbnailUrl: Int,
     destination: String,
     course: Course,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -196,14 +167,13 @@ fun CourseCard(course: Course, modifier: Modifier = Modifier) {
             .background(Color.White)
     ) {
         // Thumbnail full width
-        Image(
-            painter = painterResource(id = course.Thumbnail),
-            contentDescription = course.Title,
+        SafeImage(
+            url = course.thumbnail,
+            contentDescription = course.title,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp) // cố định chiều cao
+                .fillMaxWidth(0.6f)
+                .height(180.dp)
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-            contentScale = ContentScale.Crop
         )
 
         // Info below image
@@ -214,13 +184,13 @@ fun CourseCard(course: Course, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = course.Title,
+                text = course.title,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 2
             )
 
             Text(
-                text = "By ${course.Instructor.Name}",
+                text = "By ${course.instructor.name}",
                 style = MaterialTheme.typography.labelMedium,
             )
 
@@ -235,15 +205,15 @@ fun CourseCard(course: Course, modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "${course.Rating}",
+                    text = "${course.rating}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             Text(
-                text = if (course.IsFree) "Free" else "$${course.Price}",
+                text = if (course.isFree) "Free" else "$${course.price}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (course.IsFree) Color(0xFF4CAF50) else Color.Black
+                color = if (course.isFree) Color(0xFF4CAF50) else Color.Black
             )
         }
     }
@@ -277,7 +247,7 @@ fun RowCategoryCard(categoryList: List<Category>) {
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
     ) {
         items(categoryList.size) { index ->
-            CategoryCard(name = categoryList[index].Name)
+            CategoryCard(name = categoryList[index].name)
 
         }
     }

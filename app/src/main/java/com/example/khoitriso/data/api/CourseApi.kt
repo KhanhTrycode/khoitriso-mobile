@@ -1,14 +1,15 @@
 package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiResponeData
-import com.example.khoitriso.data.dto.BookDto
+import com.example.khoitriso.data.dto.CourseDto
+import com.example.khoitriso.domain.models.Book
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface BooksApi {
-    @GET("books")
-    suspend fun getBooks(
+interface CourseApi {
+    @GET("courses")
+    suspend fun getCourse(
         @Query("page") page: Int = 1,
         @Query("pageSize") pageSize: Int =20,
         @Query("search") search: String?= null,
@@ -16,5 +17,6 @@ interface BooksApi {
         @Query("authorId") authorId: Int? = null,
         @Query("sortBy") sortBy: String? = null,
         @Query("sortOrder") sortOrder: String? = null,
-    ): Response<ApiResponeData<BookDto>>
+        @Query("isFree") isFree: Boolean? = null
+    ): Response<ApiResponeData<CourseDto>>
 }

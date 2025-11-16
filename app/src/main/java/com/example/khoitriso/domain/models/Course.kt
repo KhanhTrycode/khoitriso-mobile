@@ -1,20 +1,20 @@
 package com.example.khoitriso.domain.models
 
 data class Course(
-    val ApprovalStatus: Int,
-    val Category: Category,
-    val Description: String,
-    val EstimatedDuration: Int,
-    val Id: Int,
-    val Instructor: Instructor,
-    val IsFree: Boolean,
-    val IsPublished: Boolean,
-    val Level: Int,
-    val Price: Int,
-    val Rating: Float,
-    val Thumbnail: Int,
-    val Title: String,
-    val TotalLessons: Int,
-    val TotalReviews: Int,
-    val TotalStudents: Int
+    val approvalStatus: Int,
+    val category: Category,
+    val description: String,
+    val estimatedDuration: Int,
+    val id: Int,
+    val instructor: Instructor,
+    val isFree: Boolean,
+    val isPublished: Boolean,
+    val level: Int,
+    val price: Int,
+    val rating: Float,
+    val thumbnail: String,
+    val title: String,
+    val totalLessons: Int,
+    val totalReviews: Int,
+    val totalStudents: Int
 )

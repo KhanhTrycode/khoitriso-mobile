@@ -110,6 +110,13 @@ object NetworkModule {
     fun provideAuthApi(@Named("secureRetrofit") retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
 
+    // CourseApi
+
+    @Provides
+    @Singleton
+    fun provideCourseApi(@Named("secureRetrofit") retrofit: Retrofit): CourseApi =
+        retrofit.create(CourseApi::class.java)
+
     // AdminApi dùng secure Retrofit (cần token)
     @Provides
     @Singleton

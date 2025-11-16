@@ -1,8 +1,8 @@
 package com.example.khoitriso.domain.models
 
 data class Instructor(
-    val Avatar: Any,
-    val Bio: Any,
-    val Id: Int,
-    val Name: String
+    val avatar: Any,
+    val bio: Any,
+    val id: Int,
+    val name: String
 )
