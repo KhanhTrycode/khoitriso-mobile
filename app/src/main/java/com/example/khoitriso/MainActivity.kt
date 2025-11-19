@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.khoitriso.ui.behavior.NavHostContainer
+import com.example.khoitriso.ui.theme.KhoiTriSoTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -17,7 +18,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyApp()
+            KhoiTriSoTheme {
+                MyApp()
+            }
         }
     }
 }

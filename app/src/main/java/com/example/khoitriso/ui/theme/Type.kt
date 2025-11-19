@@ -10,8 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val Inter = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Bold),
-    Font(R.font.inter_black, FontWeight.Normal),
+    Font(R.font.inter_regular, FontWeight.ExtraBold),
+    Font(R.font.inter_medium, FontWeight.Normal),
+    Font(R.font.inter_extra_bold, FontWeight.Bold),
 )
 
 val MyTypography = Typography(
@@ -24,7 +25,7 @@ val MyTypography = Typography(
     ),
     titleLarge = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.ExtraBold,
         fontSize = 30.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp

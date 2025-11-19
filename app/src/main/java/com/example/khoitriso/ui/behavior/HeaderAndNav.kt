@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.behavior
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -33,21 +35,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.khoitriso.R
+import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.homescreen.HomeScreen
+import com.example.khoitriso.ui.learningpath.LearningPathScreen
 import com.example.khoitriso.ui.loginscreen.LoginScreen
+import com.example.khoitriso.ui.profilescreen.ProfileScreen
+import com.example.khoitriso.ui.searchscreen.SearchScreen
 import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.navigationBarItems
 
 @Composable
-fun NavHostContainer(navController: androidx.navigation.NavHostController) {
+fun NavHostContainer(navController: NavHostController) {
     val lazyListState = rememberLazyListState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: NavRoute.login
@@ -63,22 +74,49 @@ fun NavHostContainer(navController: androidx.navigation.NavHostController) {
             LoginScreen(navController) // navigate("home") sẽ tìm được
         }
         composable(NavRoute.home) {
-            if (showHeaderNav) {
-                HeaderNavScaffold(lazyListState) {
-                    HomeScreen(lazyListState)
-                }
-            } else {
-                HomeScreen(lazyListState)
+
+            HeaderNavScaffold(lazyListState, navController) {
+                HomeScreen(lazyListState, navController = navController)
             }
+        }
+        composable(NavRoute.search) {
+
+            HeaderNavScaffold(lazyListState, navController) {
+                SearchScreen(lazyListState)
+            }
+        }
+        composable(NavRoute.profile) {
+
+            HeaderNavScaffold(lazyListState, navController) {
+                ProfileScreen(lazyListState)
+            }
+        }
+        composable(NavRoute.learningPath) {
+
+            HeaderNavScaffold(lazyListState, navController) {
+                LearningPathScreen(lazyListState)
+            }
+        }
+        composable(
+            NavRoute.CourseDetailWithArgs,
+            arguments = listOf(navArgument("courseId") { type = NavType.IntType })
+        ) {
+            CourseDetailScreen(
+                onBack = {
+                    navController.popBackStack("home", inclusive = false)
+                }
+            )
         }
     }
 }
 
 
+@SuppressLint("FrequentlyChangingValue")
 @Composable
 fun HeaderNavScaffold(
-    lazyListState: androidx.compose.foundation.lazy.LazyListState,
-    content: @Composable () -> Unit
+    lazyListState: LazyListState,
+    navController: NavHostController,
+    content: @Composable () -> Unit,
 ) {
     var previousScroll by remember { mutableStateOf(0) }
     var headerVisible by remember { mutableStateOf(true) }
@@ -109,17 +147,15 @@ fun HeaderNavScaffold(
         animationSpec = tween(300)
     )
 
-    val navOffset by animateDpAsState(
-        targetValue = if (headerVisible) headerHeight else 0.dp,
-        animationSpec = tween(300)
-    )
-
     Box(Modifier.fillMaxSize()) {
         // Content
         Box(
             Modifier
                 .fillMaxSize()
-                .padding(top = headerHeight + navHeight)
+                .padding(
+                    top = if (headerVisible) headerHeight else 0.dp,
+                    bottom = navHeight
+                )
         ) {
             content()
         }
@@ -134,12 +170,14 @@ fun HeaderNavScaffold(
                 .offset(y = headerOffset)
         )
 
-        // Nav
-        NavigationBar(
-            modifier = Modifier
+        // Nav bar ở bottom
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
                 .height(navHeight)
-                .offset(y = navOffset)
-        )
+        ) {
+            MyNavigationBar(navController)
+        }
     }
 }
 
@@ -148,13 +186,13 @@ fun HeaderNavScaffold(
 fun HeaderScreen(
     avatarUrl: Int,
     displayName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Color.White.copy(alpha = 0.4f)
+                MaterialTheme.colorScheme.background.copy(alpha = 0.3f)
             )
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -174,14 +212,14 @@ fun HeaderScreen(
         Text(
             text = displayName,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)    // <-- đẩy tên chiếm không gian còn lại
+            modifier = Modifier.weight(1f)
         )
 
         IconButton(modifier = Modifier, onClick = {}) {
             Icon(
                 imageVector = Icons.Outlined.ShoppingCart,
                 contentDescription = "Cart",
-                tint = Color.White
+                tint = Color.Black
 
             )
         }
@@ -190,7 +228,7 @@ fun HeaderScreen(
             Icon(
                 imageVector = Icons.Outlined.Notifications,
                 contentDescription = "Notification",
-                tint = Color.White
+                tint = Color.Black
             )
         }
 
@@ -198,22 +236,37 @@ fun HeaderScreen(
 }
 
 @Composable
-fun NavigationBar(modifier: Modifier = Modifier) {
-    val bottomNavItems = listOf("Home", "Search", "Profile") // sample
+fun MyNavigationBar(navController: NavHostController, modifier: Modifier = Modifier) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = Color.White,
+        containerColor = Color.Transparent,
         modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.3f))
     ) {
-        bottomNavItems.forEach { item ->
+        navigationBarItems.forEach { item ->
+            val isSelected = currentRoute == item.label
+
             NavigationBarItem(
-                icon = { Icon(Icons.Outlined.ShoppingCart, contentDescription = item) },
-                label = { Text(item) },
-                selected = false,
-                onClick = {}
+                selected = isSelected,
+                onClick = {
+                    navController.navigate(item.label) {
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                        contentDescription = item.label
+                    )
+                },
             )
         }
     }
 }
-
-

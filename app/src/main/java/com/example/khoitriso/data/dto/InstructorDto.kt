@@ -10,8 +10,8 @@ data class InstructorDto(
 )
 
 fun InstructorDto.toDomain() = Instructor(
-    avatar = Avatar?: "Unknown",
-    bio = Bio?: "Unknown",
+    avatar = Avatar?: "",
+    bio = Bio?: "",
     id = Id,
     name = Name
 

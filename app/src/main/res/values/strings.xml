@@ -10,4 +10,13 @@
 
     <string name="slider_4">Chứng chỉ được công nhận</string>
     <string name="slider_4_desc">Nâng cao giá trị bản thân với chứng chỉ uy tín</string>
+    
+<!--    Home Screen-->
+    <string name="try_course_string">
+        Deal hời - Khám phá ngay hôm nay!
+    </string>
+
+    <string name="start_now">
+        HỌC NGAY
+    </string>
 </resources>

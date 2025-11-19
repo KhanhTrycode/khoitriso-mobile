@@ -3,41 +3,51 @@ package com.example.khoitriso.data.dto
 import com.example.khoitriso.domain.models.Course
 
 data class CourseDto(
-    val ApprovalStatus: Int,
     val Category: CategoryDto,
     val CategoryId: Int,
+    val CreatedAt: String,
     val Description: String,
-    val EstimatedDuration: Int,
     val Id: Int,
     val Instructor: InstructorDto,
     val InstructorId: Int,
+    val IsEnrolled: Boolean,
     val IsFree: Boolean,
-    val IsPublished: Boolean,
+    val Lessons: List<LessonDto>,
     val Level: Int,
     val Price: Int,
-    val Rating: Float,
+    val Rating: Float?,
+    val Requirements: List<String>?,
     val Thumbnail: String,
     val Title: String,
-    val TotalLessons: Int,
     val TotalReviews: Int,
-    val TotalStudents: Int
+    val TotalStudents: Int,
+    val UpdatedAt: String,
+    val WhatYouWillLearn: List<String>,
+    val EstimatedDuration:Int?,
+    val TotalLessons: Int?
 )
 
 fun CourseDto.toDomain() = Course(
-    approvalStatus = ApprovalStatus,
     category = Category.toDomain(),
+    categoryId = CategoryId,
+    createdAt = CreatedAt,
     description = Description,
-    estimatedDuration = EstimatedDuration,
+    estimatedDuration = EstimatedDuration?: 0,
     id = Id,
     instructor = Instructor.toDomain(),
+    instructorId = InstructorId,
+    isEnrolled = IsEnrolled,
     isFree = IsFree,
-    isPublished = IsPublished,
+    lessons = Lessons.map { it.toDomain() },
     level = Level,
     price = Price,
-    rating = Rating,
+    rating = Rating?: 0f,
+    requirements = Requirements ?: emptyList(),
     thumbnail = Thumbnail,
     title = Title,
-    totalLessons = TotalLessons,
+    totalLessons = TotalLessons?: 0,
     totalReviews = TotalReviews,
-    totalStudents = TotalStudents
+    totalStudents = TotalStudents,
+    updatedAt = UpdatedAt,
+    whatYouWillLearn = WhatYouWillLearn
 )

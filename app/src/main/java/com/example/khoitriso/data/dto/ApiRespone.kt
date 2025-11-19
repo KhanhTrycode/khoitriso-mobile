@@ -7,3 +7,4 @@ data class ApiRespone<T>(
     val MessageCode: String,
     val Result: T?
 )
+

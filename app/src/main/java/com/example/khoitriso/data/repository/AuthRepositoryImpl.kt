@@ -3,9 +3,7 @@ package com.example.khoitriso.data.repository
 import com.example.khoitriso.data.api.AuthApi
 import com.example.khoitriso.data.api.PublicApi
 import com.example.khoitriso.data.dto.auth.GoogleAuthRequest
-import com.example.khoitriso.data.dto.users.toDomain
 import com.example.khoitriso.domain.models.Authorization
-import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.domain.repository.AuthRepository
 import javax.inject.Inject
 
