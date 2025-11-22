@@ -11,11 +11,11 @@ data class LessonDto(
     val IsFree: Boolean,
     val IsPublished: Boolean,
     val LessonOrder: Int,
-    val Materials: List<MaterialDto>,
+    val Materials: List<MaterialDto>?,
     val Title: String,
     val UserProgress: Any,
     val VideoDuration: Int,
-    val VideoUrl: String
+    val VideoUrl: String,
 )
 
 fun LessonDto.toDomain() = Lesson(
@@ -26,7 +26,7 @@ fun LessonDto.toDomain() = Lesson(
     isFree = IsFree,
     isPublished = IsPublished,
     lessonOrder = LessonOrder,
-    materials = Materials,
+    materials = Materials?.map { it.toDomain() } ?: emptyList(),
     title = Title,
     userProgress = UserProgress,
     videoDuration = VideoDuration,

@@ -54,6 +54,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavController
 import com.example.khoitriso.R
+import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.ui.behavior.ActionButtons
 import com.example.khoitriso.ui.behavior.CreateBy
@@ -92,7 +93,7 @@ fun CourseDetailScreen(
         bottomBar = {
             if (courseState is UiState.Success) {
                 ActionButtons(
-                    price = (courseState as UiState.Success<Course>).data.price,
+                    price = (courseState as UiState.Success<CourseDetail>).data.price,
                     onBuy = { viewModel.buyNow() },
                     onCart = { viewModel.addToCart() }
                 )
@@ -102,8 +103,8 @@ fun CourseDetailScreen(
         when (courseState) {
             is UiState.Error -> {}
             is UiState.Loading -> {}
-            is UiState.Success<Course> -> {
-                val course = (courseState as UiState.Success<Course>).data
+            is UiState.Success<CourseDetail> -> {
+                val course = (courseState as UiState.Success<CourseDetail>).data
                 DetailContent(
                     course,
                     player,
@@ -120,7 +121,7 @@ fun CourseDetailScreen(
 
 @Composable
 private fun DetailContent(
-    course: Course,
+    course: CourseDetail,
     player: ExoPlayer?,
     modifier: Modifier = Modifier,
 ) {
@@ -237,7 +238,7 @@ fun Media3AndroidView(player: ExoPlayer?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CourseInfo(course: Course) {
+fun CourseInfo(course: CourseDetail) {
     Text(
         text = course.title,
         style = MaterialTheme.typography.titleMedium,

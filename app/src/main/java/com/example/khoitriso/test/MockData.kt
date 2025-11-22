@@ -119,15 +119,7 @@ object MockData {
             totalReviews = 150,
             totalStudents = 2300,
             estimatedDuration = 1200,
-            requirements = listOf(
-                "A computer with internet access (Windows, Mac, or Linux).",
-                "Basic understanding of any programming language is a plus but not required."
-            ),
-            lessons = createMockLessonsForCourse(1, 5),
-            whatYouWillLearn = listOf(
-                "A computer with internet access (Windows, Mac, or Linux).",
-                "Basic understanding of any programming language is a plus but not required."
-            )
+
         )
     ) + (2..12).map { index ->
         val isFreeFlag = index % 2 == 0
@@ -146,14 +138,85 @@ object MockData {
             totalReviews = 10 + index,
             totalStudents = 100 * index,
             estimatedDuration = 600 + index * 50,
-            requirements = listOf("Basic knowledge for course $index"),
-            lessons = createMockLessonsForCourse(index, 5),
-            whatYouWillLearn = listOf(
-                "A computer with internet access (Windows, Mac, or Linux).",
-                "Basic understanding of any programming language is a plus but not required."
-            )
         )
     }
+    val courseDetail = CourseDetail(
+        id = 99,
+        title = "Advanced Jetpack Compose: The Ultimate Guide",
+        description = "Dive deep into the advanced concepts of Jetpack Compose. Learn about custom layouts, advanced state management, performance optimization, and creating complex, beautiful UIs that stand out.",
+        instructor = instructors[4], // Giảng viên "AI Engineer"
+        category = categories[6],   // Category "Frontend"
+        price = 79, // Giá tiền là 79
+        thumbnail = "R.drawable.course_test.toString()", // Thay bằng URL ảnh thật sau
+        isFree = false,
+        level = 3, // 3 = Advanced
+        rating = 4.9f,
+        totalLessons = 12,
+        totalReviews = 350,
+        totalStudents = 1800,
+        estimatedDuration = 2400, // 40 giờ
+        isEnrolled = false, // Giả sử người dùng chưa đăng ký
+        createdAt = "2024-10-01T10:00:00Z",
+        updatedAt = "2024-11-20T14:30:00Z",
+        requirements = listOf(
+            "Solid understanding of Kotlin.",
+            "Basic experience with Jetpack Compose.",
+            "Android Studio installed and configured."
+        ),
+        whatYouWillLearn = listOf(
+            "Master advanced state management with custom Savers.",
+            "Create high-performance custom layouts and modifiers.",
+            "Optimize recomposition and layout phases.",
+            "Integrate complex animations and gestures.",
+            "Understand Compose internals for better debugging."
+        ),
+        lessons = listOf(
+            Lesson(
+                id = 9901,
+                courseId = 99,
+                title = "Part 1: Deep Dive into State",
+                description = "Exploring remember, derivedStateOf, and custom Saver objects.",
+                lessonOrder = 1,
+                isFree = true, // Bài đầu tiên miễn phí
+                isPublished = true,
+                videoDuration = 1200,
+                videoUrl = "https://example.com/video9901.mp4",
+                contentText = 0,
+                materials = emptyList(),
+                userProgress = null
+            ),
+            Lesson(
+                id = 9902,
+                courseId = 99,
+                title = "Part 2: Custom Layouts and Modifiers",
+                description = "Building your own Row, Column, and custom Modifiers.",
+                lessonOrder = 2,
+                isFree = false,
+                isPublished = true,
+                videoDuration = 1800,
+                videoUrl = "https://example.com/video9902.mp4",
+                contentText = 0,
+                materials = emptyList(),
+                userProgress = null
+            ),
+            Lesson(
+                id = 9903,
+                courseId = 99,
+                title = "Part 3: Performance Optimization",
+                description = "Using Layout Inspector and best practices to avoid unnecessary recompositions.",
+                lessonOrder = 3,
+                isFree = false,
+                isPublished = true,
+                videoDuration = 1500,
+                videoUrl = "https://example.com/video9903.mp4",
+                contentText = 0,
+                materials = emptyList(),
+                userProgress = null
+            )
+        )
+    )
+
+
 
     // ---------------------------
     // Books (12 total) - FIXED
@@ -227,25 +290,25 @@ object MockData {
     // ---------------------------
     // Assignments (10 sample)
     // ---------------------------
-    val assignments = (1..10).map { i ->
-        Assignment(
-            description = "Assignment $i for lesson",
-            dueDate = "2025-12-${if (i < 10) "0$i" else "$i"}",
-            id = 300 + i,
-            isPublished = true,
-            lessonId = mockCourses[i % mockCourses.size].lessons.firstOrNull()?.id ?: (i * 1000),
-            maxAttempts = 3,
-            maxScore = 100,
-            passingScore = 50,
-            questions = null,
-            showAnswersAfter = 0,
-            shuffleOptions = false,
-            shuffleQuestions = false,
-            timeLimit = 60,
-            title = "Assignment $i",
-            userAttempts = users.take(3)
-        )
-    }
+//    val assignments = (1..10).map { i ->
+//        Assignment(
+//            description = "Assignment $i for lesson",
+//            dueDate = "2025-12-${if (i < 10) "0$i" else "$i"}",
+//            id = 300 + i,
+//            isPublished = true,
+//            lessonId = mockCourses[i % mockCourses.size].lessons.firstOrNull()?.id ?: (i * 1000),
+//            maxAttempts = 3,
+//            maxScore = 100,
+//            passingScore = 50,
+//            questions = null,
+//            showAnswersAfter = 0,
+//            shuffleOptions = false,
+//            shuffleQuestions = false,
+//            timeLimit = 60,
+//            title = "Assignment $i",
+//            userAttempts = users.take(3)
+//        )
+//    }
 
     // ---------------------------
     // Coupons (10 sample)

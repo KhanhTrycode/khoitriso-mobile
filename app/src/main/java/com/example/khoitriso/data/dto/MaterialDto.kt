@@ -1,5 +1,7 @@
 package com.example.khoitriso.data.dto
 
+import com.example.khoitriso.domain.models.Material
+
 data class MaterialDto(
     val CreatedAt: String,
     val DownloadCount: Int,
@@ -12,4 +14,17 @@ data class MaterialDto(
     val LessonId: Int,
     val Title: String,
     val UpdatedAt: Any
+)
+
+fun MaterialDto.toDomain() = Material(
+    downloadCount = DownloadCount,
+    fileName = FileName,
+    filePath = FilePath,
+    fileSize = FileSize,
+    fileType = FileType,
+    fileUrl = FileUrl,
+    id = Id,
+    lessonId = LessonId,
+    title = Title,
+    updatedAt = UpdatedAt
 )

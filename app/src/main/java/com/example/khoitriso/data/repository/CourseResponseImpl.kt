@@ -1,8 +1,10 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.CourseApi
+import com.example.khoitriso.data.dto.toDetailDomain
 import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.Course
+import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.repository.CourseRepository
 import javax.inject.Inject
 
@@ -23,8 +25,23 @@ class CourseResponseImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCourseById(id: Int): Result<Course> {
-        TODO("Not yet implemented")
+    override suspend fun getCourseById(id: Int): Result<CourseDetail> {
+        return try {
+            val response = courseApi.getCourseById(id)
+            if (response.isSuccessful) {
+                Result.success(
+                    response.body()?.Result?.toDetailDomain() ?: throw Exception
+                        (
+                        "Course" +
+                                " not found"
+                    )
+                )
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
     }
 

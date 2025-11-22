@@ -1,10 +1,12 @@
 package com.example.khoitriso.data.api
 
+import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
 import com.example.khoitriso.data.dto.CourseDto
 import com.example.khoitriso.domain.models.Book
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface CourseApi {
@@ -19,4 +21,9 @@ interface CourseApi {
         @Query("sortOrder") sortOrder: String? = null,
         @Query("isFree") isFree: Boolean? = null
     ): Response<ApiResponeData<CourseDto>>
+
+    @GET("courses/{id}")
+    suspend fun getCourseById(
+        @Path("id") id: Int
+    ): Response<ApiRespone<CourseDto>>
 }

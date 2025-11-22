@@ -8,7 +8,7 @@ data class Lesson(
     val isFree: Boolean,
     val isPublished: Boolean,
     val lessonOrder: Int,
-    val materials: List<Any>,
+    val materials: List<Material>,
     val title: String,
     val userProgress: Any?,
     val videoDuration: Int,

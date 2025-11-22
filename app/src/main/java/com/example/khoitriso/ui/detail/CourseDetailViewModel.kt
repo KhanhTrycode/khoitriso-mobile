@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,13 +18,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.core.net.toUri
 import androidx.media3.common.PlaybackException
+import com.example.khoitriso.domain.models.CourseDetail
+import com.example.khoitriso.domain.usecase.course.CourseUsecase
+import com.example.khoitriso.ui.behavior.BaseViewModel
 
 @HiltViewModel
 class CourseDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
-    private val _course: MutableStateFlow<UiState<Course>> = MutableStateFlow(UiState.Loading)
-    val course: StateFlow<UiState<Course>> = _course
+    private val savedStateHandle: SavedStateHandle,
+    private val courseUsecase: CourseUsecase
+) : BaseViewModel() {
+    private val _course: MutableStateFlow<UiState<CourseDetail>> = MutableStateFlow(UiState.Loading)
+    val course: StateFlow<UiState<CourseDetail>> = _course
     val courseId = savedStateHandle.get<Int>("courseId")!!
     private val _playerState = MutableStateFlow<ExoPlayer?>(null)
     val playerState: StateFlow<ExoPlayer?> = _playerState
@@ -34,15 +37,11 @@ class CourseDetailViewModel @Inject constructor(
     }
 
     private fun getCourse() {
-        viewModelScope.launch {
-            _course.value = UiState.Loading
-            try {
-                val result = MockData.mockCourses[courseId-1]
-                _course.value = UiState.Success(result)
-            } catch (e: Exception) {
-                _course.value = UiState.Error(e.message ?: "Unknown error")
-            }
-        }
+        loadData(
+            stateFlow = _course,
+            mockData = MockData.courseDetail,
+            apiCall = { courseUsecase.getCourseById(courseId) }
+        )
     }
 
     fun initializePlayer(

@@ -2,6 +2,7 @@ package com.example.khoitriso.domain.usecase.course
 
 import android.util.Log
 import com.example.khoitriso.domain.models.Course
+import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.repository.CourseRepository
 
 data class CourseUsecase(
@@ -17,8 +18,11 @@ class GetCourse(private val repo: CourseRepository) {
 }
 
 class GetCourseById(private val repo: CourseRepository) {
-    suspend operator fun invoke(id: Int): Result<Course> {
-        return repo.getCourseById(id)
+    suspend operator fun invoke(id: Int): Result<CourseDetail> {
+        val result =repo.getCourseById(id)
+        Log.d("Usecase", "invokeGetMyCourse: $result")
+
+        return result
     }
 }
 
