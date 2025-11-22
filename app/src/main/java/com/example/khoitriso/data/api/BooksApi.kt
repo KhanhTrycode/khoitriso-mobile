@@ -1,9 +1,11 @@
 package com.example.khoitriso.data.api
 
+import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
 import com.example.khoitriso.data.dto.BookDto
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface BooksApi {
@@ -17,4 +19,9 @@ interface BooksApi {
         @Query("sortBy") sortBy: String? = null,
         @Query("sortOrder") sortOrder: String? = null,
     ): Response<ApiResponeData<BookDto>>
+
+    @GET("books/{id}")
+    suspend fun getBookById(
+        @Path("id") bookId: Int
+    ) : Response<ApiRespone<BookDto>>
 }

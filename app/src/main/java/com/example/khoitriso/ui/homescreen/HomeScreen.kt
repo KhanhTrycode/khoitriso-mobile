@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,7 +87,7 @@ fun HomeScreen(
             SectionTitle("Recommended Book", "See all")
         }
         item {
-            RecommendedBook(recommendedBooks)
+            RecommendedBook(recommendedBooks, navController)
         }
 
         item {
@@ -520,7 +519,7 @@ fun TrendingCourse(coursesState: UiState<List<Course>>, navController: NavContro
 }
 
 @Composable
-fun RecommendedBook(booksState: UiState<List<Book>>) {
+fun RecommendedBook(booksState: UiState<List<Book>>, navController: NavController) {
     when (booksState) {
         is UiState.Loading -> {
             Box(
@@ -553,7 +552,7 @@ fun RecommendedBook(booksState: UiState<List<Book>>) {
 
         is UiState.Success -> {
             val books = booksState.data
-            RowBookCard(books)
+            RowBookCard(books, navController)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.khoitriso.data.dto
+    package com.example.khoitriso.data.dto
 
 import com.example.khoitriso.domain.models.LearningPath
 
@@ -8,7 +8,7 @@ data class LearningPathDto(
     val Category: CategoryDto,
     val CategoryId: Int,
     val CourseCount: Int,
-    val Courses: CourseDto,
+    val Courses: List<CourseDto>,
     val CreatedAt: String,
     val Description: String,
     val DifficultyLevel: Int,
@@ -35,7 +35,7 @@ fun LearningPathDto.toDomain() = LearningPath(
     category = Category.toDomain(),
     categoryId = CategoryId,
     courseCount = CourseCount,
-    courses = Courses.toDomain(),
+    courses = Courses.map { it.toDomain() },
     createdAt = CreatedAt,
     description = Description,
     difficultyLevel = DifficultyLevel,

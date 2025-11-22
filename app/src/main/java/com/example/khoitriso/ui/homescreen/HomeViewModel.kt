@@ -1,11 +1,8 @@
 package com.example.khoitriso.ui.homescreen
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import com.example.khoitriso.data.local.TokenManager
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Course
-import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +15,8 @@ import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -50,60 +47,40 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun getCategory() {
-        viewModelScope.launch {
-            _categories.value = UiState.Loading
-            try {
-                val result = MockData.categories
-                _categories.value = UiState.Success(result)
-            } catch (e: Exception) {
-                _categories.value = UiState.Error(e.message ?: "Unknown error")
-            }
+        loadData(_categories, MockData.categories) {
+            categoryUsecase.getCategory()
         }
     }
 
     fun getBooks() {
+        loadData(_books, MockData.books) {
+            bookUsecase.getBook()
+        }
         viewModelScope.launch {
-            _books.value = UiState.Loading
-            try {
-                val result = MockData.books
-                _books.value = UiState.Success(result)
+            _books.collectLatest { bookState ->
+                if (bookState is UiState.Success<List<Book>>) {
+                    val books = bookState.data
+                    val recommendedBooks = books.shuffled().take(5)
+                    _recommendedBooks.value = UiState.Success(recommendedBooks)
 
-                // update recommended books
-                val recommended = if (result.size >= 5) result.subList(0, 5) else result
-                _recommendedBooks.value = UiState.Success(recommended)
-                Log.d("HomeViewModel", "getBooks: $recommended")
-                Log.d("HomeViewModel", "getBooks: ${_books.value}")
-            } catch (e: Exception) {
-                _books.value = UiState.Error(e.message ?: "Unknown error")
-                _recommendedBooks.value = UiState.Error(e.message ?: "Unknown error")
+                }
             }
         }
     }
 
     fun getCourse() {
+        loadData(_courses, MockData.mockCourses) {
+            courseUsecase.getCourse()
+        }
         viewModelScope.launch {
-            _courses.value = UiState.Loading
-            try {
-                val result = MockData.mockCourses
-                _courses.value = UiState.Success(result)
-
-                // update trending courses
-                val trending = if (result.size >= 5) result.subList(0, 5) else result
-                _trendingCourses.value = UiState.Success(trending)
-
-                // update try course (take first course)
-                if (result.isNotEmpty()) {
-                    _tryCourses.value = UiState.Success(result.first())
-                } else {
-                    _tryCourses.value = UiState.Error("No courses available")
+            _courses.collectLatest { courseState ->
+                if (courseState is UiState.Success<List<Course>>) {
+                    val courses = courseState.data
+                    val trendingCourses = courses.shuffled().take(5)
+                    _trendingCourses.value = UiState.Success(trendingCourses)
+                    _tryCourses.value = UiState.Success(trendingCourses.first())
                 }
-
-            } catch (e: Exception) {
-                _courses.value = UiState.Error(e.message ?: "Unknown error")
-                _trendingCourses.value = UiState.Error(e.message ?: "Unknown error")
-                _tryCourses.value = UiState.Error(e.message ?: "Unknown error")
             }
         }
     }
-
 }

@@ -13,9 +13,9 @@ class CourseResponseImpl @Inject constructor(
     override suspend fun getCourse(): Result<List<Course>> {
         return try {
             val response = courseApi.getCourse()
-            if (response.isSuccessful){
+            if (response.isSuccessful) {
                 Result.success(response.body()?.Result?.Items?.map { it.toDomain() } ?: emptyList())
-            }else{
+            } else {
                 Result.failure(Exception("API error: ${response.code()}"))
             }
         } catch (e: Exception) {
@@ -23,12 +23,17 @@ class CourseResponseImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCourseById(id: Int): Course {
+    override suspend fun getCourseById(id: Int): Result<Course> {
+        TODO("Not yet implemented")
+
+    }
+
+    override suspend fun getMyCourse(): Result<List<Course>> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getMyCourse(): List<Course> {
+    override suspend fun SearchCourse(): Result<List<Course>> {
         TODO("Not yet implemented")
     }
-
 }
+

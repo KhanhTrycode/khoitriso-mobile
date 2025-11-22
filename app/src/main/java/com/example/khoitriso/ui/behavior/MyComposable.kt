@@ -1,6 +1,7 @@
 package com.example.khoitriso.ui.behavior
 
-import android.media.browse.MediaBrowser.MediaItem
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,12 +18,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,18 +38,24 @@ import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.NavRoute
-import com.example.khoitriso.utils.UiState
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
+import androidx.core.app.Person
+import com.example.khoitriso.domain.models.Instructor
 import com.example.khoitriso.ui.theme.StarColor
 import com.example.khoitriso.utils.toDecimal
 import com.example.khoitriso.utils.toVND
@@ -99,24 +104,28 @@ fun RowCourseCard(listItem: List<Course>, navController: NavController) {
 }
 
 @Composable
-fun RowBookCard(listItem: List<Book>) {
+fun RowBookCard(listItem: List<Book>, navController: NavController) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(listItem.size) { index ->
-            BookCard(listItem[index])
+            BookCard(listItem[index], navController)
         }
     }
 }
 
 @Composable
-fun BookCard(book: Book, modifier: Modifier = Modifier){
+fun BookCard(book: Book,navController: NavController,modifier: Modifier = Modifier){
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.background)
+            .clickable{
+                Log.d("Navigate", "BookCard: ${book.id}")
+                navController.navigate(NavRoute.NavBookDetail(book.id))
+            }
     ) {
         // Thumbnail full width
         SafeImage(
@@ -159,6 +168,7 @@ fun CourseCard(
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.background)
             .clickable{
+                Log.d("CourseCard", "CourseCard: ${course.id}")
                 navController.navigate(NavRoute.NavCourseDetail(course.id))
             }
     ) {
@@ -201,13 +211,7 @@ fun ItemCardBottom(rating: Float, isFree: Boolean, price: Int, totalReviews: Int
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Text(
-            text = "$rating",
-            style = MaterialTheme.typography.bodyMedium
-            .copy(fontSize = 16.sp,color = StarColor, fontWeight = FontWeight.Bold),
 
-        )
-        Spacer(modifier = Modifier.width(4.dp))
         FractionalRatingStars(rating = rating)
         Spacer(modifier = Modifier.width(4.dp))
         Text(
@@ -229,9 +233,17 @@ fun FractionalRatingStars(
     starSize: Dp = 16.dp,
     modifier: Modifier = Modifier,
     starColor: Color = StarColor,
-    emptyColor: Color = Color.LightGray
+    emptyColor: Color = Color.LightGray,
 ) {
+
     Row(modifier = modifier) {
+        Text(
+            text = "$rating",
+            style = MaterialTheme.typography.bodyMedium
+                .copy(fontSize = 16.sp,color = StarColor, fontWeight = FontWeight.Bold),
+
+            )
+        Spacer(modifier = Modifier.width(4.dp))
         for (i in 1..5) {
             val fillFraction = when {
                 i <= rating.toInt() -> 1f // full star
@@ -269,4 +281,90 @@ fun FractionalRatingStars(
 // Shape cắt icon theo phần trăm width
 fun FractionalWidthShape(fraction: Float) = GenericShape { size, _ ->
     addRect(androidx.compose.ui.geometry.Rect(0f, 0f, size.width * fraction, size.height))
+}
+
+//-----------------------------------------DETAIL SCREEN-----------------------------------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DetailHeader(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    TopAppBar(
+        title = {},
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        },
+        modifier = modifier.background(MaterialTheme.colorScheme.primary)
+    )
+}
+
+@Composable
+fun ActionButtons(price: Int, onBuy: () -> Unit, onCart: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Nút thêm vào giỏ hàng (chỉ có icon)
+        OutlinedIconButton(
+            onClick = onCart,
+            modifier = Modifier.size(56.dp),
+            shape = CircleShape,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Icon(
+                Icons.Outlined.ShoppingCart,
+                contentDescription = "Add to Cart",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Nút mua ngay
+        Button(
+            onClick = onBuy,
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+        ) {
+
+            Text(
+                text = "${stringResource(R.string.buy_now)} - ${price.toVND()}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun CreateBy(fullName: String,avatar: String, modifier: Modifier = Modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        // avatar may be an Int resource in mock data
+        SafeImage(
+            url = avatar,
+            contentDescription = fullName,
+            error = R.drawable.avatar_default,
+            modifier = Modifier.size(48.dp).clip(CircleShape)
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Row {
+            Text(
+                text = stringResource(R.string.created_by),
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Text(
+                text = fullName,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 }

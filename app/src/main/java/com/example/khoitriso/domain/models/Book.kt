@@ -9,8 +9,6 @@ data class Book(
     val description: String,
     val edition: String,
     val id: Int,
-    val isActive: Boolean,
-    val isbn: String,
     val language: String,
     val price: Int,
     val publicationYear: Int,

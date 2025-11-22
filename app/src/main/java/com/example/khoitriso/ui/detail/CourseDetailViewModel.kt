@@ -2,6 +2,7 @@ package com.example.khoitriso.ui.detail
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,7 +37,7 @@ class CourseDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _course.value = UiState.Loading
             try {
-                val result = MockData.mockCourses[courseId]
+                val result = MockData.mockCourses[courseId-1]
                 _course.value = UiState.Success(result)
             } catch (e: Exception) {
                 _course.value = UiState.Error(e.message ?: "Unknown error")
@@ -93,5 +94,13 @@ class CourseDetailViewModel @Inject constructor(
                 println("Other error: ${error.message}")
             }
         }
+    }
+
+    fun addToCart(){
+
+    }
+
+    fun buyNow(){
+
     }
 }

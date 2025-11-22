@@ -10,7 +10,12 @@
 
     <string name="slider_4">Chứng chỉ được công nhận</string>
     <string name="slider_4_desc">Nâng cao giá trị bản thân với chứng chỉ uy tín</string>
-    
+
+
+<!--    MyComposable-->
+    <string name="created_by">
+        Tạo bởi
+    </string>
 <!--    Home Screen-->
     <string name="try_course_string">
         Deal hời - Khám phá ngay hôm nay!
@@ -19,4 +24,9 @@
     <string name="start_now">
         HỌC NGAY
     </string>
+    <string name="buy_now">
+        Mua Ngay
+    </string>
+
+
 </resources>

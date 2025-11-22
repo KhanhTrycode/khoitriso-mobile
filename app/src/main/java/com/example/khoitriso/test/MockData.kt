@@ -6,12 +6,12 @@ import com.example.khoitriso.domain.models.*
 object MockData {
 
     // ---------------------------
+
     // Authors (12 total)
     // ---------------------------
     val authors = listOf(
         Author("https://example.com/a1.png", "Nguyễn Văn A", 1),
         Author("https://example.com/a2.png", "Trần Thị B", 2),
-
         Author("https://example.com/a3.png", "Phạm Đức C", 3),
         Author("https://example.com/a4.png", "Hoàng Mai D", 4),
         Author("https://example.com/a5.png", "Lê Thanh E", 5),
@@ -31,7 +31,6 @@ object MockData {
         Category(1, "Programming", "Programming books and courses", "", true, 1, null),
         Category(2, "Design", "UI/UX and design", "", true, 2, null),
         Category(3, "Backend", "Server-side topics", "", true, 3, null),
-
         Category(4, "AI", "Artificial Intelligence", "", true, 4, null),
         Category(5, "Marketing", "Digital marketing", "", true, 5, null),
         Category(6, "Mobile", "Android/iOS Development", "", true, 6, null),
@@ -48,19 +47,19 @@ object MockData {
     // Instructors (13 total)
     // ---------------------------
     val instructors = listOf(
-        Instructor("", "Giảng viên Android", 1, "Nguyên Văn A"),
-        Instructor("", "Chuyên gia UI/UX", 2, "Trần Thị B"),
-        Instructor("", "Backend Developer", 3, "Lê Văn C"),
-        Instructor("", "AWS Cloud Engineer", 4, "Nguyễn Thành D"),
-        Instructor("", "AI Engineer", 5, "Phạm Như E"),
-        Instructor("", "KMM Specialist", 6, "Đặng Bá F"),
-        Instructor("", "Game Developer", 7, "Hồ Mỹ G"),
-        Instructor("", "Cyber Security Expert", 8, "Trần Duy H"),
-        Instructor("", "Fullstack Dev", 9, "Lê Văn I"),
-        Instructor("", "React Developer", 10, "Nguyễn Quốc K"),
-        Instructor("", "UI/UX Designer", 11, "Phạm Linh L"),
-        Instructor("", "Spring Boot Instructor", 12, "Vũ Trọng M"),
-        Instructor("", "iOS Swift Developer", 13, "Đỗ Thành N"),
+        Instructor(avatar = "", bio = "Giảng viên Android", id = 1, name = "Nguyên Văn A"),
+        Instructor(avatar = "", bio = "Chuyên gia UI/UX", id = 2, name = "Trần Thị B"),
+        Instructor(avatar = "", bio = "Backend Developer", id = 3, name = "Lê Văn C"),
+        Instructor(avatar = "", bio = "AWS Cloud Engineer", id = 4, name = "Nguyễn Thành D"),
+        Instructor(avatar = "", bio = "AI Engineer", id = 5, name = "Phạm Như E"),
+        Instructor(avatar = "", bio = "KMM Specialist", id = 6, name = "Đặng Bá F"),
+        Instructor(avatar = "", bio = "Game Developer", id = 7, name = "Hồ Mỹ G"),
+        Instructor(avatar = "", bio = "Cyber Security Expert", id = 8, name = "Trần Duy H"),
+        Instructor(avatar = "", bio = "Fullstack Dev", id = 9, name = "Lê Văn I"),
+        Instructor(avatar = "", bio = "React Developer", id = 10, name = "Nguyễn Quốc K"),
+        Instructor(avatar = "", bio = "UI/UX Designer", id = 11, name = "Phạm Linh L"),
+        Instructor(avatar = "", bio = "Spring Boot Instructor", id = 12, name = "Vũ Trọng M"),
+        Instructor(avatar = "", bio = "iOS Swift Developer", id = 13, name = "Đỗ Thành N"),
     )
 
     // ---------------------------
@@ -69,7 +68,6 @@ object MockData {
     val users = listOf(
         User("local", "", "user1@example.com", "User One", 1, 1),
         User("google", "", "user2@example.com", "User Two", 2, 2),
-
         User("local", "", "user3@example.com", "User Three", 3, 1),
         User("local", "", "user4@example.com", "User Four", 4, 1),
         User("google", "", "user5@gmail.com", "User Five", 5, 2),
@@ -82,281 +80,160 @@ object MockData {
         User("facebook", "", "user12@fb.com", "User Twelve", 12, 1),
     )
 
+    // Helper function to create lessons
+    private fun createMockLessonsForCourse(courseId: Int, count: Int): List<Lesson> {
+        return (1..count).map { lessonIndex ->
+            Lesson(
+                id = courseId * 100 + lessonIndex,
+                courseId = courseId,
+                title = "Chapter $lessonIndex: Topic for Course $courseId",
+                description = "This is a detailed description for lesson $lessonIndex of course $courseId.",
+                lessonOrder = lessonIndex,
+                isFree = lessonIndex == 1, // Only the first lesson is free
+                isPublished = true,
+                videoDuration = 300 + (lessonIndex * 50),
+                videoUrl = "https://example.com/video_${courseId}_${lessonIndex}.mp4",
+                contentText = 0, // Placeholder
+                materials = emptyList(),
+                userProgress = null
+            )
+        }
+    }
+
     // ---------------------------
-    // Courses (12 total)
+    // Courses (12 total) - FIXED & COMPLETED
     // ---------------------------
     val mockCourses = listOf(
         Course(
-            category = categories[0],
-            description = "Try Test Course 1",
-            estimatedDuration = 20,
             id = 1,
+            title = "Complete Kotlin Development Masterclass",
+            description = "This is the best course for learning Kotlin from scratch. We cover all the basics and advanced topics of modern Android development with Jetpack Compose.",
             instructor = instructors[0],
-            lessons = listOf(
-                Lesson(
-                    0,
-                    1,
-                    "Giới thiệu khóa học: Course No1",
-                    1001,
-                    true,
-                    true,
-                    0,
-                    emptyList(),
-                    "Giới thiệu khóa học",
-                    null,
-                    60,
-                    ""
-                )
-            ),
-            isFree = true,
-            level = 1,
-            price = 0,
-            rating = 4.5f,
+            category = categories[0],
+            price = 490000,
             thumbnail = R.drawable.course_test.toString(),
-            title = "Course No1",
-            totalLessons = 10,
-            totalReviews = 10,
-            totalStudents = 100
-        ),
-        // It's good practice to ensure unique IDs
-        Course(
-            category = categories[1],
-            description = "Try Test Course 2",
-            estimatedDuration = 35,
-            id = 2,
-            instructor = instructors[1],
-            lessons = listOf(
-                Lesson(
-                    0,
-                    2,
-                    "Giới thiệu khóa học: Course No2",
-                    1002,
-                    false,
-                    true,
-                    0,
-                    emptyList(),
-                    "Giới thiệu khóa học",
-                    null,
-                    60,
-                    ""
-                )
-            ),
             isFree = false,
             level = 2,
-            price = 50,
-            rating = 4.7f,
-            thumbnail = R.drawable.course_test.toString(),
-            title = "Course No2",
-            totalLessons = 15,
-            totalReviews = 20,
-            totalStudents = 200
-        ),
-
-        // Additional mock courses
-        *Array(10) { index ->
-            val id = index + 3
-            val isFreeFlag = id % 2 == 0
-            Course(
-                category = categories[id % categories.size],
-                description = "Mock Course $id description",
-                estimatedDuration = 10 + id,
-                id = id,
-                instructor = instructors[id % instructors.size],
-                lessons = listOf(
-                    Lesson(
-                        0,
-                        id,
-                        "Giới thiệu khóa học: Course No$id",
-                        id * 1000 + 1,
-                        isFreeFlag,
-                        true,
-                        0,
-                        emptyList(),
-                        "Giới thiệu khóa học",
-                        null,
-                        60,
-                        ""
-                    )
-                ),
-                isFree = isFreeFlag,
-                level = (id % 3) + 1,
-                price = if (isFreeFlag) 0 else 20 + id,
-                rating = 4f + (id % 5) * 0.1f,
-                thumbnail = R.drawable.course_test.toString(),
-                title = "Course No$id",
-                totalLessons = 5 + id,
-                totalReviews = 10 + id,
-                totalStudents = 100 * id
+            rating = 4.8f,
+            totalLessons = 5,
+            totalReviews = 150,
+            totalStudents = 2300,
+            estimatedDuration = 1200,
+            requirements = listOf(
+                "A computer with internet access (Windows, Mac, or Linux).",
+                "Basic understanding of any programming language is a plus but not required."
+            ),
+            lessons = createMockLessonsForCourse(1, 5),
+            whatYouWillLearn = listOf(
+                "A computer with internet access (Windows, Mac, or Linux).",
+                "Basic understanding of any programming language is a plus but not required."
             )
-        }
-    )
-
-    // ---------------------------
-    // Lessons (12 total)
-    // ---------------------------
-    val lessons = listOf(
-        Lesson(
-            0,
-            1,
-            "Lesson 1 description",
-            1,
-            true,
-            true,
-            1,
-            emptyList(),
-            "Lesson 1",
-            null,
-            120,
-            "https://example.com/video1.mp4"
-        ),
-        Lesson(
-            0,
-            1,
-            "Lesson 2 description",
-            2,
-            false,
-            true,
-            2,
-            emptyList(),
-            "Lesson 2",
-            null,
-            90,
-            "https://example.com/video2.mp4"
-        ),
-    ) + (3..12).map {
-        Lesson(
-            0,
-            it % 3 + 1,
-            "Lesson $it description",
-            it,
-            it % 2 == 0,
-            true,
-            it,
-            emptyList(),
-            "Lesson $it",
-            null,
-            60 + it * 2,
-            "https://example.com/video$it.mp4"
+        )
+    ) + (2..12).map { index ->
+        val isFreeFlag = index % 2 == 0
+        Course(
+            id = index,
+            title = "Course No$index",
+            description = "Mock Course $index description. This course covers topics from the ${categories[index % categories.size].name} category.",
+            instructor = instructors[index % instructors.size],
+            category = categories[index % categories.size],
+            price = if (isFreeFlag) 0 else (20 + index),
+            thumbnail = R.drawable.course_test.toString(),
+            isFree = isFreeFlag,
+            level = (index % 3) + 1,
+            rating = 4.0f + (index % 5) * 0.1f,
+            totalLessons = 5,
+            totalReviews = 10 + index,
+            totalStudents = 100 * index,
+            estimatedDuration = 600 + index * 50,
+            requirements = listOf("Basic knowledge for course $index"),
+            lessons = createMockLessonsForCourse(index, 5),
+            whatYouWillLearn = listOf(
+                "A computer with internet access (Windows, Mac, or Linux).",
+                "Basic understanding of any programming language is a plus but not required."
+            )
         )
     }
 
     // ---------------------------
-    // Chapters (12 total)
+    // Books (12 total) - FIXED
     // ---------------------------
-    val chapters = listOf(
-        Chapter(1, "2025-11-17", "Chapter 1", 1, 1, 0, emptyList(), "Chapter 1", "2025-11-17"),
-        Chapter(1, "2025-11-17", "Chapter 2", 2, 2, 0, emptyList(), "Chapter 2", "2025-11-17"),
-    ) + (3..12).map {
+    val books = (1..12).map { index ->
+        Book(
+            author = authors[index % authors.size],
+            category = categories[index % categories.size],
+            description = "Book $index description",
+            edition = "${index}th",
+            id = index,
+            language = "en",
+            publicationYear = 2020 + (index % 5),
+            rating = 4.0f + (index % 5) * 0.1f,
+            title = "Book $index",
+            totalReviews = 5 + index,
+            approvalStatus = 0,
+            coverImage = "",
+            createdAt = "",
+            price = 201,
+            updatedAt = "",
+        )
+    }
+
+    // ---------------------------
+    // Chapters (10 sample)
+    // ---------------------------
+    val chapters = (1..10).map { i ->
         Chapter(
-            1,
-            "2025-11-17",
-            "Chapter $it description",
-            it,
-            it,
-            0,
-            emptyList(),
-            "Chapter $it",
-            "2025-11-17"
+            bookId = (i % books.size) + 1,
+            createdAt = "2025-11-17",
+            description = "Chapter $i for book ${(i % books.size) + 1}",
+            id = 100 + i,
+            orderIndex = i,
+            questionCount = 0,
+            questions = emptyList(),
+            title = "Chapter $i",
+            updatedAt = "2025-11-17"
         )
     }
 
     // ---------------------------
-    // Books (12 total)
+    // BookDetails (10 sample)
     // ---------------------------
-    val books = listOf(
-        Book(
-            1,
-            authors[0],
-            categories[0],
-            "",
-            "2025-11-17",
-            "Book 1 description",
-            "1st",
-            1,
-            true,
-            "ISBN-001",
-            "en",
-            100,
-            2025,
-            4.5f,
-            "Book One",
-            5,
-            "2025-11-17"
-        ),
-        Book(
-            1,
-            authors[1],
-            categories[1],
-            "",
-            "2025-11-17",
-            "Book 2 description",
-            "2nd",
-            2,
-            true,
-            "ISBN-002",
-            "en",
-            150,
-            2024,
-            4.0f,
-            "Book Two",
-            8,
-            "2025-11-17"
-        ),
-    ) + (3..12).map {
-        Book(
-            1,
-            authors[it % authors.size],
-            categories[it % categories.size],
-            "",
-            "2025-11-17",
-            "Book $it description",
-            "${it}th",
-            it,
-            true,
-            "ISBN-$it",
-            "en",
-            80 + it,
-            2020 + (it % 5),
-            4.0f + (it % 5) * 0.1f,
-            "Book $it",
-            5 + it,
-            "2025-11-17"
-        )
-    }
-
-    // ---------------------------
-    // BookDetail (11 total)
-    // ---------------------------
-    val bookDetails = listOf(
+    val bookDetails = (1..10).map { i ->
         BookDetail(
-            1, authors[0], 1, categories[0], 1,
-            chapters, "", "2025-11-17", "Full book detail",
-            "", "1st", 1, true, false, "ISBN-001",
-            "en", 100, 2025, 5, "", "",
-            "Book One", 5, "2025-11-17"
-        )
-    ) + (2..11).map {
-        BookDetail(
-            1, authors[it % authors.size], authors[it % authors.size].id,
-            categories[it % categories.size], categories[it % categories.size].id,
-            chapters, "", "2025-11-17", "Book detail $it",
-            "", "${it}th", it, true, false, "ISBN-D$it",
-            "en", 120 + it, 2020 + (it % 5), 4 + (it % 5),
-            "", "", "Book Detail $it", 10 + it,
-            "2025-11-17"
+            approvalStatus = 1,
+            author = authors[i % authors.size],
+            category = categories[i % categories.size],
+            chapters = chapters.filter { it.bookId == ((i % books.size) + 1) },
+            coverImage = "",
+            createdAt = "2025-11-17",
+            description = "Detailed description for BookDetail $i",
+            ebookFile = "",
+            edition = "${i}th",
+            id = 200 + i,
+            isOwned = false,
+            isbn = "ISBN-BD-$i",
+            language = "en",
+            price = 900+i*3,
+            publicationYear = 2020 + (i % 5),
+            rating = (3f + (i % 3)),
+            reviewNotes = "",
+            staticPagePath = "",
+            title = "Book Detail $i",
+            totalReviews = 1 + i,
+            updatedAt = "2025-11-17"
         )
     }
 
     // ---------------------------
-    // Assignments (11 total)
+    // Assignments (10 sample)
     // ---------------------------
-    val assignments = listOf(
+    val assignments = (1..10).map { i ->
         Assignment(
-            description = "Assignment 1",
-            dueDate = "2025-12-01",
-            id = 1,
+            description = "Assignment $i for lesson",
+            dueDate = "2025-12-${if (i < 10) "0$i" else "$i"}",
+            id = 300 + i,
             isPublished = true,
-            lessonId = lessons[0].id,
+            lessonId = mockCourses[i % mockCourses.size].lessons.firstOrNull()?.id ?: (i * 1000),
             maxAttempts = 3,
             maxScore = 100,
             passingScore = 50,
@@ -365,200 +242,117 @@ object MockData {
             shuffleOptions = false,
             shuffleQuestions = false,
             timeLimit = 60,
-            title = "Assignment 1",
-            userAttempts = users
-        )
-    ) + (2..11).map {
-        Assignment(
-            description = "Assignment $it",
-            dueDate = "2025-12-${if (it < 10) "0$it" else it}",
-            id = it,
-            isPublished = true,
-            lessonId = lessons[0].id,
-            maxAttempts = 3,
-            maxScore = 100,
-            passingScore = 50,
-            questions = null,
-            showAnswersAfter = 0,
-            shuffleOptions = it % 2 == 0,
-            shuffleQuestions = it % 2 == 1,
-            timeLimit = 60 + it,
-            title = "Assignment $it",
-            userAttempts = users
+            title = "Assignment $i",
+            userAttempts = users.take(3)
         )
     }
 
     // ---------------------------
-    // Coupons (11 total)
+    // Coupons (10 sample)
     // ---------------------------
-    val coupons = listOf(
+    val coupons = (1..10).map { i ->
         Coupon(
-            emptyList(),
-            emptyList(),
-            "NEWYEAR",
-            "New Year Discount",
-            1,
-            "Percent",
-            10,
-            1,
-            true,
-            100,
-            0,
-            "New Year",
-            100,
-            0,
-            "2025-01-01",
-            "2025-12-31"
-        )
-    ) + (2..11).map {
-        Coupon(
-            emptyList(), emptyList(), "COUPON$it",
-            "Discount coupon $it", 1, "Percent",
-            5 + it, it, true,
-            100 + it, 0, "Coupon $it",
-            100, 0, "2025-01-01", "2025-12-31"
-        )
-    }
-
-    // ---------------------------
-    // Items (11 total)
-    // ---------------------------
-    val items = listOf(
-        Item(1, 101, "Book One", 1, "Book", 100, 1, 100)
-    ) + (2..11).map {
-        Item(it, 100 + it, "Item $it", 1, "Book", 50 + it, 1, 50 + it)
-    }
-
-    // ---------------------------
-    // Orders (11 total)
-    // ---------------------------
-    val orders = listOf(
-        Order(
-            "USD",
-            10,
-            1,
-            90,
-            1,
-            "ORD001",
-            "",
-            "2025-11-17",
-            "stripe",
-            "card",
-            1,
-            "Paid",
-            0,
-            100,
-            "TXN001",
-            users[0].id,
-            coupons[0],
-            items,
-            "2025-11-17"
-        )
-    ) + (2..11).map {
-        Order(
-            "USD", it, 1, 100 + it,
-            it, "ORD00$it", "", "2025-11-${10 + it}",
-            "stripe", "card", 1, "Paid",
-            0, 110 + it, "TXN00$it",
-            users[0].id, coupons[0], items,
-            "2025-11-17"
-        )
-    }
-
-    // ---------------------------
-    // LearningPaths (3 total)
-    // ---------------------------
-    val learningPaths = listOf(
-        LearningPath(
-            approvalStatus = 1,
-            approvalStatusName = "Approved",
-            category = categories[0],
-            categoryId = categories[0].id,
-            courseCount = 3,
-            courses = mockCourses[0],
-            createdAt = "2025-11-17",
-            description = "A structured path to learn programming",
-            difficultyLevel = 2,
-            difficultyLevelName = "Intermediate",
-            enrollmentCount = 120,
-            estimatedDuration = 120,
-            id = 1,
-            instructor = instructors[0],
-            instructorId = instructors[0].id,
+            applicableItemIds = emptyList(),
+            applicableItemTypes = emptyList(),
+            code = "COUPON$i",
+            description = "Coupon $i description",
+            discountType = if (i % 2 == 0) 1 else 2,
+            discountTypeName = if (i % 2 == 0) "Percent" else "Fixed",
+            discountValue = if (i % 2 == 0) 10 + i else 5 + i,
+            id = 400 + i,
             isActive = true,
-            isEnrolled = false,
-            isPublished = true,
-            price = 199,
-            qualityScore = 0f,
-            reviewNotes = "",
-            thumbnail = R.drawable.course_test.toString(),
-            title = "Programming Bootcamp",
-            updatedAt = "2025-11-17"
-        ),
+            maxDiscountAmount = 100,
+            minOrderAmount = 0,
+            name = "Coupon $i",
+            usageLimit = 100,
+            usedCount = 0,
+            validFrom = "2025-01-01",
+            validTo = "2025-12-31"
+        )
+    }
+
+    // ---------------------------
+    // Items (10 sample)
+    // ---------------------------
+    val items = (1..10).map { i ->
+        Item(
+            id = 500 + i,
+            itemId = 1000 + i,
+            itemName = "Item $i",
+            itemType = 1,
+            itemTypeName = "Product",
+            price = 10 * i,
+            quantity = 1,
+            subTotal = 10 * i
+        )
+    }
+
+    // ---------------------------
+    // Orders (10 sample)
+    // ---------------------------
+    val orders = (1..10).map { i ->
+        Order(
+            currency = "USD",
+            discountAmount = if (i % 2 == 0) 5 else 0,
+            exchangeRate = 1,
+            finalAmount = (items[i - 1].subTotal - if (i % 2 == 0) 5 else 0),
+            id = 600 + i,
+            orderCode = "ORD${600 + i}",
+            orderNotes = "",
+            paidAt = "2025-11-17",
+            paymentGateway = "stripe",
+            paymentMethod = "card",
+            status = 1,
+            statusName = "Paid",
+            taxAmount = 0,
+            totalAmount = items[i - 1].subTotal,
+            transactionId = "TXN${600 + i}",
+            userId = users[i % users.size].id,
+            coupon = if (i % 3 == 0) coupons[i % coupons.size] else null,
+            items = listOf(items[i - 1]),
+            createdAt = "2025-11-17"
+        )
+    }
+
+    // ---------------------------
+    // LearningPaths (10 sample)
+    // ---------------------------
+    val learningPaths = (1..10).map { i ->
         LearningPath(
             approvalStatus = 1,
             approvalStatusName = "Published",
-            category = categories[1],
-            categoryId = categories[1].id,
-            courseCount = 2,
-            courses = mockCourses[1],
+            category = categories[i % categories.size],
+            categoryId = categories[i % categories.size].id,
+            courseCount = 1,
+            courses = mockCourses.subList(2,5),
             createdAt = "2025-11-17",
-            description = "Design fundamentals and UI/UX",
-            difficultyLevel = 1,
-            difficultyLevelName = "Beginner",
-            enrollmentCount = 80,
-            estimatedDuration = 60,
-            id = 2,
-            instructor = instructors[1],
-            instructorId = instructors[1].id,
+            description = "Learning path $i",
+            difficultyLevel = (i % 3) + 1,
+            difficultyLevelName = listOf("Beginner", "Intermediate", "Advanced")[i % 3],
+            enrollmentCount = 50 * i,
+            estimatedDuration = 60 * i,
+            id = 700 + i,
+            instructor = instructors[i % instructors.size],
+            instructorId = instructors[i % instructors.size].id,
             isActive = true,
             isEnrolled = false,
             isPublished = true,
-            price = 99,
-            qualityScore = 0f,
+            price = 99 + i,
+            qualityScore = 4.0f,
             reviewNotes = "",
             thumbnail = R.drawable.course_test.toString(),
-            title = "Design Starter Pack",
-            updatedAt = "2025-11-17"
-        ),
-        LearningPath(
-            approvalStatus = 1,
-            approvalStatusName = "Live",
-            category = categories[2],
-            categoryId = categories[2].id,
-            courseCount = 4,
-            courses = mockCourses[2 % mockCourses.size],
-            createdAt = "2025-11-17",
-            description = "Backend and APIs",
-            difficultyLevel = 3,
-            difficultyLevelName = "Advanced",
-            enrollmentCount = 200,
-            estimatedDuration = 240,
-            id = 3,
-            instructor = instructors[2],
-            instructorId = instructors[2].id,
-            isActive = true,
-            isEnrolled = false,
-            isPublished = true,
-            price = 299,
-            qualityScore = 0f,
-            reviewNotes = "",
-            thumbnail = R.drawable.course_test.toString(),
-            title = "Backend Mastery",
+            title = "Learning Path $i",
             updatedAt = "2025-11-17"
         )
-    )
+    }
 
     // ---------------------------
-    // Questions (12 total)
+    // Questions (10 sample)
     // ---------------------------
-    val questions = listOf(
-        Question(1),
-        Question(2),
-    ) + (3..12).map { Question(it) }
+    val questions = (1..10).map { i -> Question(id = 800 + i) }
 
     // ---------------------------
-    // Authorization
+    // Authorizations (10 sample)
     // ---------------------------
-    val authorization = Authorization("access-token-xyz", "refresh-token-abc")
+    val authorizations = (1..10).map { i -> Authorization(accessToken = "access-$i", refresh = "refresh-$i") }
 }

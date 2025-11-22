@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -47,6 +46,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.khoitriso.R
+import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.homescreen.HomeScreen
 import com.example.khoitriso.ui.learningpath.LearningPathScreen
@@ -64,7 +65,6 @@ fun NavHostContainer(navController: NavHostController) {
     val currentRoute = navBackStackEntry?.destination?.route ?: NavRoute.login
 
     val noHeaderNavScreens = listOf(NavRoute.login)
-    val showHeaderNav = currentRoute !in noHeaderNavScreens
 
     NavHost(
         navController = navController,
@@ -80,21 +80,23 @@ fun NavHostContainer(navController: NavHostController) {
             }
         }
         composable(NavRoute.search) {
-
             HeaderNavScaffold(lazyListState, navController) {
-                SearchScreen(lazyListState)
+                SearchScreen(navController)
             }
         }
         composable(NavRoute.profile) {
 
             HeaderNavScaffold(lazyListState, navController) {
-                ProfileScreen(lazyListState)
+                ProfileScreen(
+                    lazyListState,
+                    navController
+                )
             }
         }
         composable(NavRoute.learningPath) {
 
             HeaderNavScaffold(lazyListState, navController) {
-                LearningPathScreen(lazyListState)
+                LearningPathScreen(lazyListState,navController)
             }
         }
         composable(
@@ -102,9 +104,15 @@ fun NavHostContainer(navController: NavHostController) {
             arguments = listOf(navArgument("courseId") { type = NavType.IntType })
         ) {
             CourseDetailScreen(
-                onBack = {
-                    navController.popBackStack("home", inclusive = false)
-                }
+                navController
+            )
+        }
+        composable(
+            NavRoute.BookDetailWithArgs,
+            arguments = listOf(navArgument("bookId") { type = NavType.IntType})
+        ){
+            BookDetailScreen(
+                navController
             )
         }
     }
@@ -246,17 +254,21 @@ fun MyNavigationBar(navController: NavHostController, modifier: Modifier = Modif
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.3f))
     ) {
+
         navigationBarItems.forEach { item ->
             val isSelected = currentRoute == item.label
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    navController.navigate(item.label) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+
+                    if (!isSelected){
+                        navController.navigate(item.label) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
                         }
                     }
                 },

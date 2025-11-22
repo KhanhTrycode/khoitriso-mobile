@@ -1,6 +1,7 @@
 package com.example.khoitriso.data.dto
 
 import com.example.khoitriso.domain.models.Book
+import com.example.khoitriso.domain.models.BookDetail
 
 data class BookDto(
     val ApprovalStatus: Int,
@@ -8,17 +9,22 @@ data class BookDto(
     val AuthorId: Int,
     val Category: CategoryDto,
     val CategoryId: Int,
+    val Chapters: List<ChapterDto>,
     val CoverImage: String,
     val CreatedAt: String,
     val Description: String,
+    val EbookFile: String,
     val Edition: String,
     val Id: Int,
     val IsActive: Boolean,
+    val IsOwned: Boolean,
     val Isbn: String,
     val Language: String,
     val Price: Int,
     val PublicationYear: Int,
     val Rating: Float?,
+    val ReviewNotes: String?,
+    val StaticPagePath: String,
     val Title: String,
     val TotalReviews: Int,
     val UpdatedAt: String
@@ -33,12 +39,34 @@ fun BookDto.toDomain() : Book = Book(
     description = Description,
     edition = Edition,
     id = Id,
-    isActive = IsActive,
+    language = Language,
+    price = Price,
+    publicationYear = PublicationYear,
+    rating = Rating?: 0f,
+    title = Title,
+    totalReviews = TotalReviews,
+    updatedAt = UpdatedAt
+)
+
+fun BookDto.toDetailDomain() : BookDetail = BookDetail(
+    approvalStatus = ApprovalStatus,
+    author = Author.toDomain(),
+    category = Category.toDomain(),
+    chapters = Chapters.map { it.toDomain() },
+    coverImage = CoverImage,
+    createdAt = CreatedAt,
+    description = Description,
+    ebookFile = EbookFile,
+    edition = Edition,
+    id = Id,
+    isOwned = IsOwned,
     isbn = Isbn,
     language = Language,
     price = Price,
     publicationYear = PublicationYear,
     rating = Rating?: 0f,
+    reviewNotes = ReviewNotes?: "",
+    staticPagePath = StaticPagePath,
     title = Title,
     totalReviews = TotalReviews,
     updatedAt = UpdatedAt

@@ -11,6 +11,8 @@ import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.auth.RefreshToken
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.book.GetBook
+import com.example.khoitriso.domain.usecase.book.GetBookById
+import com.example.khoitriso.domain.usecase.book.SearchBook
 import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.category.GetCategory
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
@@ -30,7 +32,11 @@ object UsecaseModule {
     @Provides
     @Singleton
     fun provideBookUseCase(bookRepository: BookRepository): BookUsecase {
-        return BookUsecase(getBook = GetBook(bookRepository))
+        return BookUsecase(
+            getBook = GetBook(bookRepository),
+            getBookById = GetBookById(bookRepository),
+            searckBook = SearchBook(bookRepository),
+        )
     }
 
     @Provides

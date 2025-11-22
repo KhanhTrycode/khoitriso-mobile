@@ -6,7 +6,7 @@ data class LearningPath(
     val category: Category,
     val categoryId: Int,
     val courseCount: Int,
-    val courses: Course,
+    val courses: List<Course>,
     val createdAt: String,
     val description: String,
     val difficultyLevel: Int,
