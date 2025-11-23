@@ -49,6 +49,10 @@ import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
+import com.example.khoitriso.ui.forum.ForumListScreen
+import com.example.khoitriso.ui.forum.ForumDetailScreen
+import com.example.khoitriso.ui.forum.ForumAskScreen
+import com.example.khoitriso.ui.notification.NotificationScreen
 import com.example.khoitriso.ui.homescreen.HomeScreen
 import com.example.khoitriso.ui.learningpath.LearningPathScreen
 import com.example.khoitriso.ui.loginscreen.LoginScreen
@@ -114,6 +118,22 @@ fun NavHostContainer(navController: NavHostController) {
             BookDetailScreen(
                 navController
             )
+        }
+        composable(NavRoute.forum) {
+            ForumListScreen(navController)
+        }
+        composable(
+            NavRoute.ForumDetailWithArgs,
+            arguments = listOf(navArgument("questionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val questionId = backStackEntry.arguments?.getString("questionId") ?: ""
+            ForumDetailScreen(navController, questionId)
+        }
+        composable(NavRoute.forumAsk) {
+            ForumAskScreen(navController)
+        }
+        composable(NavRoute.notifications) {
+            NotificationScreen(navController)
         }
     }
 }
