@@ -29,10 +29,8 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.ui.behavior.DetailHeader
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.viewinterop.AndroidView
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import com.example.khoitriso.utils.UiState
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,7 +46,13 @@ fun ForumListScreen(
     val statsState by viewModel.stats.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val selectedTag by viewModel.selectedTag.collectAsState()
     val isSolvedFilter by viewModel.isSolvedFilter.collectAsState()
+    val isPinnedFilter by viewModel.isPinnedFilter.collectAsState()
+    val sortBy by viewModel.sortBy.collectAsState()
+    val userVotes by viewModel.userVotes.collectAsState()
+    val bookmarks by viewModel.bookmarks.collectAsState()
+    val currentUserId by viewModel.currentUserId.collectAsState()
     
     var searchText by remember { mutableStateOf("") }
     var showFilters by remember { mutableStateOf(false) }
@@ -64,6 +68,11 @@ fun ForumListScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
+                        Icon(Icons.Default.Bookmark, "Bookmarks")
                     }
                 }
             )
@@ -115,6 +124,83 @@ fun ForumListScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
                     
+                    // Sort and Filter Row
+                    var showSortMenu by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Sort Dropdown
+                        Box {
+                            FilterChip(
+                                selected = sortBy != null,
+                                onClick = { showSortMenu = true },
+                                label = { 
+                                    Text(
+                                        when (sortBy) {
+                                            "newest" -> "Mới nhất"
+                                            "oldest" -> "Cũ nhất"
+                                            "votes" -> "Nhiều vote"
+                                            "activity" -> "Hoạt động"
+                                            "unanswered" -> "Chưa trả lời"
+                                            else -> "Sắp xếp"
+                                        }
+                                    )
+                                }
+                            )
+                            DropdownMenu(
+                                expanded = showSortMenu,
+                                onDismissRequest = { showSortMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Hoạt động") },
+                                    onClick = {
+                                        viewModel.setSortBy("activity")
+                                        showSortMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Mới nhất") },
+                                    onClick = {
+                                        viewModel.setSortBy("newest")
+                                        showSortMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Cũ nhất") },
+                                    onClick = {
+                                        viewModel.setSortBy("oldest")
+                                        showSortMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Nhiều vote nhất") },
+                                    onClick = {
+                                        viewModel.setSortBy("votes")
+                                        showSortMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Chưa trả lời") },
+                                    onClick = {
+                                        viewModel.setSortBy("unanswered")
+                                        showSortMenu = false
+                                    }
+                                )
+                            }
+                        }
+                        
+                        // Filter Pinned
+                        FilterChip(
+                            selected = isPinnedFilter == true,
+                            onClick = { 
+                                viewModel.setIsPinnedFilter(if (isPinnedFilter == true) null else true)
+                            },
+                            label = { Text("Ghim") }
+                        )
+                    }
+                    
                     // Filter Buttons Row
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -161,6 +247,22 @@ fun ForumListScreen(
                                 label = { Text("Chưa giải quyết") }
                             )
                         }
+                        
+                        // Popular Tags Filter
+                        when (tagsState) {
+                            is UiState.Success -> {
+                                items(tagsState.data.take(10)) { tag ->
+                                    FilterChip(
+                                        selected = selectedTag == tag.name,
+                                        onClick = { 
+                                            viewModel.setSelectedTag(if (selectedTag == tag.name) null else tag.name)
+                                        },
+                                        label = { Text(tag.name) }
+                                    )
+                                }
+                            }
+                            else -> {}
+                        }
                     }
                     
                     // Search Button
@@ -199,8 +301,23 @@ fun ForumListScreen(
                             items(result.items) { question ->
                                 QuestionCard(
                                     question = question,
+                                    userVote = userVotes["1-${question.id}"],
+                                    isBookmarked = bookmarks.contains(question.id),
+                                    currentUserId = currentUserId ?: 0,
                                     onClick = { navController.navigate(com.example.khoitriso.utils.NavRoute.NavForumDetail(question.id)) },
-                                    onBookmarkClick = { /* TODO: Handle bookmark */ }
+                                    onVote = { voteType ->
+                                        currentUserId?.let { userId ->
+                                            viewModel.vote(1, question.id, userId, voteType, {}, {})
+                                        }
+                                    },
+                                    onBookmarkClick = {
+                                        currentUserId?.let { userId ->
+                                            viewModel.toggleBookmark(question.id, userId, {}, {})
+                                        }
+                                    },
+                                    onTagClick = { tag ->
+                                        viewModel.setSelectedTag(if (selectedTag == tag) null else tag)
+                                    }
                                 )
                             }
                             
@@ -231,8 +348,13 @@ fun ForumListScreen(
 @Composable
 fun QuestionCard(
     question: ForumQuestion,
+    userVote: Int?,
+    isBookmarked: Boolean,
+    currentUserId: Int,
     onClick: () -> Unit,
-    onBookmarkClick: () -> Unit
+    onVote: (Int) -> Unit,
+    onBookmarkClick: () -> Unit,
+    onTagClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -262,6 +384,21 @@ fun QuestionCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                // Vote buttons
+                if (currentUserId > 0) {
+                    IconButton(
+                        onClick = { onVote(1) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowUpward,
+                            null,
+                            tint = if (userVote == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                
                 Text(
                     text = "${question.voteCount}",
                     fontSize = 18.sp,
@@ -273,6 +410,20 @@ fun QuestionCard(
                     }
                 )
                 Text("votes", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                
+                if (currentUserId > 0) {
+                    IconButton(
+                        onClick = { onVote(-1) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowDownward,
+                            null,
+                            tint = if (userVote == -1) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 
                 Spacer(Modifier.height(8.dp))
                 
@@ -292,6 +443,22 @@ fun QuestionCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text("views", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                
+                // Bookmark button
+                if (currentUserId > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    IconButton(
+                        onClick = onBookmarkClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            null,
+                            tint = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
             
             // Content Column
@@ -332,13 +499,20 @@ fun QuestionCard(
                 }
                 
                 // Content Preview
-                Text(
-                    text = question.content.replace(Regex("<[^>]*>"), "").take(150),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                ) {
+                    HtmlContent(
+                        html = question.content.substring(0, minOf(200, question.content.length)) + 
+                               (if (question.content.length > 200) "..." else ""),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp) // Preview height
+                    )
+                }
                 
                 // Tags
                 if (question.tags.isNotEmpty()) {
@@ -349,7 +523,7 @@ fun QuestionCard(
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier.clickable { /* TODO: Filter by tag */ }
+                                modifier = Modifier.clickable { onTagClick(tag) }
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -498,6 +672,9 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
         }
     }
 }
+
+@Composable
+// HtmlContent đã được move ra file riêng HtmlContent.kt
 
 @SuppressLint("SimpleDateFormat")
 fun formatTimeAgo(dateString: String): String {

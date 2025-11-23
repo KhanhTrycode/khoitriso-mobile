@@ -52,6 +52,7 @@ import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.forum.ForumListScreen
 import com.example.khoitriso.ui.forum.ForumDetailScreen
 import com.example.khoitriso.ui.forum.ForumAskScreen
+import com.example.khoitriso.ui.forum.ForumBookmarksScreen
 import com.example.khoitriso.ui.notification.NotificationScreen
 import com.example.khoitriso.ui.homescreen.HomeScreen
 import com.example.khoitriso.ui.learningpath.LearningPathScreen
@@ -131,6 +132,9 @@ fun NavHostContainer(navController: NavHostController) {
         }
         composable(NavRoute.forumAsk) {
             ForumAskScreen(navController)
+        }
+        composable(NavRoute.forumBookmarks) {
+            ForumBookmarksScreen(navController)
         }
         composable(NavRoute.notifications) {
             NotificationScreen(navController)

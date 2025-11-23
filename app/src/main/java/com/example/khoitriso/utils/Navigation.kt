@@ -21,6 +21,7 @@ object  NavRoute {
     val bookDetail = "bookDetail"
     val forum = "forum"
     val forumAsk = "forum/ask"
+    val forumBookmarks = "forum/bookmarks"
     val notifications = "notifications"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val BookDetailWithArgs = "bookDetail/{bookId}"

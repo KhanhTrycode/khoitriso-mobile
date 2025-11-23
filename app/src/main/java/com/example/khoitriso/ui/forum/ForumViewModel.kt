@@ -125,7 +125,10 @@ class ForumViewModel @Inject constructor(
     private val _isSolvedFilter = MutableStateFlow<Boolean?>(null)
     val isSolvedFilter: StateFlow<Boolean?> = _isSolvedFilter.asStateFlow()
 
-    private val _sortBy = MutableStateFlow<String?>("createdAt")
+    private val _isPinnedFilter = MutableStateFlow<Boolean?>(null)
+    val isPinnedFilter: StateFlow<Boolean?> = _isPinnedFilter.asStateFlow()
+
+    private val _sortBy = MutableStateFlow<String?>("activity")
     val sortBy: StateFlow<String?> = _sortBy.asStateFlow()
 
     private val _desc = MutableStateFlow<Boolean?>(true)
@@ -157,10 +160,23 @@ class ForumViewModel @Inject constructor(
         loadQuestions()
     }
 
+    fun setIsPinnedFilter(isPinned: Boolean?) {
+        _isPinnedFilter.value = isPinned
+        _currentPage.value = 1
+        loadQuestions()
+    }
+
     fun setSortBy(sortBy: String?, desc: Boolean? = null) {
         _sortBy.value = sortBy
         if (desc != null) {
             _desc.value = desc
+        } else {
+            // Auto set desc based on sortBy
+            _desc.value = when (sortBy) {
+                "oldest" -> false
+                "unanswered" -> true // unanswered questions first
+                else -> true // newest, votes, activity default to desc
+            }
         }
         _currentPage.value = 1
         loadQuestions()
@@ -170,21 +186,70 @@ class ForumViewModel @Inject constructor(
         _currentPage.value = page
         _questions.value = UiState.Loading
         viewModelScope.launch {
+            // Map sortBy to API format
+            val apiSortBy = when (_sortBy.value) {
+                "newest" -> "createdAt"
+                "oldest" -> "createdAt"
+                "votes" -> "voteCount"
+                "activity" -> "lastActivityAt"
+                "unanswered" -> "createdAt" // Sort by createdAt, filter by isSolved = false
+                else -> _sortBy.value ?: "createdAt"
+            }
+            
+            // When sorting by "unanswered", automatically filter isSolved = false
+            val isSolvedFilterValue = if (_sortBy.value == "unanswered") {
+                false
+            } else {
+                _isSolvedFilter.value
+            }
+            
             val result = forumUsecase.getQuestions(
                 search = _searchQuery.value.ifEmpty { null },
                 categoryId = _selectedCategory.value,
                 tag = _selectedTag.value,
-                isSolved = _isSolvedFilter.value,
-                isPinned = null,
+                isSolved = isSolvedFilterValue,
+                isPinned = _isPinnedFilter.value,
                 page = page,
                 pageSize = 20,
-                sortBy = _sortBy.value,
+                sortBy = apiSortBy,
                 desc = _desc.value
             )
             _questions.value = result.fold(
-                onSuccess = { UiState.Success(it) },
+                onSuccess = { 
+                    // Load user votes and bookmarks after questions loaded
+                    _currentUserId.value?.let { userId ->
+                        loadUserVotesForQuestions(it.items, userId)
+                        loadBookmarksForQuestions(it.items, userId)
+                    }
+                    UiState.Success(it)
+                },
                 onFailure = { UiState.Error(it.message ?: "Failed to load questions") }
             )
+        }
+    }
+
+    private suspend fun loadUserVotesForQuestions(questions: List<ForumQuestion>, userId: Int) {
+        questions.forEach { question ->
+            forumUsecase.getUserVote(1, question.id, userId).onSuccess { voteType ->
+                val key = "1-${question.id}"
+                _userVotes.value = _userVotes.value.toMutableMap().apply {
+                    if (voteType != null && voteType != 0) {
+                        put(key, voteType)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun loadBookmarksForQuestions(questions: List<ForumQuestion>, userId: Int) {
+        questions.forEach { question ->
+            forumUsecase.isBookmarked(question.id, userId).onSuccess { isBookmarked ->
+                _bookmarks.value = _bookmarks.value.toMutableSet().apply {
+                    if (isBookmarked) {
+                        add(question.id)
+                    }
+                }
+            }
         }
     }
 
@@ -375,6 +440,25 @@ class ForumViewModel @Inject constructor(
         }
     }
 
+    fun unacceptAnswer(answerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = forumUsecase.unacceptAnswer(answerId)
+            result.fold(
+                onSuccess = {
+                    onSuccess()
+                    // Refresh question and answers
+                    _question.value.let { state ->
+                        if (state is UiState.Success) {
+                            loadQuestionById(state.data.id)
+                            loadAnswers(state.data.id)
+                        }
+                    }
+                },
+                onFailure = { onError(it.message ?: "Failed to unaccept answer") }
+            )
+        }
+    }
+
     fun loadCategories() {
         viewModelScope.launch {
             val result = forumUsecase.getCategories()
@@ -405,10 +489,21 @@ class ForumViewModel @Inject constructor(
         }
     }
 
+    suspend fun getBookmarks(userId: Int, page: Int = 1, pageSize: Int = 20): Result<ForumBookmarksResult> {
+        return forumUsecase.getBookmarks(userId, page, pageSize)
+    }
+
     fun loadInitialData() {
         loadQuestions()
         loadCategories()
         loadTags()
         loadStats()
+        
+        // Load bookmarks for all questions when user is available
+        viewModelScope.launch {
+            _currentUserId.value?.let { userId ->
+                // This will be called after questions are loaded
+            }
+        }
     }
 }

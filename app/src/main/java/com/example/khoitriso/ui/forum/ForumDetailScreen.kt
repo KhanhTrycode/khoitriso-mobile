@@ -22,9 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.auth0.jwt.JWT
@@ -277,6 +274,9 @@ fun ForumDetailScreen(
                             },
                                 onAccept = {
                                     viewModel.acceptAnswer(answer.id, {}, {})
+                                },
+                                onUnaccept = {
+                                    viewModel.unacceptAnswer(answer.id, {}, {})
                                 },
                                 comments = comments[answer.id] ?: emptyList(),
                                 showCommentForm = showCommentForms[answer.id] == true,
@@ -551,6 +551,7 @@ fun AnswerCard(
     currentUserId: Int,
     onVote: (Int) -> Unit,
     onAccept: () -> Unit,
+    onUnaccept: () -> Unit,
     comments: List<ForumComment>,
     showCommentForm: Boolean,
     commentContent: String,
@@ -614,15 +615,30 @@ fun AnswerCard(
                     )
                 }
                 if (canAccept) {
-                    IconButton(
-                        onClick = onAccept,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            if (answer.isAccepted) Icons.Default.CheckCircle else Icons.Default.CheckCircleOutline,
-                            null,
-                            tint = if (answer.isAccepted) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    if (answer.isAccepted) {
+                        // Show unaccept button when answer is already accepted
+                        IconButton(
+                            onClick = onUnaccept,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                "Hủy chấp nhận",
+                                tint = Color(0xFF10B981)
+                            )
+                        }
+                    } else {
+                        // Show accept button when answer is not accepted
+                        IconButton(
+                            onClick = onAccept,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircleOutline,
+                                "Chấp nhận câu trả lời",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 if (answer.isAccepted) {
@@ -854,21 +870,7 @@ fun EmptyAnswersView(
 }
 
 @Composable
-fun HtmlContent(html: String, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    
-    AndroidView(
-        factory = { ctx ->
-            WebView(ctx).apply {
-                webViewClient = WebViewClient()
-                settings.javaScriptEnabled = false
-                settings.domStorageEnabled = false
-                loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
-            }
-        },
-        modifier = modifier.height(IntrinsicSize.Min)
-    )
-}
+// HtmlContent đã được move ra file riêng HtmlContent.kt
 
 @SuppressLint("SimpleDateFormat")
 fun formatTimeAgo(dateString: String): String {
