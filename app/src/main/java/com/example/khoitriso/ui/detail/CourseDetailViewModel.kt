@@ -39,7 +39,7 @@ class CourseDetailViewModel @Inject constructor(
     private fun getCourse() {
         loadData(
             stateFlow = _course,
-            mockData = MockData.courseDetail,
+            mockData = MockData.mockCourseDetail1,
             apiCall = { courseUsecase.getCourseById(courseId) }
         )
     }

@@ -28,7 +28,7 @@ class BookDetailViewModel @Inject constructor(
 
         val bookId = savedStateHandle.get<Int>("bookId") ?: -1
         loadData(
-            _book, MockData.bookDetails[1],
+            _book, MockData.mockBookDetail1,
             apiCall = {
                 bookUseCase.getBookById(bookId)
             }

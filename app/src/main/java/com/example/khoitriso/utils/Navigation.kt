@@ -12,6 +12,8 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object  NavRoute {
+
+    val exploreBook: String = "exloreBook"
     val login: String = "login"
     val home: String = "home"
     val profile: String = "profile"

@@ -3,9 +3,10 @@ package com.example.khoitriso.domain.repository
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.domain.models.MyResponese
+import com.example.khoitriso.domain.request.GetBookRequest
 
 interface BookRepository {
-    suspend fun getBooks(): Result<MyResponese<Book>>
+    suspend fun getBooks(getBookRequest:GetBookRequest?): Result<MyResponese<Book>>
     suspend fun getBookById(id: Int): Result<BookDetail>
 
     //    suspend fun getQuestionsOfBook(id: Int):

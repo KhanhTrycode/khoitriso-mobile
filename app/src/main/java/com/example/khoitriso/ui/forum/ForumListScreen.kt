@@ -32,6 +32,7 @@ import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.ui.behavior.DetailHeader
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.khoitriso.ui.behavior.FormatTimeAgo
+import com.example.khoitriso.ui.behavior.PaginationControls
 import com.example.khoitriso.utils.UiState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat

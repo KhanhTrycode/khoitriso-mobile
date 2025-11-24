@@ -84,14 +84,18 @@ fun HomeScreen(
         }
 
         item {
-            SectionTitle("Recommended Book", "See all")
+            SectionTitle("Recommended Book", "See all", onClickAction = {
+                navController.navigate(NavRoute.exploreBook)
+            })
         }
         item {
             RecommendedBook(recommendedBooks, navController)
         }
 
         item {
-            SectionTitle("Trending Courses", "View all")
+            SectionTitle("Trending Courses", "View all", onClickAction = {
+                navController.navigate(NavRoute.forum)
+            })
         }
         item {
             TrendingCourse(trendingCourses, navController)
@@ -107,9 +111,11 @@ fun HomeScreen(
 }
 
 @Composable
-fun SectionTitle(title: String, actionText: String) {
+fun SectionTitle(title: String, actionText: String, onClickAction: () -> Unit = {}, modifier:
+Modifier
+= Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
@@ -128,7 +134,9 @@ fun SectionTitle(title: String, actionText: String) {
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 ),
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier.align(Alignment.CenterEnd).clickable{
+                    onClickAction()
+                }
             )
         }
     }

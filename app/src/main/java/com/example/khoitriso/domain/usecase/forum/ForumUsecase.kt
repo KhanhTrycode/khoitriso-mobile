@@ -48,7 +48,7 @@ class GetQuestions(private val repo: ForumRepository) {
         pageSize: Int = 20,
         sortBy: String? = null,
         desc: Boolean? = null
-    ): Result<ForumQuestions> {
+    ): Result<MyResponese<ForumQuestion>> {
         return repo.getQuestions(search, categoryId, tag, isSolved, isPinned, page, pageSize, sortBy, desc)
     }
 }

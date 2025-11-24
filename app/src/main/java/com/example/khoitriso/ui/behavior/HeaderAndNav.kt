@@ -49,6 +49,7 @@ import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
+import com.example.khoitriso.ui.explore.ExploreBookScreen
 import com.example.khoitriso.ui.forum.ForumListScreen
 import com.example.khoitriso.ui.forum.ForumDetailScreen
 import com.example.khoitriso.ui.forum.ForumAskScreen
@@ -138,6 +139,10 @@ fun NavHostContainer(navController: NavHostController) {
         }
         composable(NavRoute.notifications) {
             NotificationScreen(navController)
+        }
+
+        composable(NavRoute.exploreBook) {
+            ExploreBookScreen(navController)
         }
     }
 }

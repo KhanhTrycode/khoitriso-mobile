@@ -8,15 +8,28 @@ import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.repository.BookRepository
+import com.example.khoitriso.domain.request.GetBookRequest
 import javax.inject.Inject
 
 class BookRepositoryImpl @Inject constructor(
     private val bookApi: BooksApi
 
 ) : BookRepository {
-    override suspend fun getBooks(): Result<MyResponese<Book>> { // Sửa kiểu trả về cho khớp
+    override suspend fun getBooks(getBookRequest: GetBookRequest?):
+            Result<MyResponese<Book>> { // Sửa kiểu trả về cho khớp
         return try {
-            val response = bookApi.getBooks()
+            val response = if (getBookRequest != null){
+                 bookApi.getBooks(
+                    page = getBookRequest.page,
+                    pageSize = getBookRequest.pageSize,
+                    search = getBookRequest.search,
+                    approvalStatus = getBookRequest.approvalStatus,
+                    authorId = getBookRequest.authorId,
+                    sortBy = getBookRequest.sortBy,
+                    sortOrder = getBookRequest.sortOrder
+                )
+            } else bookApi.getBooks()
+
             if (response.isSuccessful) {
                 val body = response.body()?.Result
                 if (body != null) {

@@ -1,433 +1,873 @@
 package com.example.khoitriso.test
 
-import com.example.khoitriso.R
-import com.example.khoitriso.domain.models.*
+import com.example.khoitriso.domain.models.Assignment
+import com.example.khoitriso.domain.models.Author
+import com.example.khoitriso.domain.models.Authorization
+import com.example.khoitriso.domain.models.Book
+import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.Category
+import com.example.khoitriso.domain.models.Chapter
+import com.example.khoitriso.domain.models.Coupon
+import com.example.khoitriso.domain.models.Course
+import com.example.khoitriso.domain.models.CourseDetail
+import com.example.khoitriso.domain.models.ForumAnswer
+import com.example.khoitriso.domain.models.ForumAttachment
+import com.example.khoitriso.domain.models.ForumCategory
+import com.example.khoitriso.domain.models.ForumComment
+import com.example.khoitriso.domain.models.ForumQuestion
+import com.example.khoitriso.domain.models.ForumStats
+import com.example.khoitriso.domain.models.ForumTag
+import com.example.khoitriso.domain.models.Instructor
+import com.example.khoitriso.domain.models.Item
+import com.example.khoitriso.domain.models.LearningPath
+import com.example.khoitriso.domain.models.Lesson
+import com.example.khoitriso.domain.models.Material
+import com.example.khoitriso.domain.models.MyCart
+import com.example.khoitriso.domain.models.MyResponese
+import com.example.khoitriso.domain.models.Notification
+import com.example.khoitriso.domain.models.Order
+import com.example.khoitriso.domain.models.Question
+import com.example.khoitriso.domain.models.User
 
 object MockData {
 
-    // ---------------------------
-
-    // Authors (12 total)
-    // ---------------------------
-    val authors = listOf(
-        Author("https://example.com/a1.png", "Nguyễn Văn A", 1),
-        Author("https://example.com/a2.png", "Trần Thị B", 2),
-        Author("https://example.com/a3.png", "Phạm Đức C", 3),
-        Author("https://example.com/a4.png", "Hoàng Mai D", 4),
-        Author("https://example.com/a5.png", "Lê Thanh E", 5),
-        Author("https://example.com/a6.png", "Trịnh Quốc F", 6),
-        Author("https://example.com/a7.png", "Đỗ Ngọc G", 7),
-        Author("https://example.com/a8.png", "Trần Hải H", 8),
-        Author("https://example.com/a9.png", "Vũ Minh I", 9),
-        Author("https://example.com/a10.png", "Đặng Tú J", 10),
-        Author("https://example.com/a11.png", "Lưu Thảo K", 11),
-        Author("https://example.com/a12.png", "Nguyễn Minh L", 12),
+    // Mock Users
+    val mockUser1 = User(
+        authProvider = "google",
+        avatar = "https://i.pravatar.cc/150?img=1",
+        email = "nguyen.van.a@example.com",
+        fullName = "Nguyễn Văn A",
+        id = 1,
+        role = 1
     )
 
-    // ---------------------------
-    // Categories (13 total)
-    // ---------------------------
-    val categories = listOf(
-        Category(1, "Programming", "Programming books and courses", "", true, 1, null),
-        Category(2, "Design", "UI/UX and design", "", true, 2, null),
-        Category(3, "Backend", "Server-side topics", "", true, 3, null),
-        Category(4, "AI", "Artificial Intelligence", "", true, 4, null),
-        Category(5, "Marketing", "Digital marketing", "", true, 5, null),
-        Category(6, "Mobile", "Android/iOS Development", "", true, 6, null),
-        Category(7, "Frontend", "React/Vue/Web", "", true, 7, null),
-        Category(8, "DevOps", "DevOps & Cloud", "", true, 8, null),
-        Category(9, "Data Science", "ML & Data Analysis", "", true, 9, null),
-        Category(10, "Soft Skills", "Communication", "", true, 10, null),
-        Category(11, "Security", "Cyber Security", "", true, 11, null),
-        Category(12, "Database", "SQL, NoSQL", "", true, 12, null),
-        Category(13, "Blockchain", "Web3 & Crypto", "", true, 13, null),
+    val mockUser2 = User(
+        authProvider = "facebook",
+        avatar = "https://i.pravatar.cc/150?img=2",
+        email = "tran.thi.b@example.com",
+        fullName = "Trần Thị B",
+        id = 2,
+        role = 2
     )
 
-    // ---------------------------
-    // Instructors (13 total)
-    // ---------------------------
-    val instructors = listOf(
-        Instructor(avatar = "", bio = "Giảng viên Android", id = 1, name = "Nguyên Văn A"),
-        Instructor(avatar = "", bio = "Chuyên gia UI/UX", id = 2, name = "Trần Thị B"),
-        Instructor(avatar = "", bio = "Backend Developer", id = 3, name = "Lê Văn C"),
-        Instructor(avatar = "", bio = "AWS Cloud Engineer", id = 4, name = "Nguyễn Thành D"),
-        Instructor(avatar = "", bio = "AI Engineer", id = 5, name = "Phạm Như E"),
-        Instructor(avatar = "", bio = "KMM Specialist", id = 6, name = "Đặng Bá F"),
-        Instructor(avatar = "", bio = "Game Developer", id = 7, name = "Hồ Mỹ G"),
-        Instructor(avatar = "", bio = "Cyber Security Expert", id = 8, name = "Trần Duy H"),
-        Instructor(avatar = "", bio = "Fullstack Dev", id = 9, name = "Lê Văn I"),
-        Instructor(avatar = "", bio = "React Developer", id = 10, name = "Nguyễn Quốc K"),
-        Instructor(avatar = "", bio = "UI/UX Designer", id = 11, name = "Phạm Linh L"),
-        Instructor(avatar = "", bio = "Spring Boot Instructor", id = 12, name = "Vũ Trọng M"),
-        Instructor(avatar = "", bio = "iOS Swift Developer", id = 13, name = "Đỗ Thành N"),
+    val mockUser3 = User(
+        authProvider = "email",
+        avatar = "https://i.pravatar.cc/150?img=3",
+        email = "le.van.c@example.com",
+        fullName = "Lê Văn C",
+        id = 3,
+        role = 1
     )
 
-    // ---------------------------
-    // Users (12 total)
-    // ---------------------------
-    val users = listOf(
-        User("local", "", "user1@example.com", "User One", 1, 1),
-        User("google", "", "user2@example.com", "User Two", 2, 2),
-        User("local", "", "user3@example.com", "User Three", 3, 1),
-        User("local", "", "user4@example.com", "User Four", 4, 1),
-        User("google", "", "user5@gmail.com", "User Five", 5, 2),
-        User("facebook", "", "user6@fb.com", "User Six", 6, 1),
-        User("local", "", "user7@example.com", "User Seven", 7, 2),
-        User("google", "", "user8@gmail.com", "User Eight", 8, 2),
-        User("local", "", "user9@example.com", "User Nine", 9, 1),
-        User("local", "", "user10@example.com", "User Ten", 10, 1),
-        User("google", "", "user11@gmail.com", "User Eleven", 11, 2),
-        User("facebook", "", "user12@fb.com", "User Twelve", 12, 1),
+    val mockUsers = listOf(mockUser1, mockUser2, mockUser3)
+
+    // Mock Authors
+    val mockAuthor1 = Author(
+        avatar = "https://i.pravatar.cc/150?img=10",
+        fullName = "Nguyễn Nhật Ánh",
+        id = 1
     )
 
-    // Helper function to create lessons
-    private fun createMockLessonsForCourse(courseId: Int, count: Int): List<Lesson> {
-        return (1..count).map { lessonIndex ->
-            Lesson(
-                id = courseId * 100 + lessonIndex,
-                courseId = courseId,
-                title = "Chapter $lessonIndex: Topic for Course $courseId",
-                description = "This is a detailed description for lesson $lessonIndex of course $courseId.",
-                lessonOrder = lessonIndex,
-                isFree = lessonIndex == 1, // Only the first lesson is free
-                isPublished = true,
-                videoDuration = 300 + (lessonIndex * 50),
-                videoUrl = "https://example.com/video_${courseId}_${lessonIndex}.mp4",
-                contentText = 0, // Placeholder
-                materials = emptyList(),
-                userProgress = null
-            )
-        }
-    }
+    val mockAuthor2 = Author(
+        avatar = "https://i.pravatar.cc/150?img=11",
+        fullName = "Ngô Tất Tố",
+        id = 2
+    )
 
-    // ---------------------------
-    // Courses (12 total) - FIXED & COMPLETED
-    // ---------------------------
-    val mockCourses = listOf(
-        Course(
-            id = 1,
-            title = "Complete Kotlin Development Masterclass",
-            description = "This is the best course for learning Kotlin from scratch. We cover all the basics and advanced topics of modern Android development with Jetpack Compose.",
-            instructor = instructors[0],
-            category = categories[0],
-            price = 490000,
-            thumbnail = R.drawable.course_test.toString(),
-            isFree = false,
-            level = 2,
-            rating = 4.8f,
-            totalLessons = 5,
-            totalReviews = 150,
-            totalStudents = 2300,
-            estimatedDuration = 1200,
+    val mockAuthor3 = Author(
+        avatar = "https://i.pravatar.cc/150?img=12",
+        fullName = "Nam Cao",
+        id = 3
+    )
 
-        )
-    ) + (2..12).map { index ->
-        val isFreeFlag = index % 2 == 0
-        Course(
-            id = index,
-            title = "Course No$index",
-            description = "Mock Course $index description. This course covers topics from the ${categories[index % categories.size].name} category.",
-            instructor = instructors[index % instructors.size],
-            category = categories[index % categories.size],
-            price = if (isFreeFlag) 0 else (20 + index),
-            thumbnail = R.drawable.course_test.toString(),
-            isFree = isFreeFlag,
-            level = (index % 3) + 1,
-            rating = 4.0f + (index % 5) * 0.1f,
-            totalLessons = 5,
-            totalReviews = 10 + index,
-            totalStudents = 100 * index,
-            estimatedDuration = 600 + index * 50,
-        )
-    }
-    val courseDetail = CourseDetail(
-        id = 99,
-        title = "Advanced Jetpack Compose: The Ultimate Guide",
-        description = "Dive deep into the advanced concepts of Jetpack Compose. Learn about custom layouts, advanced state management, performance optimization, and creating complex, beautiful UIs that stand out.",
-        instructor = instructors[4], // Giảng viên "AI Engineer"
-        category = categories[6],   // Category "Frontend"
-        price = 79, // Giá tiền là 79
-        thumbnail = "R.drawable.course_test.toString()", // Thay bằng URL ảnh thật sau
+    val mockAuthors = listOf(mockAuthor1, mockAuthor2, mockAuthor3)
+
+    // Mock Categories
+    val mockCategory1 = Category(
+        id = 1,
+        name = "Lập trình",
+        description = "Các khóa học và sách về lập trình",
+        icon = "code",
+        isActive = true,
+        orderIndex = 1,
+        parent = null
+    )
+
+    val mockCategory2 = Category(
+        id = 2,
+        name = "Văn học",
+        description = "Sách văn học Việt Nam và thế giới",
+        icon = "book",
+        isActive = true,
+        orderIndex = 2,
+        parent = null
+    )
+
+    val mockCategory3 = Category(
+        id = 3,
+        name = "Web Development",
+        description = "Phát triển web frontend và backend",
+        icon = "web",
+        isActive = true,
+        orderIndex = 3,
+        parent = mockCategory1
+    )
+
+    val mockCategory4 = Category(
+        id = 4,
+        name = "Mobile Development",
+        description = "Phát triển ứng dụng di động",
+        icon = "mobile",
+        isActive = true,
+        orderIndex = 4,
+        parent = mockCategory1
+    )
+
+    val mockCategories = listOf(mockCategory1, mockCategory2, mockCategory3, mockCategory4)
+
+    // Mock Instructors
+    val mockInstructor1 = Instructor(
+        avatar = "https://i.pravatar.cc/150?img=20",
+        bio = "Giảng viên có 10 năm kinh nghiệm trong lĩnh vực lập trình",
+        id = 1,
+        name = "Trần Minh Tuấn"
+    )
+
+    val mockInstructor2 = Instructor(
+        avatar = "https://i.pravatar.cc/150?img=21",
+        bio = "Chuyên gia về phát triển ứng dụng di động",
+        id = 2,
+        name = "Phạm Thu Hương"
+    )
+
+    val mockInstructor3 = Instructor(
+        avatar = "https://i.pravatar.cc/150?img=22",
+        bio = "Full-stack developer với nhiều dự án thực tế",
+        id = 3,
+        name = "Lê Hoàng Nam"
+    )
+
+    val mockInstructors = listOf(mockInstructor1, mockInstructor2, mockInstructor3)
+
+    // Mock Materials
+    val mockMaterial1 = Material(
+        downloadCount = 150,
+        fileName = "slide_bai_1.pdf",
+        filePath = "/materials/course1/",
+        fileSize = 2048000,
+        fileType = "pdf",
+        fileUrl = "https://example.com/materials/slide_bai_1.pdf",
+        id = 1,
+        lessonId = 1,
+        title = "Slide bài giảng 1",
+        updatedAt = "2024-11-20T10:30:00Z"
+    )
+
+    val mockMaterial2 = Material(
+        downloadCount = 89,
+        fileName = "source_code.zip",
+        filePath = "/materials/course1/",
+        fileSize = 5120000,
+        fileType = "zip",
+        fileUrl = "https://example.com/materials/source_code.zip",
+        id = 2,
+        lessonId = 1,
+        title = "Source code mẫu",
+        updatedAt = "2024-11-21T14:20:00Z"
+    )
+
+    val mockMaterials = listOf(mockMaterial1, mockMaterial2)
+
+    // Mock Questions
+    val mockQuestion1 = Question(id = 1)
+    val mockQuestion2 = Question(id = 2)
+    val mockQuestion3 = Question(id = 3)
+
+    val mockQuestions = listOf(mockQuestion1, mockQuestion2, mockQuestion3)
+
+    // Mock Lessons
+    val mockLesson1 = Lesson(
+        contentText = 0,
+        courseId = 1,
+        description = "Giới thiệu về Kotlin và cài đặt môi trường",
+        id = 1,
+        isFree = true,
+        isPublished = true,
+        lessonOrder = 1,
+        materials = listOf(mockMaterial1, mockMaterial2),
+        title = "Bài 1: Giới thiệu Kotlin",
+        userProgress = null,
+        videoDuration = 1800,
+        videoUrl = "https://example.com/videos/kotlin_intro.mp4"
+    )
+
+    val mockLesson2 = Lesson(
+        contentText = 0,
+        courseId = 1,
+        description = "Các kiểu dữ liệu cơ bản trong Kotlin",
+        id = 2,
         isFree = false,
-        level = 3, // 3 = Advanced
-        rating = 4.9f,
-        totalLessons = 12,
-        totalReviews = 350,
-        totalStudents = 1800,
-        estimatedDuration = 2400, // 40 giờ
-        isEnrolled = false, // Giả sử người dùng chưa đăng ký
+        isPublished = true,
+        lessonOrder = 2,
+        materials = emptyList(),
+        title = "Bài 2: Kiểu dữ liệu",
+        userProgress = null,
+        videoDuration = 2400,
+        videoUrl = "https://example.com/videos/kotlin_datatypes.mp4"
+    )
+
+    val mockLesson3 = Lesson(
+        contentText = 0,
+        courseId = 1,
+        description = "Functions và lambdas trong Kotlin",
+        id = 3,
+        isFree = false,
+        isPublished = true,
+        lessonOrder = 3,
+        materials = emptyList(),
+        title = "Bài 3: Functions",
+        userProgress = null,
+        videoDuration = 3000,
+        videoUrl = "https://example.com/videos/kotlin_functions.mp4"
+    )
+
+    val mockLessons = listOf(mockLesson1, mockLesson2, mockLesson3)
+
+    // Mock Chapters
+    val mockChapter1 = Chapter(
+        bookId = 1,
+        createdAt = "2024-11-01T08:00:00Z",
+        description = "Khái quát về lập trình hướng đối tượng",
+        id = 1,
+        orderIndex = 1,
+        questionCount = 5,
+        questions = emptyList(),
+        title = "Chương 1: Giới thiệu OOP",
+        updatedAt = "2024-11-01T08:00:00Z"
+    )
+
+    val mockChapter2 = Chapter(
+        bookId = 1,
+        createdAt = "2024-11-02T08:00:00Z",
+        description = "Tính kế thừa và đa hình",
+        id = 2,
+        orderIndex = 2,
+        questionCount = 8,
+        questions = emptyList(),
+        title = "Chương 2: Kế thừa và Đa hình",
+        updatedAt = "2024-11-02T08:00:00Z"
+    )
+
+    val mockChapter3 = Chapter(
+        bookId = 1,
+        createdAt = "2024-11-03T08:00:00Z",
+        description = "Tính đóng gói và trừu tượng",
+        id = 3,
+        orderIndex = 3,
+        questionCount = 6,
+        questions = emptyList(),
+        title = "Chương 3: Đóng gói và Trừu tượng",
+        updatedAt = "2024-11-03T08:00:00Z"
+    )
+
+    val mockChapters = listOf(mockChapter1, mockChapter2, mockChapter3)
+
+    // Mock Books
+    val mockBook1 = Book(
+        approvalStatus = 1,
+        author = mockAuthor1,
+        category = mockCategory1,
+        coverImage = "https://picsum.photos/300/400?random=1",
         createdAt = "2024-10-01T10:00:00Z",
-        updatedAt = "2024-11-20T14:30:00Z",
+        description = "Cuốn sách hướng dẫn lập trình Kotlin từ cơ bản đến nâng cao",
+        edition = "Lần 1",
+        id = 1,
+        language = "Tiếng Việt",
+        price = 150000,
+        publicationYear = 2024,
+        rating = 4.5f,
+        title = "Lập trình Kotlin cho người mới bắt đầu",
+        totalReviews = 125,
+        updatedAt = "2024-11-20T10:00:00Z"
+    )
+
+    val mockBook2 = Book(
+        approvalStatus = 1,
+        author = mockAuthor2,
+        category = mockCategory2,
+        coverImage = "https://picsum.photos/300/400?random=2",
+        createdAt = "2024-09-15T10:00:00Z",
+        description = "Tác phẩm văn học nổi tiếng của Ngô Tất Tố",
+        edition = "Lần 5",
+        id = 2,
+        language = "Tiếng Việt",
+        price = 85000,
+        publicationYear = 2023,
+        rating = 4.8f,
+        title = "Tắt Đèn",
+        totalReviews = 320,
+        updatedAt = "2024-10-15T10:00:00Z"
+    )
+
+    val mockBook3 = Book(
+        approvalStatus = 1,
+        author = mockAuthor3,
+        category = mockCategory2,
+        coverImage = "https://picsum.photos/300/400?random=3",
+        createdAt = "2024-08-20T10:00:00Z",
+        description = "Truyện ngắn nổi tiếng của Nam Cao",
+        edition = "Lần 3",
+        id = 3,
+        language = "Tiếng Việt",
+        price = 65000,
+        publicationYear = 2023,
+        rating = 4.7f,
+        title = "Chí Phèo",
+        totalReviews = 280,
+        updatedAt = "2024-09-20T10:00:00Z"
+    )
+
+    val mockBooks = listOf(mockBook1, mockBook2, mockBook3)
+
+    // Mock BookDetail
+    val mockBookDetail1 = BookDetail(
+        approvalStatus = 1,
+        author = mockAuthor1,
+        category = mockCategory1,
+        chapters = mockChapters,
+        coverImage = "https://picsum.photos/300/400?random=1",
+        createdAt = "2024-10-01T10:00:00Z",
+        description = "Cuốn sách hướng dẫn lập trình Kotlin từ cơ bản đến nâng cao với nhiều ví dụ thực tế",
+        ebookFile = "https://example.com/ebooks/kotlin_beginner.pdf",
+        edition = "Lần 1",
+        id = 1,
+        isOwned = true,
+        isbn = "978-604-2-24567-8",
+        language = "Tiếng Việt",
+        price = 150000,
+        publicationYear = 2024,
+        rating = 4.5f,
+        reviewNotes = null,
+        staticPagePath = "/static/books/1",
+        title = "Lập trình Kotlin cho người mới bắt đầu",
+        totalReviews = 125,
+        updatedAt = "2024-11-20T10:00:00Z"
+    )
+
+    // Mock Courses
+    val mockCourse1 = Course(
+        category = mockCategory3,
+        createdAt = "2024-09-01T08:00:00Z",
+        description = "Khóa học Kotlin toàn diện cho Android Development",
+        estimatedDuration = 40,
+        id = 1,
+        instructor = mockInstructor1,
+        isFree = false,
+        level = 1,
+        price = 299000,
+        rating = 4.6f,
+        thumbnail = "https://picsum.photos/400/300?random=11",
+        title = "Kotlin Android Development",
+        totalLessons = 45,
+        totalReviews = 189,
+        totalStudents = 1250
+    )
+
+    val mockCourse2 = Course(
+        category = mockCategory3,
+        createdAt = "2024-08-15T08:00:00Z",
+        description = "Học React từ cơ bản đến nâng cao",
+        estimatedDuration = 35,
+        id = 2,
+        instructor = mockInstructor2,
+        isFree = false,
+        level = 2,
+        price = 399000,
+        rating = 4.8f,
+        thumbnail = "https://picsum.photos/400/300?random=12",
+        title = "ReactJS Từ A-Z",
+        totalLessons = 60,
+        totalReviews = 340,
+        totalStudents = 2100
+    )
+
+    val mockCourse3 = Course(
+        category = mockCategory4,
+        createdAt = "2024-10-10T08:00:00Z",
+        description = "Khóa học miễn phí về cơ bản Flutter",
+        estimatedDuration = 20,
+        id = 3,
+        instructor = mockInstructor3,
+        isFree = true,
+        level = 1,
+        price = 0,
+        rating = 4.3f,
+        thumbnail = "https://picsum.photos/400/300?random=13",
+        title = "Flutter Cơ Bản",
+        totalLessons = 25,
+        totalReviews = 95,
+        totalStudents = 850
+    )
+
+    val mockCourses = listOf(mockCourse1, mockCourse2, mockCourse3)
+
+    // Mock CourseDetail
+    val mockCourseDetail1 = CourseDetail(
+        category = mockCategory3,
+        createdAt = "2024-09-01T08:00:00Z",
+        description = "Khóa học Kotlin toàn diện cho Android Development với các dự án thực tế",
+        estimatedDuration = 40,
+        id = 1,
+        instructor = mockInstructor1,
+        isEnrolled = true,
+        isFree = false,
+        lessons = mockLessons,
+        level = 1,
+        price = 299000,
+        rating = 4.6f,
         requirements = listOf(
-            "Solid understanding of Kotlin.",
-            "Basic experience with Jetpack Compose.",
-            "Android Studio installed and configured."
+            "Kiến thức cơ bản về lập trình",
+            "Biết sử dụng Android Studio",
+            "Có máy tính cài đặt được Android Studio"
         ),
+        thumbnail = "https://picsum.photos/400/300?random=11",
+        title = "Kotlin Android Development",
+        totalLessons = 45,
+        totalReviews = 189,
+        totalStudents = 1250,
+        updatedAt = "2024-11-22T08:00:00Z",
         whatYouWillLearn = listOf(
-            "Master advanced state management with custom Savers.",
-            "Create high-performance custom layouts and modifiers.",
-            "Optimize recomposition and layout phases.",
-            "Integrate complex animations and gestures.",
-            "Understand Compose internals for better debugging."
-        ),
-        lessons = listOf(
-            Lesson(
-                id = 9901,
-                courseId = 99,
-                title = "Part 1: Deep Dive into State",
-                description = "Exploring remember, derivedStateOf, and custom Saver objects.",
-                lessonOrder = 1,
-                isFree = true, // Bài đầu tiên miễn phí
-                isPublished = true,
-                videoDuration = 1200,
-                videoUrl = "https://example.com/video9901.mp4",
-                contentText = 0,
-                materials = emptyList(),
-                userProgress = null
-            ),
-            Lesson(
-                id = 9902,
-                courseId = 99,
-                title = "Part 2: Custom Layouts and Modifiers",
-                description = "Building your own Row, Column, and custom Modifiers.",
-                lessonOrder = 2,
-                isFree = false,
-                isPublished = true,
-                videoDuration = 1800,
-                videoUrl = "https://example.com/video9902.mp4",
-                contentText = 0,
-                materials = emptyList(),
-                userProgress = null
-            ),
-            Lesson(
-                id = 9903,
-                courseId = 99,
-                title = "Part 3: Performance Optimization",
-                description = "Using Layout Inspector and best practices to avoid unnecessary recompositions.",
-                lessonOrder = 3,
-                isFree = false,
-                isPublished = true,
-                videoDuration = 1500,
-                videoUrl = "https://example.com/video9903.mp4",
-                contentText = 0,
-                materials = emptyList(),
-                userProgress = null
-            )
+            "Nắm vững ngôn ngữ lập trình Kotlin",
+            "Xây dựng ứng dụng Android hoàn chỉnh",
+            "Hiểu rõ kiến trúc MVVM",
+            "Sử dụng Jetpack Compose",
+            "Kết nối API và xử lý dữ liệu"
         )
     )
 
+    // Mock Assignments
+    val mockAssignment1 = Assignment(
+        description = "Bài tập về cú pháp cơ bản Kotlin",
+        dueDate = "2024-12-01T23:59:59Z",
+        id = 1,
+        isPublished = true,
+        lessonId = 1,
+        maxAttempts = 3,
+        maxScore = 100,
+        passingScore = 70,
+        questions = mockQuestion1,
+        showAnswersAfter = 1,
+        shuffleOptions = true,
+        shuffleQuestions = false,
+        timeLimit = 3600,
+        title = "Bài tập 1: Cú pháp Kotlin",
+        userAttempts = listOf(mockUser1)
+    )
 
+    val mockAssignment2 = Assignment(
+        description = "Bài tập về Functions và Lambdas",
+        dueDate = "2024-12-10T23:59:59Z",
+        id = 2,
+        isPublished = true,
+        lessonId = 3,
+        maxAttempts = 2,
+        maxScore = 100,
+        passingScore = 75,
+        questions = mockQuestion2,
+        showAnswersAfter = 2,
+        shuffleOptions = true,
+        shuffleQuestions = true,
+        timeLimit = 2700,
+        title = "Bài tập 2: Functions",
+        userAttempts = emptyList()
+    )
 
-    // ---------------------------
-    // Books (12 total) - FIXED
-    // ---------------------------
-    val books = (1..12).map { index ->
-        Book(
-            author = authors[index % authors.size],
-            category = categories[index % categories.size],
-            description = "Book $index description",
-            edition = "${index}th",
-            id = index,
-            language = "en",
-            publicationYear = 2020 + (index % 5),
-            rating = 4.0f + (index % 5) * 0.1f,
-            title = "Book $index",
-            totalReviews = 5 + index,
-            approvalStatus = 0,
-            coverImage = "",
-            createdAt = "",
-            price = 201,
-            updatedAt = "",
-        )
-    }
+    val mockAssignments = listOf(mockAssignment1, mockAssignment2)
 
-    // ---------------------------
-    // Chapters (10 sample)
-    // ---------------------------
-    val chapters = (1..10).map { i ->
-        Chapter(
-            bookId = (i % books.size) + 1,
-            createdAt = "2025-11-17",
-            description = "Chapter $i for book ${(i % books.size) + 1}",
-            id = 100 + i,
-            orderIndex = i,
-            questionCount = 0,
-            questions = emptyList(),
-            title = "Chapter $i",
-            updatedAt = "2025-11-17"
-        )
-    }
+    // Mock Coupons
+    val mockCoupon1 = Coupon(
+        applicableItemIds = listOf(1, 2, 3),
+        applicableItemTypes = listOf(1, 2),
+        code = "BLACKFRIDAY2024",
+        description = "Giảm giá Black Friday",
+        discountType = 1,
+        discountTypeName = "Percentage",
+        discountValue = 30,
+        id = 1,
+        isActive = true,
+        maxDiscountAmount = 200000,
+        minOrderAmount = 500000,
+        name = "Black Friday Sale",
+        usageLimit = 1000,
+        usedCount = 245,
+        validFrom = "2024-11-20T00:00:00Z",
+        validTo = "2024-11-30T23:59:59Z"
+    )
 
-    // ---------------------------
-    // BookDetails (10 sample)
-    // ---------------------------
-    val bookDetails = (1..10).map { i ->
-        BookDetail(
-            approvalStatus = 1,
-            author = authors[i % authors.size],
-            category = categories[i % categories.size],
-            chapters = chapters.filter { it.bookId == ((i % books.size) + 1) },
-            coverImage = "",
-            createdAt = "2025-11-17",
-            description = "Detailed description for BookDetail $i",
-            ebookFile = "",
-            edition = "${i}th",
-            id = 200 + i,
-            isOwned = false,
-            isbn = "ISBN-BD-$i",
-            language = "en",
-            price = 900+i*3,
-            publicationYear = 2020 + (i % 5),
-            rating = (3f + (i % 3)),
-            reviewNotes = "",
-            staticPagePath = "",
-            title = "Book Detail $i",
-            totalReviews = 1 + i,
-            updatedAt = "2025-11-17"
-        )
-    }
+    val mockCoupon2 = Coupon(
+        applicableItemIds = emptyList(),
+        applicableItemTypes = listOf(1),
+        code = "NEWUSER50",
+        description = "Giảm giá cho người dùng mới",
+        discountType = 2,
+        discountTypeName = "Fixed Amount",
+        discountValue = 50000,
+        id = 2,
+        isActive = true,
+        maxDiscountAmount = 50000,
+        minOrderAmount = 100000,
+        name = "New User Discount",
+        usageLimit = 500,
+        usedCount = 78,
+        validFrom = "2024-11-01T00:00:00Z",
+        validTo = "2024-12-31T23:59:59Z"
+    )
 
-    // ---------------------------
-    // Assignments (10 sample)
-    // ---------------------------
-//    val assignments = (1..10).map { i ->
-//        Assignment(
-//            description = "Assignment $i for lesson",
-//            dueDate = "2025-12-${if (i < 10) "0$i" else "$i"}",
-//            id = 300 + i,
-//            isPublished = true,
-//            lessonId = mockCourses[i % mockCourses.size].lessons.firstOrNull()?.id ?: (i * 1000),
-//            maxAttempts = 3,
-//            maxScore = 100,
-//            passingScore = 50,
-//            questions = null,
-//            showAnswersAfter = 0,
-//            shuffleOptions = false,
-//            shuffleQuestions = false,
-//            timeLimit = 60,
-//            title = "Assignment $i",
-//            userAttempts = users.take(3)
-//        )
-//    }
+    val mockCoupons = listOf(mockCoupon1, mockCoupon2)
 
-    // ---------------------------
-    // Coupons (10 sample)
-    // ---------------------------
-    val coupons = (1..10).map { i ->
-        Coupon(
-            applicableItemIds = emptyList(),
-            applicableItemTypes = emptyList(),
-            code = "COUPON$i",
-            description = "Coupon $i description",
-            discountType = if (i % 2 == 0) 1 else 2,
-            discountTypeName = if (i % 2 == 0) "Percent" else "Fixed",
-            discountValue = if (i % 2 == 0) 10 + i else 5 + i,
-            id = 400 + i,
-            isActive = true,
-            maxDiscountAmount = 100,
-            minOrderAmount = 0,
-            name = "Coupon $i",
-            usageLimit = 100,
-            usedCount = 0,
-            validFrom = "2025-01-01",
-            validTo = "2025-12-31"
-        )
-    }
+    // Mock Items
+    val mockItem1 = Item(
+        id = 1,
+        itemId = 1,
+        itemName = "Kotlin Android Development",
+        itemType = 1,
+        itemTypeName = "Course",
+        price = 299000,
+        quantity = 1,
+        subTotal = 299000
+    )
 
-    // ---------------------------
-    // Items (10 sample)
-    // ---------------------------
-    val items = (1..10).map { i ->
-        Item(
-            id = 500 + i,
-            itemId = 1000 + i,
-            itemName = "Item $i",
-            itemType = 1,
-            itemTypeName = "Course",
-            price = 10 * i,
-            quantity = 1,
-            subTotal = 10 * i
-        )
-    }
-    val cartItems = (1..10).map { i ->
-        Item(
-            id = 500 + i,
-            itemId = 1000 + i,
-            itemName = "Item $i",
-            itemType = 1,
-            itemTypeName = "Course",
-            price = 10 * i,
-            quantity = 1,
-            subTotal = 10 * i
-        )
-    }
+    val mockItem2 = Item(
+        id = 2,
+        itemId = 1,
+        itemName = "Lập trình Kotlin cho người mới bắt đầu",
+        itemType = 2,
+        itemTypeName = "Book",
+        price = 150000,
+        quantity = 1,
+        subTotal = 150000
+    )
 
-    // ---------------------------
-    // Orders (10 sample)
-    // ---------------------------
-    val orders = (1..10).map { i ->
-        Order(
-            currency = "USD",
-            discountAmount = if (i % 2 == 0) 5 else 0,
-            exchangeRate = 1,
-            finalAmount = (items[i - 1].subTotal - if (i % 2 == 0) 5 else 0),
-            id = 600 + i,
-            orderCode = "ORD${600 + i}",
-            orderNotes = "",
-            paidAt = "2025-11-17",
-            paymentGateway = "stripe",
-            paymentMethod = "card",
-            status = 1,
-            statusName = "Paid",
-            taxAmount = 0,
-            totalAmount = items[i - 1].subTotal,
-            transactionId = "TXN${600 + i}",
-            userId = users[i % users.size].id,
-            coupon = if (i % 3 == 0) coupons[i % coupons.size] else null,
-            items = listOf(items[i - 1]),
-            createdAt = "2025-11-17"
-        )
-    }
+    val mockItem3 = Item(
+        id = 3,
+        itemId = 2,
+        itemName = "ReactJS Từ A-Z",
+        itemType = 1,
+        itemTypeName = "Course",
+        price = 399000,
+        quantity = 1,
+        subTotal = 399000
+    )
 
-    // ---------------------------
-    // LearningPaths (10 sample)
-    // ---------------------------
-    val learningPaths = (1..10).map { i ->
-        LearningPath(
-            approvalStatus = 1,
-            approvalStatusName = "Published",
-            category = categories[i % categories.size],
-            categoryId = categories[i % categories.size].id,
-            courseCount = 1,
-            courses = mockCourses.subList(2,5),
-            createdAt = "2025-11-17",
-            description = "Learning path $i",
-            difficultyLevel = (i % 3) + 1,
-            difficultyLevelName = listOf("Beginner", "Intermediate", "Advanced")[i % 3],
-            enrollmentCount = 50 * i,
-            estimatedDuration = 60 * i,
-            id = 700 + i,
-            instructor = instructors[i % instructors.size],
-            instructorId = instructors[i % instructors.size].id,
-            isActive = true,
-            isEnrolled = false,
-            isPublished = true,
-            price = 99 + i,
-            qualityScore = 4.0f,
-            reviewNotes = "",
-            thumbnail = R.drawable.course_test.toString(),
-            title = "Learning Path $i",
-            updatedAt = "2025-11-17"
-        )
-    }
+    val mockItems = listOf(mockItem1, mockItem2, mockItem3)
 
-    // ---------------------------
-    // Questions (10 sample)
-    // ---------------------------
-    val questions = (1..10).map { i -> Question(id = 800 + i) }
+    // Mock Orders
+    val mockOrder1 = Order(
+        currency = "VND",
+        discountAmount = 89700,
+        exchangeRate = 1,
+        finalAmount = 359300,
+        id = 1,
+        orderCode = "ORD20241120001",
+        orderNotes = "Giao hàng vào giờ hành chính",
+        paidAt = "2024-11-20T14:30:00Z",
+        paymentGateway = "VNPay",
+        paymentMethod = "ATM",
+        status = 2,
+        statusName = "Completed",
+        taxAmount = 0,
+        totalAmount = 449000,
+        transactionId = "VNP20241120143000",
+        userId = 1,
+        coupon = mockCoupon1,
+        items = listOf(mockItem1, mockItem2),
+        createdAt = "2024-11-20T14:00:00Z"
+    )
 
-    // ---------------------------
-    // Authorizations (10 sample)
-    // ---------------------------
-    val authorizations = (1..10).map { i -> Authorization(accessToken = "access-$i", refresh = "refresh-$i") }
+    val mockOrder2 = Order(
+        currency = "VND",
+        discountAmount = 0,
+        exchangeRate = 1,
+        finalAmount = 399000,
+        id = 2,
+        orderCode = "ORD20241121002",
+        orderNotes = "",
+        paidAt = "2024-11-21T09:15:00Z",
+        paymentGateway = "MoMo",
+        paymentMethod = "E-Wallet",
+        status = 1,
+        statusName = "Processing",
+        taxAmount = 0,
+        totalAmount = 399000,
+        transactionId = "MOMO20241121091500",
+        userId = 2,
+        coupon = null,
+        items = listOf(mockItem3),
+        createdAt = "2024-11-21T09:00:00Z"
+    )
+
+    val mockOrders = listOf(mockOrder1, mockOrder2)
+
+    // Mock Notifications
+    val mockNotification1 = Notification(
+        id = 1,
+        userId = 1,
+        title = "Khóa học mới được thêm vào",
+        content = "Khóa học Kotlin Android Development đã được thêm vào thư viện",
+        type = 2,
+        priority = 1,
+        isRead = false,
+        actionUrl = "/courses/1",
+        relatedId = "1",
+        relatedType = "course",
+        createdAt = "2024-11-24T10:00:00Z"
+    )
+
+    val mockNotification2 = Notification(
+        id = 2,
+        userId = 1,
+        title = "Đơn hàng đã được xác nhận",
+        content = "Đơn hàng #ORD20241120001 của bạn đã được xác nhận và đang xử lý",
+        type = 5,
+        priority = 2,
+        isRead = true,
+        actionUrl = "/orders/1",
+        relatedId = "1",
+        relatedType = "order",
+        createdAt = "2024-11-20T14:35:00Z"
+    )
+
+    val mockNotification3 = Notification(
+        id = 3,
+        userId = 2,
+        title = "Bài tập sắp đến hạn",
+        content = "Bài tập 'Cú pháp Kotlin' sẽ đến hạn trong 2 ngày",
+        type = 4,
+        priority = 1,
+        isRead = false,
+        actionUrl = "/assignments/1",
+        relatedId = "1",
+        relatedType = "assignment",
+        createdAt = "2024-11-23T08:00:00Z"
+    )
+
+    val mockNotifications = listOf(mockNotification1, mockNotification2, mockNotification3)
+
+    // Mock Forum data
+    val mockForumAttachment1 = ForumAttachment(
+        fileName = "screenshot.png",
+        fileUrl = "https://example.com/attachments/screenshot.png",
+        fileSize = 1024000,
+        fileType = "image/png"
+    )
+
+    val mockForumCategory1 = ForumCategory(
+        id = "fc1",
+        name = "Lập trình",
+        description = "Thảo luận về lập trình",
+        color = "#FF5722",
+        icon = "code",
+        isActive = true,
+        sortOrder = 1
+    )
+
+    val mockForumCategory2 = ForumCategory(
+        id = "fc2",
+        name = "Học tập",
+        description = "Chia sẻ kinh nghiệm học tập",
+        color = "#2196F3",
+        icon = "school",
+        isActive = true,
+        sortOrder = 2
+    )
+
+    val mockForumTag1 = ForumTag(
+        id = "ft1",
+        name = "kotlin",
+        description = "Kotlin programming language",
+        color = "#7F52FF",
+        isActive = true
+    )
+
+    val mockForumTag2 = ForumTag(
+        id = "ft2",
+        name = "android",
+        description = "Android development",
+        color = "#3DDC84",
+        isActive = true
+    )
+
+    val mockForumComment1 = ForumComment(
+        id = "fc1",
+        parentId = "fq1",
+        parentType = 1,
+        content = "Câu hỏi hay, tôi cũng đang tìm hiểu về vấn đề này",
+        userId = 2,
+        userName = "Trần Thị B",
+        userAvatar = "https://i.pravatar.cc/150?img=2",
+        createdAt = "2024-11-23T11:00:00Z",
+        updatedAt = null
+    )
+
+    val mockForumAnswer1 = ForumAnswer(
+        id = "fa1",
+        questionId = "fq1",
+        content = "Để sử dụng coroutines trong Kotlin, bạn cần thêm dependency kotlinx-coroutines-core vào build.gradle. Sau đó bạn có thể sử dụng launch hoặc async để tạo coroutine scope.",
+        userId = 3,
+        userName = "Lê Văn C",
+        userAvatar = "https://i.pravatar.cc/150?img=3",
+        isAccepted = true,
+        isDeleted = false,
+        voteCount = 15,
+        commentCount = 2,
+        createdAt = "2024-11-23T12:00:00Z",
+        updatedAt = null,
+        attachments = emptyList()
+    )
+
+    val mockForumQuestion1 = ForumQuestion(
+        id = "fq1",
+        title = "Làm thế nào để sử dụng Coroutines trong Kotlin?",
+        content = "Tôi đang học Kotlin và muốn hiểu rõ hơn về Coroutines. Có ai có thể giải thích và cho ví dụ cụ thể không?",
+        userId = 1,
+        userName = "Nguyễn Văn A",
+        userAvatar = "https://i.pravatar.cc/150?img=1",
+        categoryId = "fc1",
+        categoryName = "Lập trình",
+        tags = listOf("kotlin", "coroutines", "android"),
+        isSolved = true,
+        isPinned = false,
+        isClosed = false,
+        isDeleted = false,
+        viewCount = 245,
+        voteCount = 12,
+        answerCount = 3,
+        acceptedAnswerId = "fa1",
+        createdAt = "2024-11-23T10:00:00Z",
+        updatedAt = "2024-11-23T14:30:00Z",
+        lastActivityAt = "2024-11-23T14:30:00Z",
+        attachments = listOf(mockForumAttachment1)
+    )
+
+    val mockForumQuestion2 = ForumQuestion(
+        id = "fq2",
+        title = "ReactJS vs VueJS - Nên học cái nào?",
+        content = "Mình đang muốn học frontend framework, không biết nên chọn ReactJS hay VueJS. Mọi người có thể tư vấn giúp mình không?",
+        userId = 2,
+        userName = "Trần Thị B",
+        userAvatar = "https://i.pravatar.cc/150?img=2",
+        categoryId = "fc1",
+        categoryName = "Lập trình",
+        tags = listOf("reactjs", "vuejs", "frontend"),
+        isSolved = false,
+        isPinned = true,
+        isClosed = false,
+        isDeleted = false,
+        viewCount = 568,
+        voteCount = 25,
+        answerCount = 8,
+        acceptedAnswerId = null,
+        createdAt = "2024-11-22T15:00:00Z",
+        updatedAt = "2024-11-24T09:00:00Z",
+        lastActivityAt = "2024-11-24T09:00:00Z",
+        attachments = emptyList()
+    )
+
+    val mockForumStats = ForumStats(
+        totalQuestions = 1250,
+        totalAnswers = 4560,
+        totalUsers = 890,
+        solvedQuestions = 980
+    )
+
+    val mockForumQuestions = listOf(mockForumQuestion1, mockForumQuestion2)
+    val mockForumAnswers = listOf(mockForumAnswer1)
+    val mockForumCategories = listOf(mockForumCategory1, mockForumCategory2)
+    val mockForumTags = listOf(mockForumTag1, mockForumTag2)
+
+    // Mock LearningPath
+    val mockLearningPath1 = LearningPath(
+        approvalStatus = 1,
+        approvalStatusName = "Approved",
+        category = mockCategory1,
+        categoryId = 1,
+        courseCount = 3,
+        courses = listOf(mockCourse1, mockCourse2, mockCourse3),
+        createdAt = "2024-10-01T08:00:00Z",
+        description = "Lộ trình học lập trình Android từ cơ bản đến nâng cao",
+        difficultyLevel = 2,
+        difficultyLevelName = "Intermediate",
+        enrollmentCount = 456,
+        estimatedDuration = 120,
+        id = 1,
+        instructor = mockInstructor1,
+        instructorId = 1,
+        isActive = true,
+        isEnrolled = true,
+        isPublished = true,
+        price = 999000,
+        qualityScore = 4.7f,
+        reviewNotes = "Lộ trình rất chất lượng",
+        thumbnail = "https://picsum.photos/400/300?random=20",
+        title = "Lộ trình Android Developer",
+        updatedAt = "2024-11-20T08:00:00Z"
+    )
+
+    val mockLearningPath2 = LearningPath(
+        approvalStatus = 1,
+        approvalStatusName = "Approved",
+        category = mockCategory3,
+        categoryId = 3,
+        courseCount = 2,
+        courses = listOf(mockCourse2),
+        createdAt = "2024-09-15T08:00:00Z",
+        description = "Lộ trình học Full-stack Web Development",
+        difficultyLevel = 3,
+        difficultyLevelName = "Advanced",
+        enrollmentCount = 289,
+        estimatedDuration = 180,
+        id = 2,
+        instructor = mockInstructor3,
+        instructorId = 3,
+        isActive = true,
+        isEnrolled = false,
+        isPublished = true,
+        price = 1499000,
+        qualityScore = 4.8f,
+        reviewNotes = "",
+        thumbnail = "https://picsum.photos/400/300?random=21",
+        title = "Lộ trình Full-stack Developer",
+        updatedAt = "2024-11-15T08:00:00Z"
+    )
+
+    val mockLearningPaths = listOf(mockLearningPath1, mockLearningPath2)
+
+    // Mock Authorization
+    val mockAuthorization = Authorization(
+        accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik5ndXnhu4VuIFbEg24gQSIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+        refresh = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlJlZnJlc2ggVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.4Adcj0vnY3T9V3dXEhIaZjQZxVwb2jMTQW8RmQE8mmo"
+    )
+
+    // Mock Response with pagination
+    val mockBookResponse = MyResponese(
+        items = mockBooks,
+        page = 1,
+        pageSize = 10,
+        total = 50,
+        totalPages = 5
+    )
+
+    val mockCourseResponse = MyResponese(
+        items = mockCourses,
+        page = 1,
+        pageSize = 10,
+        total = 30,
+        totalPages = 3
+    )
+
+    // Mock Cart
+    val mockCart = MyCart(
+        items = mockItems,
+        total = 3
+    )
 }

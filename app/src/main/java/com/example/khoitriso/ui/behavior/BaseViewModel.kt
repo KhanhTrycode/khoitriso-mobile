@@ -2,9 +2,11 @@ package com.example.khoitriso.ui.behavior
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.usecase.category.GetCategory
 import com.example.khoitriso.utils.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 abstract class BaseViewModel : ViewModel() {
@@ -46,10 +48,54 @@ abstract class BaseViewModel : ViewModel() {
         }
     }
 
+    protected fun <T> loadDataWithPage(
+        stateFlow: MutableStateFlow<UiState<MyResponese<T>>>,
+        mockData: List<T>,
+        isTestMode: Boolean = _isTestMode,
+        apiCall: suspend () -> Result<MyResponese<T>>,
+    ) {
+        viewModelScope.launch {
+            stateFlow.value = UiState.Loading
+            if (isTestMode) {
+                stateFlow.value = UiState.Success(
+                    MyResponese(
+                        items = mockData,
+                        page = 1,
+                        pageSize = mockData.size,
+                        total = mockData.size,
+                        totalPages = 1
+                    )
+                )
+            } else {
+                try {
+                    val result = apiCall()
+                    result.fold(
+                        onSuccess = { item ->
+                            stateFlow.value = UiState.Success(item)
+                        },
+                        onFailure = { exception ->
+                            // Nếu thất bại, cập nhật state với thông báo lỗi
+                            stateFlow.value = UiState.Error(
+                                exception.message ?: ("An unknown error " +
+                                        "occurred")
+                            )
+                        }
+                    )
+                } catch (e: Exception) {
+                    // Xử lý lỗi nếu cần
+                    e.printStackTrace()
+                    UiState.Error(e.message ?: "Unknown error")
+                }
+            }
+        }
+
+
+
+    }
     fun onBuy() {
 
     }
 
-    fun onCart(){
+    fun onCart() {
     }
 }

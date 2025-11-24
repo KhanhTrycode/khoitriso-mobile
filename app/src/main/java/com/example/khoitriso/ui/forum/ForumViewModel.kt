@@ -1,6 +1,9 @@
 package com.example.khoitriso.ui.forum
 
 import androidx.lifecycle.viewModelScope
+import com.auth0.jwt.JWT
+import com.example.khoitriso.data.local.TokenManager
+import com.example.khoitriso.data.local.UserManager
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
 import com.example.khoitriso.domain.request.CreateAnswerRequest
@@ -10,6 +13,7 @@ import com.example.khoitriso.domain.request.ForumBookmarksResult
 import com.example.khoitriso.domain.request.ForumQuestions
 import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
+import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,9 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ForumViewModel @Inject constructor(
     private val forumUsecase: ForumUsecase,
-    private val tokenManager: com.example.khoitriso.data.local.TokenManager,
-    private val userManager: com.example.khoitriso.data.local.UserManager,
-    private val authRepository: com.example.khoitriso.domain.repository.AuthRepository
+    private val tokenManager: TokenManager,
+    private val userManager: UserManager,
+    private val authRepository: AuthRepository
 ) : BaseViewModel() {
     
     private val _currentUserId = MutableStateFlow<Int?>(null)
@@ -47,7 +51,7 @@ class ForumViewModel @Inject constructor(
         val token = tokenManager.getAccessToken()
         token?.let {
             try {
-                val jwt = com.auth0.jwt.JWT.decode(it)
+                val jwt = JWT.decode(it)
                 _currentUserId.value = jwt.getClaim("UserId").asInt()
             } catch (e: Exception) {
                 _currentUserId.value = null
@@ -83,9 +87,8 @@ class ForumViewModel @Inject constructor(
     }
 
     // Questions list
-    private val _questions = MutableStateFlow<UiState<ForumQuestions>>(UiState.Loading)
-    val questions: StateFlow<UiState<ForumQuestions>> = _questions.asStateFlow()
-
+    private val _questions = MutableStateFlow<UiState<MyResponese<ForumQuestion>>>(UiState.Loading)
+    val questions: StateFlow<UiState<MyResponese<ForumQuestion>>> = _questions
     // Question detail
     private val _question = MutableStateFlow<UiState<ForumQuestion>>(UiState.Loading)
     val question: StateFlow<UiState<ForumQuestion>> = _question.asStateFlow()
@@ -209,27 +212,35 @@ class ForumViewModel @Inject constructor(
                 _isSolvedFilter.value
             }
             
-            val result = forumUsecase.getQuestions(
-                search = _searchQuery.value.ifEmpty { null },
-                categoryId = _selectedCategory.value,
-                tag = _selectedTag.value,
-                isSolved = isSolvedFilterValue,
-                isPinned = _isPinnedFilter.value,
-                page = page,
-                pageSize = 20,
-                sortBy = apiSortBy,
-                desc = _desc.value
-            )
-            _questions.value = result.fold(
-                onSuccess = { 
-                    // Load user votes and bookmarks after questions loaded
-                    _currentUserId.value?.let { userId ->
-                        loadUserVotesForQuestions(it.items, userId)
-                        loadBookmarksForQuestions(it.items, userId)
-                    }
-                    UiState.Success(it)
-                },
-                onFailure = { UiState.Error(it.message ?: "Failed to load questions") }
+//            val result = forumUsecase.getQuestions(
+//                search = _searchQuery.value.ifEmpty { null },
+//                categoryId = _selectedCategory.value,
+//                tag = _selectedTag.value,
+//                isSolved = isSolvedFilterValue,
+//                isPinned = _isPinnedFilter.value,
+//                page = page,
+//                pageSize = 20,
+//                sortBy = apiSortBy,
+//                desc = _desc.value
+//            )
+//            _questions.value = result.fold(
+//                onSuccess = { 
+//                    // Load user votes and bookmarks after questions loaded
+//                    _currentUserId.value?.let { userId ->
+//                        loadUserVotesForQuestions(it.items, userId)
+//                        loadBookmarksForQuestions(it.items, userId)
+//                    }
+//                    UiState.Success(it)
+//                },
+//                onFailure = { UiState.Error(it.message ?: "Failed to load questions") }
+//            )
+
+            loadDataWithPage(
+                stateFlow = _questions,
+                mockData = MockData.mockForumQuestions,
+                apiCall = {
+                    forumUsecase.getQuestions()
+                }
             )
         }
     }

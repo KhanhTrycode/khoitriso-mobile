@@ -48,19 +48,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun getCategory() {
-        loadData(_categories, MockData.categories) {
+        loadData(_categories, MockData.mockCategories) {
             categoryUsecase.getCategory()
         }
     }
 
     fun getBooks() {
-        loadData(_books, MyResponese<Book>(
-            items = MockData.books,
-            page = 1,
-            pageSize = MockData.books.size,
-            total = MockData.books.size,
-            totalPages = 1
-        )) {
+        loadDataWithPage(_books, mockData = MockData.mockBooks
+        ) {
             bookUsecase.getBook()
         }
         viewModelScope.launch {

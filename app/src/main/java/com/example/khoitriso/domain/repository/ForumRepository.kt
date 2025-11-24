@@ -22,7 +22,7 @@ interface ForumRepository {
         pageSize: Int = 20,
         sortBy: String? = null,
         desc: Boolean? = null
-    ): Result<ForumQuestions>
+    ): Result<MyResponese<ForumQuestion>>
 
     suspend fun getQuestionById(id: String): Result<ForumQuestion>
     suspend fun createQuestion(request: CreateQuestionRequest): Result<ForumQuestion>

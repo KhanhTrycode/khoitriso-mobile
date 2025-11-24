@@ -18,7 +18,7 @@ data class BookDetail(
     val price: Int,
     val publicationYear: Int,
     val rating: Float,
-    val reviewNotes: Any,
+    val reviewNotes: Any?,
     val staticPagePath: String,
     val title: String,
     val totalReviews: Int,

@@ -23,6 +23,7 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
 import com.example.khoitriso.domain.request.ForumBookmarksResult
+import com.example.khoitriso.ui.behavior.PaginationControls
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.NavRoute
 import java.text.SimpleDateFormat

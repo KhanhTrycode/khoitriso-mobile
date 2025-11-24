@@ -1,6 +1,7 @@
 package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
+import com.example.khoitriso.data.dto.ApiResponeData
 import com.example.khoitriso.data.dto.forum.*
 import retrofit2.Response
 import retrofit2.http.*
@@ -18,7 +19,7 @@ interface ForumApi {
         @Query("pageSize") pageSize: Int = 20,
         @Query("sortBy") sortBy: String? = null,
         @Query("desc") desc: Boolean? = null
-    ): Response<ApiRespone<ForumQuestionsResponse>>
+    ): Response<ApiResponeData<ForumQuestionDto>>
 
     @GET("forum/questions/{id}")
     suspend fun getQuestionById(@Path("id") id: String): Response<ApiRespone<ForumQuestionDto>>

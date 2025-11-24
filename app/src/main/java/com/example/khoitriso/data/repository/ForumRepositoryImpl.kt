@@ -1,7 +1,9 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.ForumApi
+import com.example.khoitriso.data.dto.BookDto
 import com.example.khoitriso.data.dto.forum.*
+import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
 import com.example.khoitriso.domain.request.CreateAnswerRequest
@@ -29,7 +31,7 @@ class ForumRepositoryImpl @Inject constructor(
         pageSize: Int,
         sortBy: String?,
         desc: Boolean?
-    ): Result<ForumQuestions> {
+    ): Result<MyResponese<ForumQuestion>> {
         return try {
             val response = forumApi.getQuestions(
                 search = search,
@@ -48,20 +50,8 @@ class ForumRepositoryImpl @Inject constructor(
                 val result = body?.Result
 
                 if (result != null) {
-                    val items = (result.Items ?: emptyList()).map { it.toDomain() }
-                    val total = result.Total ?: 0
-                    val pageSize = result.PageSize ?: 20
-                    val totalPages = (total + pageSize - 1) / pageSize // Ceiling division
+                    Result.success(result.toDomain(ForumQuestionDto::toDomain))
 
-                    Result.success(
-                        ForumQuestions(
-                            items = items,
-                            total = total,
-                            page = result.Page ?: page,
-                            pageSize = pageSize,
-                            totalPages = totalPages
-                        )
-                    )
                 } else {
                     Result.failure(Exception("Response data is null"))
                 }
