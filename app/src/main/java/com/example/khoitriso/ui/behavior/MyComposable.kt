@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.behavior
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -52,6 +53,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.res.stringResource
@@ -65,6 +67,9 @@ import com.example.khoitriso.ui.theme.StarColor
 import com.example.khoitriso.utils.debug
 import com.example.khoitriso.utils.toDecimal
 import com.example.khoitriso.utils.toVND
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
@@ -410,5 +415,54 @@ fun CreateBy(fullName: String,avatar: String, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+//Forum
+@SuppressLint("SimpleDateFormat")
+fun FormatTimeAgo(dateString: String): String {
+    return try {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = sdf.parse(dateString) ?: return dateString
+        val now = Date()
+        val diffInSeconds = (now.time - date.time) / 1000
+
+        when {
+            diffInSeconds < 60 -> "vừa xong"
+            diffInSeconds < 3600 -> "${diffInSeconds / 60} phút trước"
+            diffInSeconds < 86400 -> "${diffInSeconds / 3600} giờ trước"
+            diffInSeconds < 2592000 -> "${diffInSeconds / 86400} ngày trước"
+            diffInSeconds < 31536000 -> "${diffInSeconds / 2592000} tháng trước"
+            else -> "${diffInSeconds / 31536000} năm trước"
+        }
+    } catch (e: Exception) {
+        dateString
+    }
+}
+
+@Composable
+fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    onPageChange: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedButton(
+            onClick = { onPageChange(currentPage - 1) },
+            enabled = currentPage > 1
+        ) { Text("Trước") }
+        Spacer(Modifier.width(16.dp))
+        Text("Trang $currentPage / $totalPages", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.width(16.dp))
+        OutlinedButton(
+            onClick = { onPageChange(currentPage + 1) },
+            enabled = currentPage < totalPages
+        ) { Text("Sau") }
     }
 }

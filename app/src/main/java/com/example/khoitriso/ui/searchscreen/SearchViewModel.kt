@@ -62,17 +62,19 @@ class SearchViewModel @Inject constructor(
             _rawResults.value = UiState.Success(emptyList())
             return
         }
-        loadData(
-            stateFlow = _rawResults,
-            mockData = MockData.books + MockData.mockCourses,
-            apiCall = {
-                // Gọi cả hai use case và kết hợp kết quả
-                val books = bookUsecase.getBook()
-                val courses = courseUsecase.getCourse()
-                val allResults = books.getOrElse { emptyList() } + courses.getOrElse { emptyList() }
-                Result.success(allResults)
-            }
-        )
+//        loadData(
+//            stateFlow = _rawResults,
+//            mockData = MockData.books + MockData.mockCourses,
+//            apiCall = {
+////                // Gọi cả hai use case và kết hợp kết quả
+////                val books = bookUsecase.getBook()
+////                val courses = courseUsecase.getCourse()
+////                val allResults = books.getOrElse {emptyList() } + courses.getOrElse {
+////                    emptyList
+////                    () }
+////                Result.success(allResults)
+//            }
+//        )
         putSearchResult()
     }
 

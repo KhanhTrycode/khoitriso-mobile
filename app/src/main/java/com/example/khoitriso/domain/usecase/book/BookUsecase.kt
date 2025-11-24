@@ -3,6 +3,7 @@ package com.example.khoitriso.domain.usecase.book
 import android.util.Log
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.repository.BookRepository
 import javax.inject.Inject
 import kotlin.getOrElse
@@ -13,7 +14,7 @@ data class BookUsecase (
     val searckBook: SearchBook
 )
 class GetBook(private val repo: BookRepository) {
-    suspend operator fun invoke(): Result<List<Book>> {
+    suspend operator fun invoke(): Result<MyResponese<Book>> {
         return repo.getBooks()
     }
 

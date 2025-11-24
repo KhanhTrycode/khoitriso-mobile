@@ -24,12 +24,12 @@ interface ForumApi {
     suspend fun getQuestionById(@Path("id") id: String): Response<ApiRespone<ForumQuestionDto>>
 
     @POST("forum/questions")
-    suspend fun createQuestion(@Body request: CreateQuestionRequest): Response<ApiRespone<ForumQuestionDto>>
+    suspend fun createQuestion(@Body request: CreateQuestionRequestDto): Response<ApiRespone<ForumQuestionDto>>
 
     @PUT("forum/questions/{id}")
     suspend fun updateQuestion(
         @Path("id") id: String,
-        @Body request: UpdateQuestionRequest
+        @Body request: UpdateQuestionRequestDto
     ): Response<ApiRespone<ForumQuestionDto>>
 
     @DELETE("forum/questions/{id}")
@@ -42,13 +42,13 @@ interface ForumApi {
     @POST("forum/questions/{questionId}/answers")
     suspend fun createAnswer(
         @Path("questionId") questionId: String,
-        @Body request: CreateAnswerRequest
+        @Body request: CreateAnswerRequestDto
     ): Response<ApiRespone<ForumAnswerDto>>
 
     @PUT("forum/answers/{id}")
     suspend fun updateAnswer(
         @Path("id") id: String,
-        @Body request: UpdateAnswerRequest
+        @Body request: UpdateAnswerRequestDto
     ): Response<ApiRespone<ForumAnswerDto>>
 
     @DELETE("forum/answers/{id}")
@@ -68,11 +68,11 @@ interface ForumApi {
     ): Response<ApiRespone<List<ForumCommentDto>>>
 
     @POST("forum/comments")
-    suspend fun createComment(@Body request: CreateCommentRequest): Response<ApiRespone<ForumCommentDto>>
+    suspend fun createComment(@Body request: CreateCommentRequestDto): Response<ApiRespone<ForumCommentDto>>
 
     // Votes
     @POST("forum/votes")
-    suspend fun vote(@Body request: ForumVoteRequest): Response<ApiRespone<ForumVoteResponse>>
+    suspend fun vote(@Body request: ForumVoteRequestDto): Response<ApiRespone<ForumVoteResponse>>
 
     @GET("forum/{targetType}/{targetId}/votes")
     suspend fun getVotes(
@@ -89,7 +89,7 @@ interface ForumApi {
 
     // Bookmarks
     @POST("forum/bookmarks")
-    suspend fun addBookmark(@Body request: ForumBookmarkRequest): Response<ApiRespone<Unit>>
+    suspend fun addBookmark(@Body request: ForumBookmarkRequestDto): Response<ApiRespone<Unit>>
 
     @DELETE("forum/bookmarks/{questionId}")
     suspend fun removeBookmark(

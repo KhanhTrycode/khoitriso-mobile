@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.auth0.jwt.JWT
 import com.example.khoitriso.domain.models.User
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -22,18 +23,40 @@ private val Context.userDataStore: DataStore<Preferences> by preferencesDataStor
 class UserManager @Inject constructor(@ApplicationContext val context: Context) {
     private val dataStore = context.userDataStore
     private val lock = Mutex()
-    
+
     private val userFullNameKey = stringPreferencesKey("user_full_name")
     private val userUsernameKey = stringPreferencesKey("user_username")
     private val userAvatarKey = stringPreferencesKey("user_avatar")
     private val userIdKey = stringPreferencesKey("user_id")
     private val userEmailKey = stringPreferencesKey("user_email")
 
+    // (Cải tiến) Tạo một Flow để quan sát người dùng
+    val userFlow: Flow<User?> = dataStore.data.map { prefs ->
+        val id = prefs[userIdKey]?.toIntOrNull()
+        val fullName = prefs[userFullNameKey]
+        val email = prefs[userEmailKey]
+
+        // Chỉ tạo User object nếu các trường bắt buộc tồn tại
+        if (id != null && fullName != null && email != null) {
+            User(
+                id = id,
+                fullName = fullName,
+                email = email,
+                avatar = prefs[userAvatarKey] ?: "",
+                authProvider = "", // Có thể lưu và lấy giá trị này từ DataStore nếu cần
+                role = 1 // Tương tự, có thể lưu và lấy role
+            )
+        } else {
+            null
+        }
+    }
+
+
     suspend fun saveUser(user: User) {
         lock.withLock {
             dataStore.edit {
                 it[userFullNameKey] = user.fullName
-                it[userUsernameKey] = user.email.split("@")[0] // Fallback to email prefix if no username
+                it[userUsernameKey] = user.email.split("@")[0] // Fallback
                 it[userAvatarKey] = user.avatar ?: ""
                 it[userIdKey] = user.id.toString()
                 it[userEmailKey] = user.email
@@ -41,69 +64,38 @@ class UserManager @Inject constructor(@ApplicationContext val context: Context) 
         }
     }
 
-    suspend fun getUserName(): String? {
-        return lock.withLock {
-            try {
-                dataStore.data.first()[userFullNameKey] ?: dataStore.data.first()[userUsernameKey]
-            } catch (e: Exception) {
-                null
-            }
-        }
+    // Hàm của bạn đã tốt, nhưng giờ nó có thể dùng userFlow
+    suspend fun getCurrentUser(): User? {
+        // Đọc giá trị một lần từ flow đã được định nghĩa ở trên
+        return userFlow.first()
     }
+
+    // Các hàm khác cũng có thể được đơn giản hóa
+    suspend fun getUserName(): String? {
+        return userFlow.first()?.fullName
+    }
+
+
 
     suspend fun getUserAvatar(): String? {
-        return lock.withLock {
-            try {
-                dataStore.data.first()[userAvatarKey]
-            } catch (e: Exception) {
-                null
-            }
-        }
+        return userFlow.first()?.avatar
     }
 
-    suspend fun getCurrentUser(): User? {
-        return lock.withLock {
-            try {
-                val prefs = dataStore.data.first()
-                val fullName = prefs[userFullNameKey] ?: return@lock null
-                val avatar = prefs[userAvatarKey] ?: ""
-                val id = prefs[userIdKey]?.toIntOrNull() ?: return@lock null
-                val email = prefs[userEmailKey] ?: return@lock null
-                val username = prefs[userUsernameKey] ?: email.split("@")[0]
-                
-                User(
-                    id = id,
-                    fullName = fullName,
-                    email = email,
-                    avatar = avatar,
-                    authProvider = "",
-                    role = 1
-                )
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
 
     suspend fun clearUser() {
         lock.withLock {
             dataStore.edit {
-                it.remove(userFullNameKey)
-                it.remove(userUsernameKey)
-                it.remove(userAvatarKey)
-                it.remove(userIdKey)
-                it.remove(userEmailKey)
+                it.clear() // Xóa tất cả các preferences trong DataStore này
             }
         }
     }
 
-    // Try to get userName from JWT token if available
+    // getUserNameFromToken không thay đổi
     suspend fun getUserNameFromToken(tokenManager: TokenManager): String? {
         val token = tokenManager.getAccessToken() ?: return null
         return try {
             val jwt = JWT.decode(token)
-            // Try common JWT claim names for name/username
-            jwt.getClaim("FullName").asString() 
+            jwt.getClaim("FullName").asString()
                 ?: jwt.getClaim("fullName").asString()
                 ?: jwt.getClaim("Name").asString()
                 ?: jwt.getClaim("name").asString()
@@ -115,4 +107,3 @@ class UserManager @Inject constructor(@ApplicationContext val context: Context) 
         }
     }
 }
-

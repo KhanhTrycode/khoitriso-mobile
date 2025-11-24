@@ -21,7 +21,7 @@ interface AuthApi {
     @GET(
         "Auth/me"
     )
-    suspend fun googleAuth() : Response<ApiRespone<UserDTO>>
+    suspend fun getMe() : Response<ApiRespone<UserDTO>>
 }
 
 

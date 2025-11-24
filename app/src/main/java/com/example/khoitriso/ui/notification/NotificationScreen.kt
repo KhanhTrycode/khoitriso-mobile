@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.notification
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -99,7 +100,7 @@ fun NotificationScreen(
                     when (connectionState) {
                         is SignalRService.ConnectionState.Connected -> {
                             Icon(
-                                Icons.Default.Circle,
+                                Icons.Default.CheckCircle,
                                 "Connected",
                                 tint = Color(0xFF10B981),
                                 modifier = Modifier.size(12.dp).padding(end = 8.dp)
@@ -135,7 +136,7 @@ fun NotificationScreen(
                             if (markingAll) {
                                 CircularProgressIndicator(Modifier.size(20.dp))
                             } else {
-                                Icon(Icons.Default.DoneAll, "Đánh dấu tất cả đã đọc")
+                                Icon(Icons.Default.Done, "Đánh dấu tất cả đã đọc")
                             }
                         }
                     }
@@ -190,7 +191,7 @@ fun NotificationScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FilterList, null, Modifier.size(20.dp))
+                        Icon(Icons.Default.List, null, Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "Bộ lọc và tìm kiếm",
@@ -263,7 +264,9 @@ fun NotificationScreen(
                                         showTypeMenu = false
                                     }
                                 )
-                                notificationTypeLabels.forEach { (type, (label, _)) ->
+                                notificationTypeLabels.forEach { (type, pair) -> // Bước 1: Chỉ phân rã thành key và value (pair)
+                                    val (label, _) = pair // Bước 2: Phân rã pair bên trong lambda
+
                                     DropdownMenuItem(
                                         text = { Text(label) },
                                         onClick = {
@@ -298,7 +301,7 @@ fun NotificationScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Icon(
-                            Icons.Default.NotificationsOff,
+                            Icons.Default.Notifications,
                             null,
                             Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -379,7 +382,6 @@ fun NotificationCard(
                         .size(8.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
                 )
                 Spacer(Modifier.width(4.dp))
             } else {

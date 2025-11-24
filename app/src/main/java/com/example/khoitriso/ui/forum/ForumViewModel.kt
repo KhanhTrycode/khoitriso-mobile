@@ -3,6 +3,12 @@ package com.example.khoitriso.ui.forum
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
+import com.example.khoitriso.domain.request.CreateAnswerRequest
+import com.example.khoitriso.domain.request.CreateCommentRequest
+import com.example.khoitriso.domain.request.CreateQuestionRequest
+import com.example.khoitriso.domain.request.ForumBookmarksResult
+import com.example.khoitriso.domain.request.ForumQuestions
+import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
@@ -77,8 +83,8 @@ class ForumViewModel @Inject constructor(
     }
 
     // Questions list
-    private val _questions = MutableStateFlow<UiState<ForumQuestionsResult>>(UiState.Loading)
-    val questions: StateFlow<UiState<ForumQuestionsResult>> = _questions.asStateFlow()
+    private val _questions = MutableStateFlow<UiState<ForumQuestions>>(UiState.Loading)
+    val questions: StateFlow<UiState<ForumQuestions>> = _questions.asStateFlow()
 
     // Question detail
     private val _question = MutableStateFlow<UiState<ForumQuestion>>(UiState.Loading)
@@ -313,20 +319,19 @@ class ForumViewModel @Inject constructor(
         }
     }
 
-    fun createComment(request: CreateCommentRequest, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun createComment(request: CreateCommentRequest) {
         viewModelScope.launch {
             val result = forumUsecase.createComment(request)
             result.fold(
                 onSuccess = {
-                    onSuccess()
                     loadComments(request.parentType, request.parentId) // Refresh comments
                 },
-                onFailure = { onError(it.message ?: "Failed to create comment") }
+                onFailure = {  }
             )
         }
     }
 
-    fun vote(targetType: Int, targetId: String, userId: Int, voteType: Int, onSuccess: (Int) -> Unit, onError: (String) -> Unit) {
+    fun vote(targetType: Int, targetId: String, userId: Int, voteType: Int) {
         viewModelScope.launch {
             val request = ForumVoteRequest(
                 targetId = targetId,
@@ -348,8 +353,6 @@ class ForumViewModel @Inject constructor(
                             put(key, voteType)
                         }
                     }
-                    onSuccess(total)
-                    
                     // Refresh question/answer
                     if (targetType == 1) { // Question
                         _question.value.let { state ->
@@ -361,7 +364,9 @@ class ForumViewModel @Inject constructor(
                         loadAnswers(_question.value.let { if (it is UiState.Success) it.data.id else "" })
                     }
                 },
-                onFailure = { onError(it.message ?: "Failed to vote") }
+                onFailure = {
+
+                }
             )
         }
     }
@@ -382,7 +387,7 @@ class ForumViewModel @Inject constructor(
         }
     }
 
-    fun toggleBookmark(questionId: String, userId: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun toggleBookmark(questionId: String, userId: Int) {
         viewModelScope.launch {
             val isBookmarked = _bookmarks.value.contains(questionId)
             val result = if (isBookmarked) {
@@ -399,9 +404,9 @@ class ForumViewModel @Inject constructor(
                             add(questionId)
                         }
                     }
-                    onSuccess()
+
                 },
-                onFailure = { onError(it.message ?: "Failed to toggle bookmark") }
+                onFailure = {  }
             )
         }
     }
@@ -421,12 +426,11 @@ class ForumViewModel @Inject constructor(
         }
     }
 
-    fun acceptAnswer(answerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun acceptAnswer(answerId: String) {
         viewModelScope.launch {
             val result = forumUsecase.acceptAnswer(answerId)
             result.fold(
                 onSuccess = {
-                    onSuccess()
                     // Refresh question and answers
                     _question.value.let { state ->
                         if (state is UiState.Success) {
@@ -435,17 +439,16 @@ class ForumViewModel @Inject constructor(
                         }
                     }
                 },
-                onFailure = { onError(it.message ?: "Failed to accept answer") }
+                onFailure = {  }
             )
         }
     }
 
-    fun unacceptAnswer(answerId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun unacceptAnswer(answerId: String) {
         viewModelScope.launch {
             val result = forumUsecase.unacceptAnswer(answerId)
             result.fold(
                 onSuccess = {
-                    onSuccess()
                     // Refresh question and answers
                     _question.value.let { state ->
                         if (state is UiState.Success) {
@@ -454,7 +457,9 @@ class ForumViewModel @Inject constructor(
                         }
                     }
                 },
-                onFailure = { onError(it.message ?: "Failed to unaccept answer") }
+                onFailure = {
+
+                }
             )
         }
     }

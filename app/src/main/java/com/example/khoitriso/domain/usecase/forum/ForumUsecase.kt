@@ -2,6 +2,14 @@ package com.example.khoitriso.domain.usecase.forum
 
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
+import com.example.khoitriso.domain.request.CreateAnswerRequest
+import com.example.khoitriso.domain.request.CreateCommentRequest
+import com.example.khoitriso.domain.request.CreateQuestionRequest
+import com.example.khoitriso.domain.request.ForumBookmarksResult
+import com.example.khoitriso.domain.request.ForumQuestions
+import com.example.khoitriso.domain.request.ForumVoteRequest
+import com.example.khoitriso.domain.request.UpdateAnswerRequest
+import com.example.khoitriso.domain.request.UpdateQuestionRequest
 
 data class ForumUsecase(
     val getQuestions: GetQuestions,
@@ -40,7 +48,7 @@ class GetQuestions(private val repo: ForumRepository) {
         pageSize: Int = 20,
         sortBy: String? = null,
         desc: Boolean? = null
-    ): Result<ForumQuestionsResult> {
+    ): Result<ForumQuestions> {
         return repo.getQuestions(search, categoryId, tag, isSolved, isPinned, page, pageSize, sortBy, desc)
     }
 }

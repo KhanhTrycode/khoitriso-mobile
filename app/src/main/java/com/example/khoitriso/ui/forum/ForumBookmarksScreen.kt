@@ -22,6 +22,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
+import com.example.khoitriso.domain.request.ForumBookmarksResult
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.NavRoute
 import java.text.SimpleDateFormat
@@ -34,12 +35,12 @@ fun ForumBookmarksScreen(
     viewModel: ForumViewModel = hiltViewModel()
 ) {
     val currentUserId by viewModel.currentUserId.collectAsState()
-    
+
     // Bookmarks state - using Flow from ViewModel
     var bookmarksState by remember { mutableStateOf<UiState<ForumBookmarksResult>>(UiState.Loading) }
     var currentPage by remember { mutableStateOf(1) }
     val pageSize = 20
-    
+
     LaunchedEffect(currentUserId, currentPage) {
         if (currentUserId != null) {
             bookmarksState = UiState.Loading
@@ -56,7 +57,7 @@ fun ForumBookmarksScreen(
             bookmarksState = UiState.Error("Vui lòng đăng nhập")
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,7 +82,7 @@ fun ForumBookmarksScreen(
                 }
             }
             is UiState.Success -> {
-                val bookmarks = bookmarksState.data.items
+                val bookmarks = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.items
                 if (bookmarks.isEmpty()) {
                     EmptyBookmarksView(navController)
                 } else {
@@ -94,13 +95,13 @@ fun ForumBookmarksScreen(
                     ) {
                         item {
                             Text(
-                                "${bookmarksState.data.total} câu hỏi đã bookmark",
+                                "${(bookmarksState as UiState.Success<ForumBookmarksResult>).data.total} câu hỏi đã bookmark",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
-                        
+
                         items(bookmarks) { bookmark ->
                             bookmark.question?.let { question ->
                                 BookmarkCard(
@@ -111,16 +112,16 @@ fun ForumBookmarksScreen(
                                             viewModel.toggleBookmark(
                                                 question.id,
                                                 userId,
-                                                onSuccess = {
-                                                    // Refresh list
-                                                    val newPage = if (bookmarks.size == 1 && currentPage > 1) {
-                                                        currentPage - 1
-                                                    } else {
-                                                        currentPage
-                                                    }
-                                                    currentPage = newPage
-                                                },
-                                                onError = {}
+//                                                onSuccess = {
+//                                                    // Refresh list
+//                                                    val newPage = if (bookmarks.size == 1 && currentPage > 1) {
+//                                                        currentPage - 1
+//                                                    } else {
+//                                                        currentPage
+//                                                    }
+//                                                    currentPage = newPage
+//                                                },
+//                                                onError = {}
                                             )
                                         }
                                     },
@@ -130,23 +131,14 @@ fun ForumBookmarksScreen(
                                 )
                             }
                         }
-                        
+
                         // Pagination
-                        if (bookmarksState.data.totalPages > 1) {
+                        if ((bookmarksState as UiState.Success<ForumBookmarksResult>).data.totalPages > 1) {
                             item {
                                 PaginationControls(
-                                    currentPage = bookmarksState.data.page,
-                                    totalPages = bookmarksState.data.totalPages,
-                                    onPrevious = {
-                                        if (bookmarksState.data.page > 1) {
-                                            currentPage = bookmarksState.data.page - 1
-                                        }
-                                    },
-                                    onNext = {
-                                        if (bookmarksState.data.page < bookmarksState.data.totalPages) {
-                                            currentPage = bookmarksState.data.page + 1
-                                        }
-                                    }
+                                    currentPage = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.page,
+                                    totalPages = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.totalPages,
+                                    onPageChange = {},
                                 )
                             }
                         }
@@ -155,7 +147,7 @@ fun ForumBookmarksScreen(
             }
             is UiState.Error -> {
                 ErrorView(
-                    message = bookmarksState.message,
+                    message = (bookmarksState as UiState.Error).message,
                     onRetry = { currentPage = 1 }
                 )
             }
@@ -209,9 +201,9 @@ fun BookmarkCard(
                     }
                 )
                 Text("votes", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                
+
                 Spacer(Modifier.height(4.dp))
-                
+
                 Text(
                     text = "${question.answerCount}",
                     fontSize = 16.sp,
@@ -219,9 +211,9 @@ fun BookmarkCard(
                     color = if (question.answerCount > 0) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text("answers", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                
+
                 Spacer(Modifier.height(4.dp))
-                
+
                 Text(
                     text = "${question.viewCount}",
                     fontSize = 12.sp,
@@ -229,7 +221,7 @@ fun BookmarkCard(
                 )
                 Text("views", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            
+
             // Content Column
             Column(
                 modifier = Modifier.weight(1f),
@@ -269,7 +261,7 @@ fun BookmarkCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    
+
                     IconButton(
                         onClick = onRemoveBookmark,
                         modifier = Modifier.size(40.dp)
@@ -282,7 +274,7 @@ fun BookmarkCard(
                         )
                     }
                 }
-                
+
                 // Content Preview
                 Text(
                     text = question.content.replace(Regex("<[^>]*>"), "").take(150),
@@ -291,7 +283,7 @@ fun BookmarkCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 // Tags
                 if (question.tags.isNotEmpty()) {
                     Row(
@@ -315,7 +307,7 @@ fun BookmarkCard(
                         }
                     }
                 }
-                
+
                 // Meta Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -331,7 +323,7 @@ fun BookmarkCard(
                             Spacer(Modifier.width(4.dp))
                             Text(question.userName, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        
+
                         question.categoryName?.let { category ->
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -344,7 +336,7 @@ fun BookmarkCard(
                                 )
                             }
                         }
-                        
+
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Schedule, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.width(4.dp))
@@ -355,7 +347,7 @@ fun BookmarkCard(
                             )
                         }
                     }
-                    
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Bookmark, null, Modifier.size(14.dp), tint = Color(0xFFFFB800))
                         Spacer(Modifier.width(4.dp))
@@ -444,7 +436,7 @@ fun formatTimeAgo(dateString: String): String {
         val date = sdf.parse(dateString) ?: return dateString
         val now = Date()
         val diffInSeconds = (now.time - date.time) / 1000
-        
+
         when {
             diffInSeconds < 60 -> "vừa xong"
             diffInSeconds < 3600 -> "${diffInSeconds / 60} phút trước"
@@ -457,4 +449,3 @@ fun formatTimeAgo(dateString: String): String {
         dateString
     }
 }
-

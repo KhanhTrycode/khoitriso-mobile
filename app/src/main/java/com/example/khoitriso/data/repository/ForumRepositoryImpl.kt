@@ -1,10 +1,18 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.ForumApi
-import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.forum.*
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.repository.*
+import com.example.khoitriso.domain.request.CreateAnswerRequest
+import com.example.khoitriso.domain.request.CreateCommentRequest
+import com.example.khoitriso.domain.request.CreateQuestionRequest
+import com.example.khoitriso.domain.request.ForumBookmarkItem
+import com.example.khoitriso.domain.request.ForumBookmarksResult
+import com.example.khoitriso.domain.request.ForumQuestions
+import com.example.khoitriso.domain.request.ForumVoteRequest
+import com.example.khoitriso.domain.request.UpdateAnswerRequest
+import com.example.khoitriso.domain.request.UpdateQuestionRequest
 import javax.inject.Inject
 
 class ForumRepositoryImpl @Inject constructor(
@@ -21,7 +29,7 @@ class ForumRepositoryImpl @Inject constructor(
         pageSize: Int,
         sortBy: String?,
         desc: Boolean?
-    ): Result<ForumQuestionsResult> {
+    ): Result<ForumQuestions> {
         return try {
             val response = forumApi.getQuestions(
                 search = search,
@@ -34,19 +42,19 @@ class ForumRepositoryImpl @Inject constructor(
                 sortBy = sortBy,
                 desc = desc
             )
-            
+
             if (response.isSuccessful) {
                 val body = response.body()
                 val result = body?.Result
-                
+
                 if (result != null) {
                     val items = (result.Items ?: emptyList()).map { it.toDomain() }
                     val total = result.Total ?: 0
                     val pageSize = result.PageSize ?: 20
                     val totalPages = (total + pageSize - 1) / pageSize // Ceiling division
-                    
+
                     Result.success(
-                        ForumQuestionsResult(
+                        ForumQuestions(
                             items = items,
                             total = total,
                             page = result.Page ?: page,
@@ -86,7 +94,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun createQuestion(request: CreateQuestionRequest): Result<ForumQuestion> {
         return try {
-            val dto = CreateQuestionRequest(
+            val dto = CreateQuestionRequestDto(
                 Title = request.title,
                 Content = request.content,
                 UserId = request.userId,
@@ -115,7 +123,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun updateQuestion(id: String, request: UpdateQuestionRequest): Result<ForumQuestion> {
         return try {
-            val dto = UpdateQuestionRequest(
+            val dto = UpdateQuestionRequestDto(
                 Title = request.title,
                 Content = request.content,
                 Tags = request.tags,
@@ -176,7 +184,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun createAnswer(questionId: String, request: CreateAnswerRequest): Result<ForumAnswer> {
         return try {
-            val dto = CreateAnswerRequest(
+            val dto = CreateAnswerRequestDto(
                 Content = request.content,
                 UserId = request.userId,
                 UserName = request.userName,
@@ -201,7 +209,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun updateAnswer(id: String, request: UpdateAnswerRequest): Result<ForumAnswer> {
         return try {
-            val dto = UpdateAnswerRequest(Content = request.content)
+            val dto = UpdateAnswerRequestDto(Content = request.content)
             val response = forumApi.updateAnswer(id, dto)
             if (response.isSuccessful) {
                 val body = response.body()
@@ -280,7 +288,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun createComment(request: CreateCommentRequest): Result<ForumComment> {
         return try {
-            val dto = CreateCommentRequest(
+            val dto = CreateCommentRequestDto(
                 ParentId = request.parentId,
                 ParentType = request.parentType,
                 Content = request.content,
@@ -307,7 +315,7 @@ class ForumRepositoryImpl @Inject constructor(
 
     override suspend fun vote(request: ForumVoteRequest): Result<Int> {
         return try {
-            val dto = ForumVoteRequest(
+            val dto = ForumVoteRequestDto(
                 TargetId = request.targetId,
                 TargetType = request.targetType,
                 UserId = request.userId,
@@ -349,24 +357,24 @@ class ForumRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserVote(targetType: Int, targetId: String, userId: Int): Result<Int?> {
+    override suspend fun getUserVote(targetType: Int, targetId: String, userId: Int): Result<Int> {
         return try {
             val response = forumApi.getUserVote(targetType, targetId, userId)
             if (response.isSuccessful) {
                 val body = response.body()
                 val result = body?.Result
-                Result.success(result?.VoteType)
+                Result.success(result?.VoteType?: throw Exception("VoteType is null"))
             } else {
-                Result.success(null)
+                Result.failure(Exception("API error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.success(null)
+            Result.failure(e)
         }
     }
 
     override suspend fun addBookmark(questionId: String, userId: Int): Result<Unit> {
         return try {
-            val dto = ForumBookmarkRequest(QuestionId = questionId, UserId = userId)
+            val dto = ForumBookmarkRequestDto(QuestionId = questionId, UserId = userId)
             val response = forumApi.addBookmark(dto)
             if (response.isSuccessful) {
                 Result.success(Unit)
@@ -423,7 +431,7 @@ class ForumRepositoryImpl @Inject constructor(
                     }
                     val total = result.Total ?: 0
                     val totalPages = (total + pageSize - 1) / pageSize
-                    
+
                     Result.success(
                         ForumBookmarksResult(
                             items = items,

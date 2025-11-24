@@ -1,11 +1,13 @@
 package com.example.khoitriso.ui.forum
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,6 +16,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +30,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.auth0.jwt.JWT
 import com.example.khoitriso.domain.models.*
-import com.example.khoitriso.domain.repository.*
+import com.example.khoitriso.domain.request.CreateAnswerRequest
+import com.example.khoitriso.domain.request.CreateCommentRequest
+import com.example.khoitriso.ui.behavior.FormatTimeAgo
 import com.example.khoitriso.utils.UiState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -37,54 +43,52 @@ import java.util.*
 fun ForumDetailScreen(
     navController: NavController,
     questionId: String,
-    viewModel: ForumViewModel = hiltViewModel()
+    viewModel: ForumViewModel = hiltViewModel(),
 ) {
     val questionState by viewModel.question.collectAsState()
     val answersState by viewModel.answers.collectAsState()
     val comments by viewModel.comments.collectAsState()
     val userVotes by viewModel.userVotes.collectAsState()
     val bookmarks by viewModel.bookmarks.collectAsState()
-    
+
+    val currentUserId by viewModel.currentUserId.collectAsState()
+    val currentUserName by viewModel.currentUserName.collectAsState()
+
+    // State cho các form
     var showAnswerForm by remember { mutableStateOf(false) }
     var answerContent by remember { mutableStateOf("") }
     var submittingAnswer by remember { mutableStateOf(false) }
-    
+
     var showCommentForms by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     var commentContents by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
-    var submittingComments by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
-    
-    val coroutineScope = rememberCoroutineScope()
-    val currentUserId by viewModel.currentUserId.collectAsState()
-    val currentUserName by viewModel.currentUserName.collectAsState()
-    val currentUserAvatar by viewModel.currentUserAvatar.collectAsState()
-    
+
+    // Tải dữ liệu ban đầu
     LaunchedEffect(questionId) {
         viewModel.loadQuestionById(questionId)
         viewModel.loadAnswers(questionId)
-        viewModel.loadComments(1, questionId) // 1 = Question
+        viewModel.loadComments(1, questionId) // 1 = Question type
     }
-    
+
+    // Tải trạng thái vote và bookmark của người dùng
     LaunchedEffect(questionId, currentUserId) {
         currentUserId?.let { userId ->
             viewModel.loadUserVote(1, questionId, userId)
             viewModel.loadBookmarkStatus(questionId, userId)
         }
     }
-    
+
+    // Tải comment và vote cho các câu trả lời
     LaunchedEffect(answersState) {
-        when (answersState) {
-            is UiState.Success -> {
-                answersState.data.forEach { answer ->
-                    viewModel.loadComments(2, answer.id) // 2 = Answer
-                    if (currentUserId != null) {
-                        viewModel.loadUserVote(2, answer.id, currentUserId)
-                    }
+        if (answersState is UiState.Success) {
+            (answersState as UiState.Success<List<ForumAnswer>>).data.forEach { answer ->
+                viewModel.loadComments(2, answer.id) // 2 = Answer type
+                currentUserId?.let { userId ->
+                    viewModel.loadUserVote(2, answer.id, userId)
                 }
             }
-            else -> {}
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -97,32 +101,22 @@ fun ForumDetailScreen(
             )
         }
     ) { paddingValues ->
-        when (questionState) {
+        when (val state = questionState) {
             is UiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             is UiState.Success -> {
-                val question = questionState.data
-                val answers = when (answersState) {
-                    is UiState.Success -> answersState.data.sortedWith(
-                        compareBy<ForumAnswer>(
-                            { !it.isAccepted }, // Accepted first
-                            { -it.voteCount } // Then by vote count
-                        )
-                    )
-                    else -> emptyList()
-                }
-                
+                val question = state.data
+                val answers = (answersState as? UiState.Success)?.data?.sortedWith(
+                    compareBy({ !it.isAccepted }, { -it.voteCount })
+                ) ?: emptyList()
+
                 val isQuestionOwner = currentUserId != null && currentUserId == question.userId
-                val canAcceptAnswer = isQuestionOwner // Only question owner can accept
-                
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -130,7 +124,7 @@ fun ForumDetailScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Question Section
+                    // PHẦN CÂU HỎI
                     item {
                         QuestionDetailCard(
                             question = question,
@@ -138,120 +132,59 @@ fun ForumDetailScreen(
                             isBookmarked = bookmarks.contains(question.id),
                             currentUserId = currentUserId ?: 0,
                             onVote = { voteType ->
-                                currentUserId?.let { userId ->
-                                    viewModel.vote(1, question.id, userId, voteType, {}, {})
-                                }
+                                currentUserId?.let { viewModel.vote(1, question.id, it, voteType) }
                             },
                             onBookmark = {
-                                currentUserId?.let { userId ->
-                                    viewModel.toggleBookmark(question.id, userId, {}, {})
-                                }
+                                currentUserId?.let { viewModel.toggleBookmark(question.id, it) }
                             },
                             comments = comments[question.id] ?: emptyList(),
                             showCommentForm = showCommentForms[question.id] == true,
                             commentContent = commentContents[question.id] ?: "",
-                            onCommentContentChange = {
-                                commentContents = commentContents.toMutableMap().apply {
-                                    put(question.id, it)
-                                }
-                            },
-                            onShowCommentForm = {
-                                showCommentForms = showCommentForms.toMutableMap().apply {
-                                    put(question.id, !(this[question.id] ?: false))
-                                }
-                            },
+                            onCommentContentChange = { newContent -> commentContents = commentContents + (question.id to newContent) },
+                            onShowCommentForm = { showCommentForms = showCommentForms + (question.id to !(showCommentForms[question.id] ?: false)) },
                             onSubmitComment = {
                                 currentUserId?.let { userId ->
-                                    coroutineScope.launch {
-                                        viewModel.createComment(
-                                            CreateCommentRequest(
-                                                parentId = question.id,
-                                                parentType = 1,
-                                                content = commentContents[question.id] ?: "",
-                                                userId = userId,
-                                                userName = currentUserName ?: "User",
-                                                userAvatar = null
-                                            ),
-                                            {},
-                                            {}
-                                        )
-                                        commentContents = commentContents.toMutableMap().apply {
-                                            remove(question.id)
-                                        }
-                                        showCommentForms = showCommentForms.toMutableMap().apply {
-                                            put(question.id, false)
-                                        }
-                                    }
+                                    val content = commentContents[question.id] ?: ""
+                                    viewModel.createComment(CreateCommentRequest(question.id, 1, content, userId, currentUserName ?: "User"))
+                                    commentContents = commentContents - question.id
+                                    showCommentForms = showCommentForms - question.id
                                 }
                             },
-                            onDeleteQuestion = {
-                                // TODO: Implement delete
-                            }
+                            onDeleteQuestion = { /* TODO */ }
                         )
                     }
-                    
-                    // Answers Header
+
+                    // PHẦN CÂU TRẢ LỜI
                     item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${answers.size} ${if (answers.size == 1) "Câu trả lời" else "Câu trả lời"}",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            if (currentUserId != null && !question.isSolved) {
-                                Button(
-                                    onClick = { showAnswerForm = !showAnswerForm }
-                                ) {
-                                    Text("Trả lời")
-                                }
-                            }
-                        }
+                        AnswersHeader(
+                            answerCount = answers.size,
+                            showAnswerButton = currentUserId != null && !question.isSolved,
+                            onAnswerClick = { showAnswerForm = !showAnswerForm }
+                        )
                     }
-                    
-                    // Answer Form
+
                     if (showAnswerForm && currentUserId != null) {
                         item {
                             AnswerFormCard(
                                 content = answerContent,
                                 onContentChange = { answerContent = it },
-                            onSubmit = {
-                                currentUserId?.let { userId ->
-                                    coroutineScope.launch {
-                                        submittingAnswer = true
-                                        viewModel.createAnswer(
-                                            questionId,
-                                            CreateAnswerRequest(
-                                                content = answerContent,
-                                                userId = userId,
-                                                userName = currentUserName ?: "User",
-                                                userAvatar = null
-                                            ),
-                                            onSuccess = {
-                                                submittingAnswer = false
-                                                answerContent = ""
-                                                showAnswerForm = false
-                                            },
-                                            onError = {
-                                                submittingAnswer = false
-                                            }
-                                        )
-                                    }
-                                }
-                            },
-                                onCancel = {
-                                    showAnswerForm = false
-                                    answerContent = ""
+                                onSubmit = {
+                                    submittingAnswer = true
+                                    viewModel.createAnswer(
+                                        questionId,
+                                        CreateAnswerRequest(answerContent, currentUserId!!, currentUserName ?: "User"),
+                                        onSuccess = {
+                                            submittingAnswer = false; answerContent = ""; showAnswerForm = false
+                                        },
+                                        onError = { submittingAnswer = false }
+                                    )
                                 },
+                                onCancel = { showAnswerForm = false; answerContent = "" },
                                 submitting = submittingAnswer
                             )
                         }
                     }
-                    
-                    // Answers List
+
                     if (answers.isEmpty()) {
                         item {
                             EmptyAnswersView(
@@ -260,94 +193,66 @@ fun ForumDetailScreen(
                             )
                         }
                     } else {
-                        items(answers) { answer ->
+                        items(answers, key = { it.id }) { answer ->
                             AnswerCard(
                                 answer = answer,
                                 userVote = userVotes["2-${answer.id}"],
-                                canAccept = canAcceptAnswer && !answer.isDeleted,
+                                canAccept = isQuestionOwner && !answer.isDeleted,
                                 isAnswerOwner = currentUserId == answer.userId,
-                            currentUserId = currentUserId ?: 0,
-                            onVote = { voteType ->
-                                currentUserId?.let { userId ->
-                                    viewModel.vote(2, answer.id, userId, voteType, {}, {})
-                                }
-                            },
-                                onAccept = {
-                                    viewModel.acceptAnswer(answer.id, {}, {})
+                                currentUserId = currentUserId ?: 0,
+                                onVote = { voteType ->
+                                    currentUserId?.let { viewModel.vote(2, answer.id, it, voteType) }
                                 },
-                                onUnaccept = {
-                                    viewModel.unacceptAnswer(answer.id, {}, {})
-                                },
+                                onAccept = { viewModel.acceptAnswer(answer.id) },
+                                onUnaccept = { viewModel.unacceptAnswer(answer.id) },
                                 comments = comments[answer.id] ?: emptyList(),
                                 showCommentForm = showCommentForms[answer.id] == true,
                                 commentContent = commentContents[answer.id] ?: "",
-                                onCommentContentChange = {
-                                    commentContents = commentContents.toMutableMap().apply {
-                                        put(answer.id, it)
-                                    }
-                                },
-                                onShowCommentForm = {
-                                    showCommentForms = showCommentForms.toMutableMap().apply {
-                                        put(answer.id, !(this[answer.id] ?: false))
-                                    }
-                                },
+                                onCommentContentChange = { newContent -> commentContents = commentContents + (answer.id to newContent) },
+                                onShowCommentForm = { showCommentForms = showCommentForms + (answer.id to !(showCommentForms[answer.id] ?: false)) },
                                 onSubmitComment = {
                                     currentUserId?.let { userId ->
-                                        coroutineScope.launch {
-                                            viewModel.createComment(
-                                                CreateCommentRequest(
-                                                    parentId = answer.id,
-                                                    parentType = 2,
-                                                    content = commentContents[answer.id] ?: "",
-                                                    userId = userId,
-                                                    userName = currentUserName ?: "User",
-                                                    userAvatar = null
-                                                ),
-                                                {},
-                                                {}
-                                            )
-                                            commentContents = commentContents.toMutableMap().apply {
-                                                remove(answer.id)
-                                            }
-                                            showCommentForms = showCommentForms.toMutableMap().apply {
-                                                put(answer.id, false)
-                                            }
-                                        }
+                                        val content = commentContents[answer.id] ?: ""
+                                        viewModel.createComment(CreateCommentRequest(answer.id, 2, content, userId, currentUserName ?: "User"))
+                                        commentContents = commentContents - answer.id
+                                        showCommentForms = showCommentForms - answer.id
                                     }
                                 },
-                                onDelete = {
-                                    // TODO: Implement delete
-                                }
+                                onDelete = { /* TODO */ }
                             )
                         }
                     }
                 }
             }
             is UiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Icon(Icons.Default.Error, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
-                        Text(questionState.message, color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { navController.popBackStack() }) {
-                            Text("Quay lại")
-                        }
-                    }
-                }
+                ErrorDisplay(message = state.message, onRetry = { navController.popBackStack() })
             }
         }
     }
 }
 
+// --- TÁCH COMPOSABLE CON RA ĐÂY ---
+
 @Composable
-fun QuestionDetailCard(
+private fun AnswersHeader(answerCount: Int, showAnswerButton: Boolean, onAnswerClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$answerCount ${if (answerCount <= 1) "Câu trả lời" else "Câu trả lời"}",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        if (showAnswerButton) {
+            Button(onClick = onAnswerClick) { Text("Trả lời") }
+        }
+    }
+}
+
+@Composable
+private fun QuestionDetailCard(
     question: ForumQuestion,
     userVote: Int?,
     isBookmarked: Boolean,
@@ -360,14 +265,14 @@ fun QuestionDetailCard(
     onCommentContentChange: (String) -> Unit,
     onShowCommentForm: () -> Unit,
     onSubmitComment: () -> Unit,
-    onDeleteQuestion: () -> Unit
+    onDeleteQuestion: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (question.isPinned) 
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) 
+            containerColor = if (question.isPinned)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             else MaterialTheme.colorScheme.surface
         )
     ) {
@@ -383,13 +288,9 @@ fun QuestionDetailCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = { onVote(1) },
-                    modifier = Modifier.size(40.dp)
-                ) {
+                IconButton(onClick = { onVote(1) }, modifier = Modifier.size(40.dp)) {
                     Icon(
-                        Icons.Default.ArrowUpward,
-                        null,
+                        Icons.Default.Warning, null,
                         tint = if (userVote == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -403,30 +304,23 @@ fun QuestionDetailCard(
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )
-                IconButton(
-                    onClick = { onVote(-1) },
-                    modifier = Modifier.size(40.dp)
-                ) {
+                IconButton(onClick = { onVote(-1) }, modifier = Modifier.size(40.dp)) {
                     Icon(
-                        Icons.Default.ArrowDownward,
-                        null,
+                        Icons.Default.Warning, null,
                         tint = if (userVote == -1) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (currentUserId != null) {
-                    IconButton(
-                        onClick = onBookmark,
-                        modifier = Modifier.size(40.dp)
-                    ) {
+                if (currentUserId != 0) {
+                    IconButton(onClick = onBookmark, modifier = Modifier.size(40.dp)) {
                         Icon(
-                            if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            if (isBookmarked) Icons.Default.Warning else Icons.Default.Warning,
                             null,
                             tint = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
-            
+
             // Content Column
             Column(
                 modifier = Modifier.weight(1f),
@@ -439,9 +333,7 @@ fun QuestionDetailCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (question.isPinned) {
-                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
-                            Text("Ghim", fontSize = 10.sp)
-                        }
+                        Badge(containerColor = MaterialTheme.colorScheme.primary) { Text("Ghim", fontSize = 10.sp) }
                     }
                     if (question.isSolved) {
                         Badge(containerColor = Color(0xFF10B981)) {
@@ -460,26 +352,23 @@ fun QuestionDetailCard(
                         textDecoration = if (question.isDeleted) TextDecoration.LineThrough else null
                     )
                 }
-                
+
                 // Content HTML
-                HtmlContent(
-                    html = question.content,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = android.text.Html.fromHtml(question.content, android.text.Html.FROM_HTML_MODE_COMPACT).toString()
                 )
-                
+
+
                 // Tags
                 if (question.tags.isNotEmpty()) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(question.tags) { tag ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
+                            Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.Tag, null, Modifier.size(12.dp))
+                                    Icon(Icons.Default.Warning, null, Modifier.size(12.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Text(tag, fontSize = 11.sp)
                                 }
@@ -487,7 +376,7 @@ fun QuestionDetailCard(
                         }
                     }
                 }
-                
+
                 // Meta Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -495,55 +384,23 @@ fun QuestionDetailCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Person, null, Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(question.userName, fontSize = 12.sp)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Schedule, null, Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(formatTimeAgo(question.createdAt), fontSize = 12.sp)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Visibility, null, Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("${question.viewCount} lượt xem", fontSize = 12.sp)
-                        }
+                        MetaInfoItem(icon = Icons.Default.Person, text = question.userName)
+                        MetaInfoItem(icon = Icons.Default.Warning, text = FormatTimeAgo(question
+                            .createdAt))
+                        MetaInfoItem(icon = Icons.Default.Warning, text = "${question.viewCount} lượt " +
+                                "xem")
                     }
                 }
-                
+
                 // Comments Section
-                if (comments.isNotEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        comments.forEach { comment ->
-                            CommentItem(comment = comment)
-                        }
-                    }
-                }
-                
-                // Add Comment Button/Form
-                if (currentUserId != null) {
-                    if (showCommentForm) {
-                        CommentForm(
-                            content = commentContent,
-                            onContentChange = onCommentContentChange,
-                            onSubmit = onSubmitComment,
-                            onCancel = onShowCommentForm
-                        )
-                    } else {
-                        TextButton(onClick = onShowCommentForm) {
-                            Text("Thêm bình luận", fontSize = 12.sp)
-                        }
-                    }
-                }
+                CommentSection(comments, showCommentForm, commentContent, onCommentContentChange, onShowCommentForm, onSubmitComment, currentUserId != 0)
             }
         }
     }
 }
 
 @Composable
-fun AnswerCard(
+private fun AnswerCard(
     answer: ForumAnswer,
     userVote: Int?,
     canAccept: Boolean,
@@ -558,18 +415,18 @@ fun AnswerCard(
     onCommentContentChange: (String) -> Unit,
     onShowCommentForm: () -> Unit,
     onSubmitComment: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (answer.isAccepted) 
-                Color(0xFF10B981).copy(alpha = 0.1f) 
+            containerColor = if (answer.isAccepted)
+                Color(0xFF10B981).copy(alpha = 0.1f)
             else MaterialTheme.colorScheme.surface
         ),
-        border = if (answer.isAccepted) 
-            BorderStroke(2.dp, Color(0xFF10B981)) 
+        border = if (answer.isAccepted)
+            BorderStroke(2.dp, Color(0xFF10B981))
         else null
     ) {
         Row(
@@ -584,13 +441,9 @@ fun AnswerCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = { onVote(1) },
-                    modifier = Modifier.size(40.dp)
-                ) {
+                IconButton(onClick = { onVote(1) }, modifier = Modifier.size(40.dp)) {
                     Icon(
-                        Icons.Default.ArrowUpward,
-                        null,
+                        Icons.Default.Warning, null,
                         tint = if (userVote == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -604,63 +457,39 @@ fun AnswerCard(
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )
-                IconButton(
-                    onClick = { onVote(-1) },
-                    modifier = Modifier.size(40.dp)
-                ) {
+                IconButton(onClick = { onVote(-1) }, modifier = Modifier.size(40.dp)) {
                     Icon(
-                        Icons.Default.ArrowDownward,
-                        null,
+                        Icons.Default.Warning, null,
                         tint = if (userVote == -1) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (canAccept) {
-                    if (answer.isAccepted) {
-                        // Show unaccept button when answer is already accepted
-                        IconButton(
-                            onClick = onUnaccept,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                "Hủy chấp nhận",
-                                tint = Color(0xFF10B981)
-                            )
-                        }
-                    } else {
-                        // Show accept button when answer is not accepted
-                        IconButton(
-                            onClick = onAccept,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.CheckCircleOutline,
-                                "Chấp nhận câu trả lời",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                    IconButton(
+                        onClick = if (answer.isAccepted) onUnaccept else onAccept,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            if (answer.isAccepted) Icons.Default.CheckCircle else Icons.Default.Warning,
+                            if (answer.isAccepted) "Hủy chấp nhận" else "Chấp nhận câu trả lời",
+                            tint = if (answer.isAccepted) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 if (answer.isAccepted) {
-                    Text(
-                        "✓ Đã chấp nhận",
-                        fontSize = 10.sp,
-                        color = Color(0xFF10B981),
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("✓ Đã chấp nhận", fontSize = 10.sp, color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
                 }
             }
-            
+
             // Content Column
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                HtmlContent(
-                    html = answer.content,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = android.text.Html.fromHtml(answer.content, android.text.Html.FROM_HTML_MODE_COMPACT).toString()
                 )
-                
+
+
                 // Meta Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -668,12 +497,9 @@ fun AnswerCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(answer.userName, fontSize = 12.sp)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Schedule, null, Modifier.size(12.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(formatTimeAgo(answer.createdAt), fontSize = 12.sp)
-                        }
+                        Text(answer.userName, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        MetaInfoItem(icon = Icons.Default.Warning, text = FormatTimeAgo(answer
+                            .createdAt))
                     }
                     if (isAnswerOwner) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -686,34 +512,44 @@ fun AnswerCard(
                         }
                     }
                 }
-                
+
                 // Comments Section
-                if (comments.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier.padding(start = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Divider()
-                        comments.forEach { comment ->
-                            CommentItem(comment = comment)
-                        }
-                    }
-                }
-                
-                // Add Comment Button/Form
-                if (currentUserId != null) {
-                    if (showCommentForm) {
-                        CommentForm(
-                            content = commentContent,
-                            onContentChange = onCommentContentChange,
-                            onSubmit = onSubmitComment,
-                            onCancel = onShowCommentForm
-                        )
-                    } else {
-                        TextButton(onClick = onShowCommentForm) {
-                            Text("Thêm bình luận", fontSize = 12.sp)
-                        }
-                    }
+                CommentSection(comments, showCommentForm, commentContent, onCommentContentChange, onShowCommentForm, onSubmitComment, currentUserId != 0, isNested = true)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommentSection(
+    comments: List<ForumComment>,
+    showCommentForm: Boolean,
+    commentContent: String,
+    onCommentContentChange: (String) -> Unit,
+    onShowCommentForm: () -> Unit,
+    onSubmitComment: () -> Unit,
+    canComment: Boolean,
+    isNested: Boolean = false,
+) {
+    Column(
+        modifier = if (isNested) Modifier.padding(start = 16.dp) else Modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (comments.isNotEmpty()) {
+            if (isNested) Divider()
+            comments.forEach { comment -> CommentItem(comment = comment) }
+        }
+        if (canComment) {
+            if (showCommentForm) {
+                CommentForm(
+                    content = commentContent,
+                    onContentChange = onCommentContentChange,
+                    onSubmit = onSubmitComment,
+                    onCancel = onShowCommentForm
+                )
+            } else {
+                TextButton(onClick = onShowCommentForm, contentPadding = PaddingValues(0.dp)) {
+                    Text("Thêm bình luận", fontSize = 12.sp)
                 }
             }
         }
@@ -721,46 +557,26 @@ fun AnswerCard(
 }
 
 @Composable
-fun CommentItem(comment: ForumComment) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        HtmlContent(
-            html = comment.content,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(
-            modifier = Modifier.padding(top = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                comment.userName,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "•",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                formatTimeAgo(comment.createdAt),
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+private fun CommentItem(comment: ForumComment) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp)) {
+        Text(text = comment.content, fontSize = 14.sp)
+        Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(comment.userName, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+            Text("•", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(FormatTimeAgo(comment.createdAt), fontSize = 11.sp, color = MaterialTheme
+                .colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-fun CommentForm(
+private fun CommentForm(
     content: String,
     onContentChange: (String) -> Unit,
     onSubmit: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
@@ -771,71 +587,51 @@ fun CommentForm(
             maxLines = 3
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onSubmit, enabled = content.isNotBlank()) {
-                Text("Gửi")
-            }
-            OutlinedButton(onClick = onCancel) {
-                Text("Hủy")
-            }
+            Button(onClick = onSubmit, enabled = content.isNotBlank()) { Text("Gửi") }
+            OutlinedButton(onClick = onCancel) { Text("Hủy") }
         }
     }
 }
 
 @Composable
-fun AnswerFormCard(
+private fun AnswerFormCard(
     content: String,
     onContentChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onCancel: () -> Unit,
-    submitting: Boolean
+    submitting: Boolean,
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                "Câu trả lời của bạn",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Câu trả lời của bạn", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = content,
                 onValueChange = onContentChange,
-                modifier = Modifier.fillMaxWidth().height(200.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
                 placeholder = { Text("Nhập câu trả lời của bạn...") },
                 maxLines = 10
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = onSubmit,
-                    enabled = content.isNotBlank() && !submitting
-                ) {
+                Button(onClick = onSubmit, enabled = content.isNotBlank() && !submitting) {
                     if (submitting) {
-                        CircularProgressIndicator(Modifier.size(16.dp))
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                     } else {
                         Text("Gửi câu trả lời")
                     }
                 }
-                OutlinedButton(onClick = onCancel) {
-                    Text("Hủy")
-                }
+                OutlinedButton(onClick = onCancel) { Text("Hủy") }
             }
         }
     }
 }
 
 @Composable
-fun EmptyAnswersView(
-    showAnswerButton: Boolean,
-    onAnswerClick: () -> Unit
-) {
+private fun EmptyAnswersView(showAnswerButton: Boolean, onAnswerClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier
@@ -844,52 +640,38 @@ fun EmptyAnswersView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                Icons.Default.Message,
-                null,
-                Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Text(
-                "Chưa có câu trả lời",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Hãy là người đầu tiên trả lời câu hỏi này!",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Icon(Icons.Default.Warning, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme
+                .onSurfaceVariant.copy(alpha = 0.5f))
+            Text("Chưa có câu trả lời", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Hãy là người đầu tiên trả lời câu hỏi này!", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (showAnswerButton) {
-                Button(onClick = onAnswerClick) {
-                    Text("Trả lời")
-                }
+                Button(onClick = onAnswerClick) { Text("Trả lời") }
             }
         }
     }
 }
 
 @Composable
-// HtmlContent đã được move ra file riêng HtmlContent.kt
-
-@SuppressLint("SimpleDateFormat")
-fun formatTimeAgo(dateString: String): String {
-    return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val date = sdf.parse(dateString) ?: return dateString
-        val now = Date()
-        val diffInSeconds = (now.time - date.time) / 1000
-        
-        when {
-            diffInSeconds < 60 -> "vừa xong"
-            diffInSeconds < 3600 -> "${diffInSeconds / 60} phút trước"
-            diffInSeconds < 86400 -> "${diffInSeconds / 3600} giờ trước"
-            diffInSeconds < 2592000 -> "${diffInSeconds / 86400} ngày trước"
-            diffInSeconds < 31536000 -> "${diffInSeconds / 2592000} tháng trước"
-            else -> "${diffInSeconds / 31536000} năm trước"
+private fun ErrorDisplay(message: String, onRetry: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(Icons.Default.Warning, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme
+                .error)
+            Text(message, color = MaterialTheme.colorScheme.error)
+            Button(onClick = onRetry) { Text("Quay lại") }
         }
-    } catch (e: Exception) {
-        dateString
+    }
+}
+
+@Composable
+private fun MetaInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(4.dp))
+        Text(text, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

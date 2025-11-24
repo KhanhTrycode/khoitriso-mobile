@@ -17,7 +17,7 @@ interface NotificationRepository {
 }
 
 data class NotificationsResult(
-    val items: List<Notification>,
+    var items: List<Notification>,
     val total: Int,
     val unreadCount: Int,
     val page: Int,

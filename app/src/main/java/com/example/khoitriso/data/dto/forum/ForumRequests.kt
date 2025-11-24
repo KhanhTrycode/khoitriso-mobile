@@ -1,6 +1,6 @@
 package com.example.khoitriso.data.dto.forum
 
-data class CreateQuestionRequest(
+data class CreateQuestionRequestDto(
     val Title: String,
     val Content: String,
     val UserId: Int,
@@ -11,7 +11,7 @@ data class CreateQuestionRequest(
     val CategoryName: String? = null
 )
 
-data class UpdateQuestionRequest(
+data class UpdateQuestionRequestDto(
     val Title: String? = null,
     val Content: String? = null,
     val UserName: String? = null,
@@ -23,21 +23,21 @@ data class UpdateQuestionRequest(
     val IsClosed: Boolean? = null
 )
 
-data class CreateAnswerRequest(
+data class CreateAnswerRequestDto(
     val Content: String,
     val UserId: Int,
     val UserName: String,
     val UserAvatar: String? = null
 )
 
-data class UpdateAnswerRequest(
+data class UpdateAnswerRequestDto(
     val Content: String? = null,
     val UserName: String? = null,
     val UserAvatar: String? = null,
     val Attachments: List<ForumAttachmentDto>? = null
 )
 
-data class CreateCommentRequest(
+data class CreateCommentRequestDto(
     val ParentId: String,
     val ParentType: Int, // 1 = Question, 2 = Answer
     val Content: String,
@@ -46,7 +46,7 @@ data class CreateCommentRequest(
     val UserAvatar: String? = null
 )
 
-data class ForumVoteRequest(
+data class ForumVoteRequestDto(
     val TargetId: String,
     val TargetType: Int, // 1 = Question, 2 = Answer, 3 = Comment
     val UserId: Int,
@@ -61,7 +61,7 @@ data class ForumUserVoteResponse(
     val VoteType: Int? // -1, 0, 1
 )
 
-data class ForumBookmarkRequest(
+data class ForumBookmarkRequestDto(
     val QuestionId: String,
     val UserId: Int
 )

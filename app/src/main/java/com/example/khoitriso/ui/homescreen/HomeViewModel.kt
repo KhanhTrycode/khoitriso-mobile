@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.domain.models.Category
+import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
@@ -27,7 +28,7 @@ class HomeViewModel @Inject constructor(
 
     private val _categories = MutableStateFlow<UiState<List<Category>>>(UiState.Loading)
     private val _courses = MutableStateFlow<UiState<List<Course>>>(UiState.Loading)
-    private val _books = MutableStateFlow<UiState<List<Book>>>(UiState.Loading)
+    private val _books = MutableStateFlow<UiState<MyResponese<Book>>>(UiState.Loading)
 
     val categories: StateFlow<UiState<List<Category>>> = _categories
 
@@ -53,13 +54,19 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getBooks() {
-        loadData(_books, MockData.books) {
+        loadData(_books, MyResponese<Book>(
+            items = MockData.books,
+            page = 1,
+            pageSize = MockData.books.size,
+            total = MockData.books.size,
+            totalPages = 1
+        )) {
             bookUsecase.getBook()
         }
         viewModelScope.launch {
             _books.collectLatest { bookState ->
-                if (bookState is UiState.Success<List<Book>>) {
-                    val books = bookState.data
+                if (bookState is UiState.Success<MyResponese<Book>>) {
+                    val books = bookState.data.items
                     val recommendedBooks = books.shuffled().take(5)
                     _recommendedBooks.value = UiState.Success(recommendedBooks)
 

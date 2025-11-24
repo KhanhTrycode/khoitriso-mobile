@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui.tooling.preview)
+    testImplementation(libs.junit.junit)
+    testImplementation(libs.junit.junit)
+    testImplementation(libs.junit.junit)
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.material3)
     // --- ConstraintLayout + BoxWithConstraints ---
@@ -124,6 +127,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.test.manifest)
+    testImplementation ("org.mockito:mockito-core:5.5.0")
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
+
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation(libs.java.jwt)
@@ -140,5 +147,7 @@ dependencies {
     
     // --- SignalR ---
     implementation("com.microsoft.signalr:signalr:6.0.8")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8") // Check for the latest version
+
 }
 
