@@ -19,10 +19,16 @@ object  NavRoute {
     val learningPath = "learningPath"
     val courseDetail = "courseDetail"
     val bookDetail = "bookDetail"
+    val forum = "forum"
+    val forumAsk = "forum/ask"
+    val forumBookmarks = "forum/bookmarks"
+    val notifications = "notifications"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val BookDetailWithArgs = "bookDetail/{bookId}"
+    const val ForumDetailWithArgs = "forum/{questionId}"
     fun NavCourseDetail(courseId: Int) = "$courseDetail/$courseId"
     fun NavBookDetail(bookId: Int) = "$bookDetail/$bookId"
+    fun NavForumDetail(questionId: String) = "forum/$questionId"
 }
 
 data class MyNavigationBarItem(

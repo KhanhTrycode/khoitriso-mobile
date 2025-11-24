@@ -4,6 +4,8 @@ import android.content.Context
 import com.example.khoitriso.data.api.*
 import com.example.khoitriso.data.local.TokenAuthenticator
 import com.example.khoitriso.data.local.TokenManager
+import com.example.khoitriso.data.signalr.SignalRService
+import com.google.gson.Gson
 import com.example.khoitriso.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -193,4 +195,22 @@ object NetworkModule {
     @Singleton
     fun provideWishlistApi(@Named("secureRetrofit") retrofit: Retrofit): WishlistApi =
         retrofit.create(WishlistApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideForumApi(@Named("secureRetrofit") retrofit: Retrofit): ForumApi =
+        retrofit.create(ForumApi::class.java)
+
+    // SignalR Service
+    @Provides
+    @Singleton
+    fun provideSignalRService(
+        tokenManager: TokenManager,
+        gson: Gson
+    ): SignalRService = SignalRService(tokenManager, gson)
+
+    // Gson
+    @Provides
+    @Singleton
+    fun provideGson(): Gson = com.google.gson.Gson()
 }
