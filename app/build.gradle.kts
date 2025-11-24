@@ -41,6 +41,7 @@ android {
         debug {
             buildConfigField("String", "API_KEY", "\"${localProps.getProperty("API_KEY")}\"")
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${localProps.getProperty("GOOGLE_CLIENT_ID")}\"")
+            buildConfigField("Boolean", "DEBUG", "\"${localProps.getProperty("DEBUG")}\"")
 
         }
     }

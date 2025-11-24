@@ -13,7 +13,7 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
 
-    override suspend fun authGoogleSDK(idToken: String): Result<Authorization?> {
+    override suspend fun authGoogleSDK(idToken: String): Result<Authorization> {
         val response = publicApi.authGoogleSDK(GoogleAuthRequest(idToken))
         return try {
             if (response.isSuccessful) {

@@ -1,6 +1,7 @@
 package com.example.khoitriso.data.local
 
 import com.example.khoitriso.data.api.AuthApi
+import com.example.khoitriso.utils.debug
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -22,6 +23,7 @@ class TokenAuthenticator @Inject constructor(
     private var refreshDeferred: CompletableDeferred<String?>? = null
 
     override fun authenticate(route: Route?, response: Response): Request? {
+        debug("Authenticate", "TokenAuthenticator")
         return runBlocking(Dispatchers.IO) {
             val newToken = getUpdatedToken()
             newToken?.let {

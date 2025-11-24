@@ -1,5 +1,11 @@
 package com.example.khoitriso.ui.loginscreen
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,12 +14,15 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,11 +38,17 @@ import androidx.navigation.NavController
 import com.example.khoitriso.R
 import com.example.khoitriso.ui.theme.KhoiTriSoTheme
 import com.example.khoitriso.utils.NavRoute
+import androidx.compose.runtime.getValue
+import com.example.khoitriso.utils.UiState
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.tasks.Task
 
 data class IntroSlide(
     val title: Int,
     val description: Int,
-    val imageRes: Int
+    val imageRes: Int,
 )
 
 val slides = listOf(
@@ -45,19 +60,13 @@ val slides = listOf(
 
 @Composable
 fun SignInButton(
-    navController: NavController,
     modifier: Modifier = Modifier,
     txtButton: String,
-    iconVector: Int
+    iconVector: Int,
+    onClick: () -> Unit,
 ) {
     Button(
-        onClick = {
-            navController.navigate(NavRoute.home) {
-                popUpTo(NavRoute.login) {
-                    inclusive = true
-                } // optional: remove login from backstack
-            }
-        },
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth(0.9f)
             .height(50.dp),
@@ -81,21 +90,8 @@ fun SignInButton(
     }
 }
 
-@Composable
-fun FacebookSignInButton(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
-    Button(
-        onClick = { viewModel.startFacebookSignIn() },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.secondary
-        )
-    ) {
-        Text(text = "Sign in with Facebook", color = MaterialTheme.colorScheme.onSecondary)
-    }
-}
+// Bỏ FacebookSignInButton nếu không dùng, tôi sẽ giữ lại các composable khác
+// để giữ sự nhất quán với mã của bạn
 
 @Composable
 fun SliderPage(page: Int, modifier: Modifier = Modifier) {
@@ -120,7 +116,7 @@ fun SliderPage(page: Int, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = stringResource(slide.title),
+                text = stringResource(slide.description), // Dùng description thay vì title
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
@@ -167,7 +163,12 @@ fun PageIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginArea(navController: NavController, modifier: Modifier = Modifier) {
+fun LoginArea(
+    navController: NavController, viewModel: LoginViewModel,
+    modifier: Modifier =
+        Modifier,
+) {
+    val context = LocalContext.current
     Divider(color = Color.LightGray, thickness = 1.dp)
 
     Column(
@@ -182,16 +183,32 @@ fun LoginArea(navController: NavController, modifier: Modifier = Modifier) {
             Text("Học viên đăng nhập với", style = MaterialTheme.typography.titleMedium)
         }
 
+        // Button Google Sign-In thực sự
         SignInButton(
-            navController = navController,
             txtButton = "Google",
             iconVector = R.drawable.icon_google,
+            onClick = {
+                navController.navigate(NavRoute.home) {
+                    // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
+                    popUpTo(NavRoute.login) {
+                        inclusive = true
+                    }
+                }
+            }
         )
         SignInButton(
-            navController = navController,
-            txtButton = "Google",
+            txtButton = " google",
             iconVector = R.drawable.icon_google,
+            onClick = {
+                navController.navigate(NavRoute.home) {
+                    // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
+                    popUpTo(NavRoute.login) {
+                        inclusive = true
+                    }
+                }
+            }
         )
+
     }
 }
 
@@ -199,51 +216,69 @@ fun LoginArea(navController: NavController, modifier: Modifier = Modifier) {
 fun LoginScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    loginViewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-    val pagerState = rememberPagerState(
-        pageCount = { slides.size }
-    )
-    KhoiTriSoTheme {
-        Column(modifier = modifier.fillMaxSize()) {
+    val tokenState by viewModel.token.collectAsState()
+    val pagerState = rememberPagerState(pageCount = { slides.size })
+//    LaunchedEffect(tokenState) {
+//        if (tokenState is UiState.Success) {
+//            navController.navigate(NavRoute.home) {
+//                // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
+//                popUpTo(NavRoute.login) {
+//                    inclusive = true
+//                }
+//            }
+//        }
+//    }
+//    val googleLauncher = rememberLauncherForActivityResult(
+//        contract     = ActivityResultContracts.StartActivityForResult(),
+//        onResult = { result ->
+//            viewModel.handleGoogleSignInResult(result.data)
+//        }
+//    )
+//    LaunchedEffect(Unit) {
+//        viewModel.setGoogleSignInLauncher(googleLauncher)
+//    }
 
-            Slider(pagerState, Modifier.weight(0.6f))
-            PageIndicator(pagerState)
+    Column(modifier = modifier.fillMaxSize()) {
 
-            Divider(color = Color.LightGray, thickness = 1.dp)
+        Slider(pagerState, Modifier.weight(0.6f))
+        PageIndicator(pagerState)
 
+        Divider(color = Color.LightGray, thickness = 1.dp)
 
-
-            LoginArea(navController, modifier.weight(0.3f))
-
-        }
-
+        LoginArea(navController, viewModel = viewModel, modifier = Modifier.weight(0.3f))
     }
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview(
-    modifier: Modifier = Modifier,
-) {
-
-
-    KhoiTriSoTheme {
-        Column(modifier = modifier.fillMaxSize()) {
-
+    when (val state = tokenState) {
+        UiState.Loading -> {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.7f)
-            )
-
-//            LoginArea(modifier.weight(0.3f))
-
-
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f)), // Lớp phủ mờ
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
         }
 
-    }
+        is UiState.Error -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 200.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .background(Color.Red.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .padding(8.dp)
+                )
+            }
+        }
 
+        else -> {}
+    }
 }
+

@@ -23,5 +23,5 @@ fun UserDTO.toDomain(): User = User(
     email = Email,
     avatar = Avatar ?: "",
     authProvider = "",
-    role = 1
+    role = Role
 )

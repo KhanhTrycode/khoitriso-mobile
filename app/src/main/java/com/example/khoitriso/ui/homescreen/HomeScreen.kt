@@ -64,7 +64,7 @@ import com.example.khoitriso.utils.UiState
 fun HomeScreen(
     lazyListState: LazyListState,
     viewModel: HomeViewModel = hiltViewModel(),
-    navController: NavController = rememberNavController(),
+    navController: NavController,
 ) {
     val recommendedBooks by viewModel.recommendedBooks.collectAsState()
     val trendingCourses by viewModel.trendingCourses.collectAsState()

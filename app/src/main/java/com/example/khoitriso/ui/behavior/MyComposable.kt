@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.NavRoute
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.filled.ArrowBack
@@ -46,17 +48,21 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.Person
 import com.example.khoitriso.domain.models.Instructor
 import com.example.khoitriso.ui.theme.StarColor
+import com.example.khoitriso.utils.debug
 import com.example.khoitriso.utils.toDecimal
 import com.example.khoitriso.utils.toVND
 
@@ -67,7 +73,8 @@ fun SafeImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     placeholder: Int = R.drawable.avatar_default, // drawable dự phòng
-    error: Int = R.drawable.course_test, // drawable khi load lỗi
+    error: Int = R.drawable.course_test, // drawable khi load lỗi,
+    contentScale: ContentScale = ContentScale.Crop
 ) {
     if (url != "Unknown") {
         AsyncImage(
@@ -80,7 +87,7 @@ fun SafeImage(
             placeholder = painterResource(id = placeholder),
             error = painterResource(id = error),
             fallback = painterResource(id = placeholder),
-            contentScale = ContentScale.Crop
+            contentScale = contentScale
         )
     } else {
         Image(
@@ -109,48 +116,65 @@ fun RowBookCard(listItem: List<Book>, navController: NavController) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(listItem.size) { index ->
-            BookCard(listItem[index], navController)
+            BookCard(listItem[index], navController, Modifier.fillMaxWidth(0.4f))
         }
     }
 }
 
 @Composable
-fun BookCard(book: Book,navController: NavController,modifier: Modifier = Modifier){
-    Column(
+fun BookCard(book: Book, navController: NavController, modifier: Modifier = Modifier) {
+    Card(
         modifier = modifier
-            .fillMaxWidth()
             .padding(8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .clickable{
-                Log.d("Navigate", "BookCard: ${book.id}")
+            .width(250.dp)
+            .clickable {
+                debug("BookCard: ${book.id}", "BookCard")
                 navController.navigate(NavRoute.NavBookDetail(book.id))
-            }
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        // Thumbnail full width
-        SafeImage(
-            url = book.coverImage,
-            contentDescription = book.title,
-            error = Constants.BOOK_DEFAULT_COVER_IMAGE,
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-        )
-
-        // Info below image
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .border(
+                    width = 1.dp, // Độ dày của border
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Text(
-                text = book.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            ItemCardBottom(book.rating,false,book.price,book.totalReviews)
+            // Hình ảnh
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                SafeImage(
+                    contentScale = ContentScale.Fit,
+                    url = book.coverImage,
+                    contentDescription = book.title,
+                    error = Constants.BOOK_DEFAULT_COVER_IMAGE,
+                    modifier = Modifier
+                        .height(300.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                )
+            }
+
+            // Info below image
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = book.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    minLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                ItemCardBottom(book.rating, false, book.price, book.totalReviews)
+            }
         }
     }
 }
@@ -161,46 +185,64 @@ fun CourseCard(
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    // Sử dụng Card Composable để tạo hiệu ứng card với elevation và shape (giữ cấu trúc dọc)
+    Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .clickable{
-                Log.d("CourseCard", "CourseCard: ${course.id}")
+            .clickable {
+                debug("CourseCard: ${course.id}", "CourseCard")
                 navController.navigate(NavRoute.NavCourseDetail(course.id))
-            }
+            },
+        shape = RoundedCornerShape(12.dp), // Góc bo tròn
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Bóng đổ
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        // Thumbnail full width
-        SafeImage(
-            url = course.thumbnail,
-            contentDescription = course.title,
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(180.dp)
-                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-        )
-
-        // Info below image
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Text(
-                text = course.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                color = MaterialTheme.colorScheme.onBackground
+            SafeImage(
+                url = course.thumbnail,
+                contentDescription = course.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                contentScale = ContentScale.Crop,
             )
 
-            Text(
-                text = "By ${course.instructor.name}",
-                style = MaterialTheme.typography.labelMedium,
-            )
-            ItemCardBottom(course.rating,course.isFree,course.price,course.totalReviews)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = course.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    minLines = 2,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "By ${course.instructor.name}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                ItemCardBottom(
+                    course.rating,
+                    course.isFree,
+                    course.price,
+                    course.totalReviews
+                )
+            }
         }
     }
 }
@@ -351,7 +393,9 @@ fun CreateBy(fullName: String,avatar: String, modifier: Modifier = Modifier) {
             url = avatar,
             contentDescription = fullName,
             error = R.drawable.avatar_default,
-            modifier = Modifier.size(48.dp).clip(CircleShape)
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
         )
         Spacer(modifier = Modifier.size(8.dp))
         Row {

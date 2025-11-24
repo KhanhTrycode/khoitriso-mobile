@@ -1,5 +1,6 @@
 package com.example.khoitriso.utils
 
+import android.util.Log
 import com.example.khoitriso.BuildConfig
 import com.example.khoitriso.R
 
@@ -11,4 +12,11 @@ object Constants {
     val NAV_HEIGHT: Int = 60
     val THRESHOLD_SCROLL:Int = 120
     val BOOK_DEFAULT_COVER_IMAGE = R.drawable.book_placeholder
+    val DEBUG = BuildConfig.DEBUG
+}
+
+fun debug(message: String,tag: String = "MyDebugLog", ) {
+    if (Constants.DEBUG){
+        Log.d(tag,message)
+    }
 }

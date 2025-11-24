@@ -343,7 +343,19 @@ object MockData {
             itemId = 1000 + i,
             itemName = "Item $i",
             itemType = 1,
-            itemTypeName = "Product",
+            itemTypeName = "Course",
+            price = 10 * i,
+            quantity = 1,
+            subTotal = 10 * i
+        )
+    }
+    val cartItems = (1..10).map { i ->
+        Item(
+            id = 500 + i,
+            itemId = 1000 + i,
+            itemName = "Item $i",
+            itemType = 1,
+            itemTypeName = "Course",
             price = 10 * i,
             quantity = 1,
             subTotal = 10 * i
