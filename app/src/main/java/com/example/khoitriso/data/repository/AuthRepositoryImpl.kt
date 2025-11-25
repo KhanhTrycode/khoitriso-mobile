@@ -49,7 +49,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMe(): Result<User?> {
+    override suspend fun getMe(): Result<User> {
         val response = authApi.getMe()
         return try {
             if (response.isSuccessful) {

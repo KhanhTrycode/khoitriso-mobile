@@ -9,9 +9,9 @@ fun ForumQuestionDto.toDomain(): ForumQuestion {
         content = Content,
         userId = UserId,
         userName = UserName,
-        userAvatar = UserAvatar,
-        categoryId = CategoryId,
-        categoryName = CategoryName,
+        userAvatar = UserAvatar?: "",
+        categoryId = CategoryId?: "Unknown",
+        categoryName = CategoryName?: "Unknown",
         tags = Tags ?: emptyList(),
         isSolved = IsSolved,
         isPinned = IsPinned,
@@ -20,10 +20,10 @@ fun ForumQuestionDto.toDomain(): ForumQuestion {
         viewCount = ViewCount,
         voteCount = VoteCount,
         answerCount = AnswerCount,
-        acceptedAnswerId = AcceptedAnswerId,
+        acceptedAnswerId = AcceptedAnswerId?: "Unknown",
         createdAt = CreatedAt,
-        updatedAt = UpdatedAt,
-        lastActivityAt = LastActivityAt,
+        updatedAt = UpdatedAt?: "",
+        lastActivityAt = LastActivityAt?: "",
         attachments = Attachments?.map { it.toDomain() } ?: emptyList()
     )
 }

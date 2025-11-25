@@ -95,4 +95,8 @@
     <string name="course">Khóa học</string>
     <string name="learning_path">Lộ trình</string>
 
+
+<!--    Forum List Screen-->
+    <string name="solved"> Đã giải
+    </string>
 </resources>

@@ -10,6 +10,8 @@ import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
 import com.example.khoitriso.domain.usecase.auth.AuthGoogleSDK
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
+import com.example.khoitriso.domain.usecase.auth.GetMe
+import com.example.khoitriso.domain.usecase.auth.LoadCurrentUserInfo
 import com.example.khoitriso.domain.usecase.auth.RefreshToken
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.book.GetBook
@@ -48,7 +50,9 @@ object UsecaseModule {
     fun provideAuthUsecase(authRepository: AuthRepository): AuthUsecase {
         return AuthUsecase(
             authGoogleSDK = AuthGoogleSDK(authRepository),
-            refresh = RefreshToken(authRepository)
+            refresh = RefreshToken(authRepository),
+            getMe = GetMe(authRepository),
+            loadCurrentUserInfo = LoadCurrentUserInfo(authRepository)
         )
     }
 

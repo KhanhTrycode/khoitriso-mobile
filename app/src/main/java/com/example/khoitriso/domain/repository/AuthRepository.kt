@@ -8,5 +8,5 @@ interface AuthRepository {
 
     suspend fun refreshToken(refreshToken: String, accessToken: String): Result<Authorization?>
 
-    suspend fun getMe(): Result<User?>
+    suspend fun getMe(): Result<User>
 }

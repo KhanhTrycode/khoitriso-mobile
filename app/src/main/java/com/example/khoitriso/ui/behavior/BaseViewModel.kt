@@ -2,11 +2,12 @@ package com.example.khoitriso.ui.behavior
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.auth0.jwt.JWT
 import com.example.khoitriso.domain.models.MyResponese
-import com.example.khoitriso.domain.usecase.category.GetCategory
+import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 abstract class BaseViewModel : ViewModel() {
@@ -88,9 +89,6 @@ abstract class BaseViewModel : ViewModel() {
                 }
             }
         }
-
-
-
     }
     fun onBuy() {
 
@@ -98,4 +96,5 @@ abstract class BaseViewModel : ViewModel() {
 
     fun onCart() {
     }
+
 }

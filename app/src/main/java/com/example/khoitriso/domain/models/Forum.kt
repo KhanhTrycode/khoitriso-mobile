@@ -6,9 +6,9 @@ data class ForumQuestion(
     val content: String,
     val userId: Int,
     val userName: String,
-    val userAvatar: String? = null,
-    val categoryId: String? = null,
-    val categoryName: String? = null,
+    val userAvatar: String,
+    val categoryId: String,
+    val categoryName: String,
     val tags: List<String> = emptyList(),
     val isSolved: Boolean = false,
     val isPinned: Boolean = false,
@@ -17,10 +17,10 @@ data class ForumQuestion(
     val viewCount: Int = 0,
     val voteCount: Int = 0,
     val answerCount: Int = 0,
-    val acceptedAnswerId: String? = null,
+    val acceptedAnswerId: String,
     val createdAt: String,
-    val updatedAt: String? = null,
-    val lastActivityAt: String? = null,
+    val updatedAt: String,
+    val lastActivityAt: String,
     val attachments: List<ForumAttachment> = emptyList()
 )
 

@@ -709,6 +709,21 @@ object MockData {
         updatedAt = null
     )
 
+    val mockForumComment2 = ForumComment(
+        id = "fc2",
+        parentId = "fq1",
+        parentType = 1,
+        content = "tôi cũng đang tìm hiểu về vấn đề này",
+        userId = 2,
+        userName = "Trần Thị B",
+        userAvatar = "https://i.pravatar.cc/150?img=2",
+        createdAt = "2024-11-23T11:00:00Z",
+        updatedAt = null
+    )
+
+    val mockForumComments = listOf(mockForumComment1, mockForumComment2)
+
+
     val mockForumAnswer1 = ForumAnswer(
         id = "fa1",
         questionId = "fq1",
@@ -766,7 +781,7 @@ object MockData {
         viewCount = 568,
         voteCount = 25,
         answerCount = 8,
-        acceptedAnswerId = null,
+        acceptedAnswerId = "null",
         createdAt = "2024-11-22T15:00:00Z",
         updatedAt = "2024-11-24T09:00:00Z",
         lastActivityAt = "2024-11-24T09:00:00Z",

@@ -76,7 +76,6 @@ class HomeViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _courses.collectLatest { courseState ->
-                Log.d("HomeViewModel", "getCourse: $courseState")
                 if (courseState is UiState.Success<List<Course>>) {
                     val courses = courseState.data
                     val trendingCourses = courses.shuffled().take(5)

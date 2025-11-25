@@ -16,6 +16,7 @@ import com.example.khoitriso.domain.usecase.forum.ForumUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +53,7 @@ class ForumViewModel @Inject constructor(
         token?.let {
             try {
                 val jwt = JWT.decode(it)
+                debug("JWT: $jwt","ForumViewModel")
                 _currentUserId.value = jwt.getClaim("UserId").asInt()
             } catch (e: Exception) {
                 _currentUserId.value = null
@@ -271,25 +273,23 @@ class ForumViewModel @Inject constructor(
     }
 
     fun loadQuestionById(id: String) {
-        _question.value = UiState.Loading
-        viewModelScope.launch {
-            val result = forumUsecase.getQuestionById(id)
-            _question.value = result.fold(
-                onSuccess = { UiState.Success(it) },
-                onFailure = { UiState.Error(it.message ?: "Failed to load question") }
-            )
-        }
+        loadData(
+            stateFlow = _question,
+            mockData = MockData.mockForumQuestion1,
+            apiCall = {
+                forumUsecase.getQuestionById(id)
+            }
+        )
     }
 
     fun loadAnswers(questionId: String) {
-        _answers.value = UiState.Loading
-        viewModelScope.launch {
-            val result = forumUsecase.getAnswers(questionId)
-            _answers.value = result.fold(
-                onSuccess = { UiState.Success(it) },
-                onFailure = { UiState.Error(it.message ?: "Failed to load answers") }
-            )
-        }
+        loadData(
+            stateFlow = _answers,
+            mockData = MockData.mockForumAnswers,
+            apiCall = {
+                forumUsecase.getAnswers(questionId)
+            }
+        )
     }
 
     fun loadComments(parentType: Int, parentId: String) {

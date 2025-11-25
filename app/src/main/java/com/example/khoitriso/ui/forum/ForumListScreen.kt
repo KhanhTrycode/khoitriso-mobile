@@ -1,7 +1,5 @@
 package com.example.khoitriso.ui.forum
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,19 +7,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material3.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,20 +32,21 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
-import com.example.khoitriso.ui.behavior.DetailHeader
-import androidx.compose.ui.text.style.TextDecoration
 import com.example.khoitriso.ui.behavior.FormatTimeAgo
 import com.example.khoitriso.ui.behavior.PaginationControls
+import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
+import com.example.khoitriso.R
+import com.example.khoitriso.utils.icon.ArrowBigDown
+import com.example.khoitriso.utils.icon.ArrowBigUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForumListScreen(
     navController: NavController,
-    viewModel: ForumViewModel = hiltViewModel(),
+    viewModel: ForumListViewModel = hiltViewModel(),
 ) {
     val questionsState by viewModel.questions.collectAsState()
     val categoriesState by viewModel.categories.collectAsState()
@@ -56,39 +60,29 @@ fun ForumListScreen(
     val sortBy by viewModel.sortBy.collectAsState()
     val userVotes by viewModel.userVotes.collectAsState()
     val bookmarks by viewModel.bookmarks.collectAsState()
-    val currentUserId by viewModel.currentUserId.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
 
     var searchText by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadInitialData()
-    }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Diễn đàn học tập") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
-                        Icon(Icons.Default.Warning, "Bookmarks")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("forum/ask") },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, "Đặt câu hỏi")
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Diễn đàn học tập") }, navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
             }
+        }, actions = {
+            IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
+                Icon(Icons.Default.Bookmarks, "Bookmarks")
+            }
+        })
+    }, floatingActionButton = {
+        FloatingActionButton(
+            onClick = { navController.navigate("forum/ask") },
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(Icons.Default.Add, "Đặt câu hỏi")
         }
-    ) { paddingValues ->
+    }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,8 +106,7 @@ fun ForumListScreen(
                 isPinnedFilter = isPinnedFilter,
                 onPinnedFilterChanged = { viewModel.setIsPinnedFilter(it) },
                 isSolvedFilter = isSolvedFilter,
-                onSolvedFilterChanged = { viewModel.setIsSolvedFilter(it) }
-            )
+                onSolvedFilterChanged = { viewModel.setIsSolvedFilter(it) })
 
             // Danh sách câu hỏi
             when (val state = questionsState) {
@@ -122,6 +115,7 @@ fun ForumListScreen(
                         CircularProgressIndicator()
                     }
                 }
+
                 is UiState.Success -> {
                     val result = state.data
                     if (result.items.isEmpty()) {
@@ -131,23 +125,28 @@ fun ForumListScreen(
                             questions = result.items,
                             userVotes = userVotes,
                             bookmarks = bookmarks,
-                            currentUserId = currentUserId,
+                            currentUserId = (currentUser as UiState.Success<User>).data.id,
                             selectedTag = selectedTag,
-                            onQuestionClick = { id -> navController.navigate(com.example.khoitriso.utils.NavRoute.NavForumDetail(id)) },
+                            onQuestionClick = { id ->
+                                navController.navigate(
+                                    NavRoute.NavForumDetail(
+                                        id
+                                    )
+                                )
+                            },
                             onVote = { questionId, voteType ->
-                                currentUserId?.let { userId ->
+                                (currentUser as UiState.Success<User>).data.id.let { userId ->
                                     viewModel.vote(1, questionId, userId, voteType)
                                 }
                             },
                             onBookmarkClick = { questionId ->
-                                currentUserId?.let { userId ->
+                                (currentUser as UiState.Success<User>).data.id.let { userId ->
                                     viewModel.toggleBookmark(questionId, userId)
                                 }
                             },
                             onTagClick = { tag ->
                                 viewModel.setSelectedTag(if (selectedTag == tag) null else tag)
-                            }
-                        )
+                            })
                     }
 
                     // Phân trang
@@ -155,12 +154,12 @@ fun ForumListScreen(
                         PaginationControls(
                             currentPage = result.page,
                             totalPages = result.totalPages,
-                            onPageChange = { newPage -> viewModel.loadQuestions(newPage) }
-                        )
+                            onPageChange = { newPage -> viewModel.loadQuestions(newPage) })
                     }
                 }
+
                 is UiState.Error -> {
-                   Text("Lỗi: ${state.message}")
+                    Text("Lỗi: ${state.message}")
                 }
             }
         }
@@ -196,8 +195,7 @@ private fun FilterSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
                 value = searchText,
@@ -229,8 +227,7 @@ private fun FilterSection(
                 FilterChip(
                     selected = isPinnedFilter == true,
                     onClick = { onPinnedFilterChanged(if (isPinnedFilter == true) null else true) },
-                    label = { Text("Ghim") }
-                )
+                    label = { Text("Ghim") })
             }
 
             // Hàng các bộ lọc khác
@@ -239,16 +236,14 @@ private fun FilterSection(
                     FilterChip(
                         selected = selectedCategory == null,
                         onClick = { onCategorySelected(null) },
-                        label = { Text("Tất cả") }
-                    )
+                        label = { Text("Tất cả") })
                 }
                 if (categoriesState is UiState.Success) {
                     items(categoriesState.data) { category ->
                         FilterChip(
                             selected = selectedCategory == category.id,
                             onClick = { onCategorySelected(category.id) },
-                            label = { Text(category.name) }
-                        )
+                            label = { Text(category.name) })
                     }
                 }
                 item { Spacer(Modifier.width(8.dp)) } // Separator
@@ -256,30 +251,26 @@ private fun FilterSection(
                     FilterChip(
                         selected = isSolvedFilter == null,
                         onClick = { onSolvedFilterChanged(null) },
-                        label = { Text("Tất cả") }
-                    )
+                        label = { Text("Tất cả") })
                 }
                 item {
                     FilterChip(
                         selected = isSolvedFilter == true,
                         onClick = { onSolvedFilterChanged(true) },
-                        label = { Text("Đã giải quyết") }
-                    )
+                        label = { Text("Đã giải quyết") })
                 }
                 item {
                     FilterChip(
                         selected = isSolvedFilter == false,
                         onClick = { onSolvedFilterChanged(false) },
-                        label = { Text("Chưa giải quyết") }
-                    )
+                        label = { Text("Chưa giải quyết") })
                 }
                 if (tagsState is UiState.Success) {
                     items(tagsState.data.take(10)) { tag ->
                         FilterChip(
                             selected = selectedTag == tag.name,
                             onClick = { onTagSelected(if (selectedTag == tag.name) null else tag.name) },
-                            label = { Text(tag.name) }
-                        )
+                            label = { Text(tag.name) })
                     }
                 }
             }
@@ -313,20 +304,14 @@ private fun SortDropdown(sortBy: String?, onSortByChanged: (String) -> Unit) {
         FilterChip(
             selected = sortBy != null,
             onClick = { showSortMenu = true },
-            label = { Text(sortOptions[sortBy] ?: "Sắp xếp") }
-        )
+            label = { Text(sortOptions[sortBy] ?: "Sắp xếp") })
         DropdownMenu(
-            expanded = showSortMenu,
-            onDismissRequest = { showSortMenu = false }
-        ) {
+            expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
             sortOptions.forEach { (key, value) ->
-                DropdownMenuItem(
-                    text = { Text(value) },
-                    onClick = {
-                        onSortByChanged(key)
-                        showSortMenu = false
-                    }
-                )
+                DropdownMenuItem(text = { Text(value) }, onClick = {
+                    onSortByChanged(key)
+                    showSortMenu = false
+                })
             }
         }
     }
@@ -376,57 +361,35 @@ private fun QuestionCard(
     onBookmarkClick: () -> Unit,
     onTagClick: (String) -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .border(
-                width = if (question.isPinned) 2.dp else 0.dp,
-                color = if (question.isPinned) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (question.isPinned)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.surface
+    Column {
+        QuestionHeader(
+            userName = question.userName,
+            avatar = question.userAvatar,
+            timeAgo = question.createdAt,
+            title = question.title,
+            isPinned = question.isPinned,
+            isSolved = question.isSolved
         )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            QuestionStatsColumn(
-                voteCount = question.voteCount,
-                answerCount = question.answerCount,
-                viewCount = question.viewCount,
-                userVote = userVote,
-                isBookmarked = isBookmarked,
-                showActions = currentUserId > 0,
-                onVote = onVote,
-                onBookmarkClick = onBookmarkClick
+        QuestionTagsRow(tags = question.tags, onTagClick = onTagClick)
+        QuestionContent(question.content)
+        QuestionStatsRow(
+            voteCount = question.voteCount,
+            answerCount = question.answerCount,
+            userVote = userVote,
+            isBookmarked = isBookmarked,
+            onVote = onVote,
+            onBookmarkClick = onBookmarkClick
             )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                QuestionHeader(
-                    title = question.title,
-                    isPinned = question.isPinned,
-                    isSolved = question.isSolved
-                )
-                QuestionTagsRow(tags = question.tags, onTagClick = onTagClick)
-                QuestionMetaInfo(
-                    userName = question.userName,
-                    categoryName = question.categoryName,
-                    lastActivity = question.lastActivityAt ?: question.updatedAt ?: question.createdAt
-                )
-            }
-        }
     }
+}
+
+@Composable
+fun QuestionContent(content: String) {
+    Text(content, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+        color =
+    MaterialTheme
+        .colorScheme
+        .onBackground)
 }
 
 @Composable
@@ -447,62 +410,121 @@ private fun QuestionStatsColumn(
     ) {
         if (showActions) {
             IconButton(onClick = { onVote(1) }, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Warning, null, tint = if (userVote == 1) MaterialTheme.colorScheme
-                    .primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Default.Warning,
+                    null,
+                    tint = if (userVote == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
 
-        Text(text = "$voteCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = when {
-            voteCount > 0 -> Color(0xFF10B981)
-            voteCount < 0 -> Color(0xFFEF4444)
-            else -> MaterialTheme.colorScheme.onSurface
-        })
+        Text(
+            text = "$voteCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = when {
+                voteCount > 0 -> Color(0xFF10B981)
+                voteCount < 0 -> Color(0xFFEF4444)
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+        )
         Text("votes", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         if (showActions) {
             IconButton(onClick = { onVote(-1) }, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Warning, null, tint = if (userVote == -1) Color(0xFFEF4444) else
-                    MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Default.Warning,
+                    null,
+                    tint = if (userVote == -1) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
         Spacer(Modifier.height(8.dp))
-        Text(text = "$answerCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (answerCount > 0) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = "$answerCount",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (answerCount > 0) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text("answers", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
-        Text(text = "$viewCount", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = "$viewCount",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text("views", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         if (showActions) {
             Spacer(Modifier.height(8.dp))
             IconButton(onClick = onBookmarkClick, modifier = Modifier.size(32.dp)) {
-                Icon(if (isBookmarked) Icons.Default.Warning else Icons.Default.Warning, null,
-                    tint = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Icon(
+                    if (isBookmarked) Icons.Default.Warning else Icons.Default.Warning,
+                    null,
+                    tint = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun QuestionHeader(title: String, isPinned: Boolean, isSolved: Boolean) {
+private fun QuestionHeader(
+    userName: String,
+    avatar: String,
+    timeAgo: String,
+    title: String,
+    isPinned: Boolean,
+    isSolved: Boolean,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        SafeImage(
+            url = avatar,
+            contentDescription = "Avatar: ${userName}",
+            error = R.drawable.avatar_default,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(16.dp))
+        )
+
+        Text(text = userName, style = MaterialTheme.typography.titleSmall)
+        Text(text = FormatTimeAgo(timeAgo), style = MaterialTheme.typography.labelMedium)
+
+
         if (isPinned) {
-            Badge(containerColor = MaterialTheme.colorScheme.primary) { Text("Ghim", fontSize = 10.sp) }
+            Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                Text(
+                    "Ghim", fontSize = 10.sp
+                )
+            }
         }
         if (isSolved) {
-            Badge(containerColor = Color(0xFF10B981)) {
+            Badge(containerColor = Color(0xFF10B981), modifier = Modifier.padding(20.dp,10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CheckCircle, null, Modifier.size(12.dp))
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text("Đã giải quyết", fontSize = 10.sp)
+                    Text(stringResource(R.string.solved), fontSize = 14.sp, color = Color.White)
                 }
             }
         }
-        Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurface)
     }
+    Text(
+        text = title,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable
@@ -513,15 +535,17 @@ private fun QuestionTagsRow(tags: List<String>, onTagClick: (String) -> Unit) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.clickable { onTagClick(tag) }
-                ) {
+                    modifier = Modifier.clickable { onTagClick(tag) }) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.Warning, null, Modifier.size(12.dp))
-                        Text(tag, fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text(
+                            tag,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 }
             }
@@ -530,44 +554,111 @@ private fun QuestionTagsRow(tags: List<String>, onTagClick: (String) -> Unit) {
 }
 
 @Composable
-private fun QuestionMetaInfo(userName: String, categoryName: String?, lastActivity: String) {
+fun QuestionStatsRow(
+    voteCount: Int,
+    answerCount: Int,
+    userVote: Int?,
+    isBookmarked: Boolean,
+    onVote: (Int) -> Unit,
+    onBookmarkClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MetaInfoItem(icon = Icons.Default.Person, text = userName)
-            categoryName?.let { category ->
-                Surface(shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
-                    Text(category, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), fontSize = 11.sp)
+            // Khối Vote
+            Row(
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clip(RoundedCornerShape(8.dp)), // Clip để ripple effect có góc bo tròn
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Nút Upvote
+                IconButton(onClick = { onVote(1) }, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.arrow_up),
+                        contentDescription = "Upvote",
+                        tint = if (userVote == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Text(
+                    text = "$voteCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+
+                // Nút Downvote
+                IconButton(onClick = { onVote(-1) }, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.arrow_down),
+                        contentDescription = "Downvote",
+                        tint = if (userVote == -1) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
-            MetaInfoItem(icon = Icons.Default.Warning, text = FormatTimeAgo(lastActivity))
+
+            // Khối số câu trả lời
+            Row(
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Comment,
+                    contentDescription = "Answers",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "$answerCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+
+        // Khối Bookmark
+        IconButton(
+            onClick = onBookmarkClick,
+            modifier = Modifier
+                .border(
+                    width = 1.dp,
+                    color = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .size(40.dp)
+        ) {
+            Icon(
+                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                contentDescription = "Bookmark",
+                tint = if (isBookmarked) Color(0xFFFFB800) else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
 @Composable
-private fun MetaInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.width(4.dp))
-        Text(text, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-
-
-
-@Composable
 private fun EmptyQuestionsView() {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -575,12 +666,17 @@ private fun EmptyQuestionsView() {
             modifier = Modifier.padding(32.dp)
         ) {
             Icon(
-                Icons.Default.Warning, null,
+                Icons.Default.Warning,
+                null,
                 Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
             Text("Không tìm thấy câu hỏi nào", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

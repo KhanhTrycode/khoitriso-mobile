@@ -16,6 +16,11 @@ val Inter = FontFamily(
 )
 
 val MyTypography = Typography(
+    titleSmall = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+    ),
     titleMedium = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
@@ -34,6 +39,13 @@ val MyTypography = Typography(
         fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 20.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Normal,
+        fontSize = 30.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
