@@ -25,12 +25,20 @@ object  NavRoute {
     val forumAsk = "forum/ask"
     val forumBookmarks = "forum/bookmarks"
     val notifications = "notifications"
+    val cart = "cart"
+    val checkout = "checkout"
+    val myPurchases = "myPurchases"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val BookDetailWithArgs = "bookDetail/{bookId}"
     const val ForumDetailWithArgs = "forum/{questionId}"
+    const val MyPurchasesWithTab = "myPurchases?tab={tab}"
+    const val PaymentResultWithArgs = "paymentResult?success={success}&orderCode={orderCode}"
     fun NavCourseDetail(courseId: Int) = "$courseDetail/$courseId"
     fun NavBookDetail(bookId: Int) = "$bookDetail/$bookId"
     fun NavForumDetail(questionId: String) = "forum/$questionId"
+    fun NavMyPurchases(tab: String = "courses") = "myPurchases?tab=$tab"
+    fun NavPaymentResult(success: Boolean, orderCode: String?) = 
+        "paymentResult?success=$success&orderCode=${orderCode ?: ""}"
 }
 
 data class MyNavigationBarItem(

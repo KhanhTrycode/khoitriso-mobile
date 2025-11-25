@@ -24,4 +24,16 @@ interface BooksApi {
     suspend fun getBookById(
         @Path("id") bookId: Int
     ) : Response<ApiRespone<BookDto>>
+
+    @GET("books/my-books")
+    suspend fun getMyBooks(
+        @Query("page") page: Int = 1,
+        @Query("pageSize") pageSize: Int = 100
+    ): Response<ApiResponeData<Any>> // Returns MyBookDto wrapped in ApiResponeData
+
+    @GET("books/{id}/export-word/my-purchase")
+    suspend fun exportBookToWord(
+        @Path("id") bookId: Int,
+        @Query("includeExplanation") includeExplanation: Boolean = false
+    ): Response<okhttp3.ResponseBody> // Returns file download
 }
