@@ -26,4 +26,10 @@ interface CourseApi {
     suspend fun getCourseById(
         @Path("id") id: Int
     ): Response<ApiRespone<CourseDto>>
+
+    @GET("courses/my-courses")
+    suspend fun getMyCourses(
+        @Query("page") page: Int = 1,
+        @Query("pageSize") pageSize: Int = 100
+    ): Response<ApiResponeData<Any>> // Returns MyCourseDto wrapped in ApiResponeData
 }

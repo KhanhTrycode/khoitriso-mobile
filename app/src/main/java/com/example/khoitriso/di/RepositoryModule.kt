@@ -9,12 +9,14 @@ import com.example.khoitriso.data.repository.CategoryRepositoryImpl
 import com.example.khoitriso.data.repository.CourseResponseImpl
 import com.example.khoitriso.data.repository.ForumRepositoryImpl
 import com.example.khoitriso.data.repository.NotificationRepositoryImpl
+import com.example.khoitriso.data.repository.UserRepositoryImpl
 import com.example.khoitriso.domain.repository.AuthRepository
 import com.example.khoitriso.domain.repository.BookRepository
 import com.example.khoitriso.domain.repository.CategoryRepository
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
+import com.example.khoitriso.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -49,5 +51,21 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun provideNotificationRepository(notificationRepositoryImpl: NotificationRepositoryImpl): NotificationRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideCartRepository(cartRepositoryImpl: com.example.khoitriso.data.repository.CartRepositoryImpl): com.example.khoitriso.domain.repository.CartRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideOrderRepository(orderRepositoryImpl: com.example.khoitriso.data.repository.OrderRepositoryImpl): com.example.khoitriso.domain.repository.OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideVNPayRepository(vnpayRepositoryImpl: com.example.khoitriso.data.repository.VNPayRepositoryImpl): com.example.khoitriso.domain.repository.VNPayRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideUserRepository(userRepositoryImpl: UserRepositoryImpl): UserRepository
 }
 

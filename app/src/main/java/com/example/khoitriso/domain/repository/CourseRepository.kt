@@ -7,5 +7,6 @@ interface CourseRepository {
     suspend fun getCourse(): Result<List<Course>>
     suspend fun getCourseById(id: Int): Result<CourseDetail>
     suspend fun getMyCourse(): Result<List<Course>>
+    suspend fun getMyCourses(): Result<List<com.example.khoitriso.data.dto.MyCourseDto>>
     suspend fun SearchCourse(): Result<List<Course>>
 }

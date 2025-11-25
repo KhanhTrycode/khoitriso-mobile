@@ -60,6 +60,10 @@ import com.example.khoitriso.ui.learningpath.LearningPathScreen
 import com.example.khoitriso.ui.loginscreen.LoginScreen
 import com.example.khoitriso.ui.profilescreen.ProfileScreen
 import com.example.khoitriso.ui.searchscreen.SearchScreen
+import com.example.khoitriso.ui.cart.CartScreen
+import com.example.khoitriso.ui.checkout.CheckoutScreen
+import com.example.khoitriso.ui.mypurchase.MyPurchaseScreen
+import com.example.khoitriso.ui.paymentresult.PaymentResultScreen
 import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.navigationBarItems
@@ -144,6 +148,38 @@ fun NavHostContainer(navController: NavHostController) {
         composable(NavRoute.exploreBook) {
             ExploreBookScreen(navController)
         }
+
+        // Cart
+        composable(NavRoute.cart) {
+            CartScreen(navController)
+        }
+
+        // Checkout
+        composable(NavRoute.checkout) {
+            CheckoutScreen(navController)
+        }
+
+        // My Purchases
+        composable(
+            route = NavRoute.MyPurchasesWithTab,
+            arguments = listOf(navArgument("tab") { type = NavType.StringType; defaultValue = "courses" })
+        ) { backStackEntry ->
+            val tab = backStackEntry.arguments?.getString("tab") ?: "courses"
+            MyPurchaseScreen(navController = navController, initialTab = tab)
+        }
+
+        // Payment Result
+        composable(
+            route = NavRoute.PaymentResultWithArgs,
+            arguments = listOf(
+                navArgument("success") { type = NavType.BoolType },
+                navArgument("orderCode") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val success = backStackEntry.arguments?.getBoolean("success") ?: false
+            val orderCode = backStackEntry.arguments?.getString("orderCode")
+            PaymentResultScreen(navController = navController, success = success, orderCode = orderCode)
+        }
     }
 }
 
@@ -201,6 +237,7 @@ fun HeaderNavScaffold(
         HeaderScreen(
             avatarUrl = R.drawable.ic_launcher_background,
             displayName = "KhoiTriSo",
+            navController = navController,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(headerHeight)
@@ -223,6 +260,7 @@ fun HeaderNavScaffold(
 fun HeaderScreen(
     avatarUrl: Int,
     displayName: String,
+    navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -252,16 +290,21 @@ fun HeaderScreen(
             modifier = Modifier.weight(1f)
         )
 
-        IconButton(modifier = Modifier, onClick = {}) {
+        IconButton(
+            modifier = Modifier,
+            onClick = { navController.navigate(NavRoute.cart) }
+        ) {
             Icon(
                 imageVector = Icons.Outlined.ShoppingCart,
                 contentDescription = "Cart",
                 tint = Color.Black
-
             )
         }
         // Notification button
-        IconButton(modifier = Modifier, onClick = { }) {
+        IconButton(
+            modifier = Modifier,
+            onClick = { navController.navigate(NavRoute.notifications) }
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Notifications,
                 contentDescription = "Notification",

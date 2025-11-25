@@ -14,6 +14,8 @@ interface BookRepository {
 //    suspend fun getActivationCode(id: Int)
 //    suspend fun validateActivationCode(code: String)
     suspend fun getMyBook(): Result<List<Book>>
+    suspend fun getMyBooks(): Result<List<com.example.khoitriso.data.dto.MyBookDto>>
+    suspend fun exportBookToWord(bookId: Int, includeExplanation: Boolean): Result<ByteArray>
     fun searchBook(string: String) : Result<List<Book>>
 //    suspend fun getChaptersOfBook(id: Int)
 }

@@ -28,5 +28,71 @@
         Mua Ngay
     </string>
 
+    <!-- Profile -->
+    <string name="profile_title">Hồ sơ</string>
+    <string name="edit_profile">Chỉnh sửa thông tin</string>
+    <string name="my_courses">Khóa học của tôi</string>
+    <string name="my_books">Sách của tôi</string>
+    <string name="save">Lưu</string>
+    <string name="cancel">Hủy</string>
+    <string name="change_avatar">Đổi ảnh đại diện</string>
+    <string name="uploading_avatar">Đang tải ảnh...</string>
+    <string name="user_avatar">Ảnh đại diện</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="email">Email</string>
+    <string name="loading">Đang tải...</string>
+    <string name="account_settings">Cài đặt tài khoản</string>
+    <string name="help_and_support">Trợ giúp &amp; Hỗ trợ</string>
+    <string name="help_center">Trung tâm trợ giúp</string>
+    <string name="contact_us">Liên hệ chúng tôi</string>
+    <string name="sign_out">Đăng xuất</string>
+
+    <!-- Cart -->
+    <string name="cart_title">Giỏ hàng</string>
+    <string name="cart_empty">Giỏ hàng của bạn trống</string>
+    <string name="cart_empty_message">Hãy khám phá các khóa học, sách và lộ trình học tập tuyệt vời</string>
+    <string name="remove_item">Xóa</string>
+    <string name="checkout">Thanh toán</string>
+    <string name="total">Tổng cộng</string>
+    <string name="subtotal">Tạm tính</string>
+    <string name="continue_shopping">Tiếp tục mua sắm</string>
+
+    <!-- My Purchase -->
+    <string name="my_purchases_title">Khóa học/Sách đã mua</string>
+    <string name="courses_tab">Khóa học</string>
+    <string name="books_tab">Sách</string>
+    <string name="continue_learning">Tiếp tục học</string>
+    <string name="read_book">Đọc sách</string>
+    <string name="export_word">Xuất Word</string>
+    <string name="no_courses">Chưa có khóa học nào</string>
+    <string name="no_books">Chưa có sách nào</string>
+    <string name="progress">Tiến độ</string>
+    <string name="enrolled">Đăng ký</string>
+    <string name="activated">Kích hoạt</string>
+    <string name="chapters">chương</string>
+    <string name="lessons">bài học</string>
+
+    <!-- Checkout -->
+    <string name="checkout_title">Thanh toán</string>
+    <string name="coupon_code">Mã giảm giá</string>
+    <string name="apply_coupon">Áp dụng</string>
+    <string name="remove_coupon">Xóa</string>
+    <string name="payment_vnpay">Thanh toán VNPay</string>
+    <string name="processing_payment">Đang xử lý thanh toán...</string>
+    <string name="order_summary">Tóm tắt đơn hàng</string>
+    <string name="discount">Giảm giá</string>
+
+    <!-- Payment Result -->
+    <string name="payment_success">Thanh toán thành công!</string>
+    <string name="payment_failed">Thanh toán thất bại</string>
+    <string name="order_code">Mã đơn hàng</string>
+    <string name="view_purchases">Xem khóa học/Sách đã mua</string>
+    <string name="try_again">Thử lại</string>
+    <string name="back_to_cart">Quay lại giỏ hàng</string>
+    <string name="processing_payment_result">Đang xử lý kết quả thanh toán...</string>
+    <string name="items">sản phẩm</string>
+    <string name="book">Sách</string>
+    <string name="course">Khóa học</string>
+    <string name="learning_path">Lộ trình</string>
 
 </resources>
