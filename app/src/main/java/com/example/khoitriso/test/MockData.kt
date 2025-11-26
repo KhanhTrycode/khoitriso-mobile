@@ -706,7 +706,7 @@ object MockData {
         userName = "Trần Thị B",
         userAvatar = "https://i.pravatar.cc/150?img=2",
         createdAt = "2024-11-23T11:00:00Z",
-        updatedAt = null
+        updatedAt = "null"
     )
 
     val mockForumComment2 = ForumComment(
@@ -718,10 +718,10 @@ object MockData {
         userName = "Trần Thị B",
         userAvatar = "https://i.pravatar.cc/150?img=2",
         createdAt = "2024-11-23T11:00:00Z",
-        updatedAt = null
+        updatedAt = "null"
     )
 
-    val mockForumComments = listOf(mockForumComment1, mockForumComment2)
+    val mockForumComments = mutableListOf(mockForumComment1, mockForumComment2)
 
 
     val mockForumAnswer1 = ForumAnswer(
@@ -736,7 +736,7 @@ object MockData {
         voteCount = 15,
         commentCount = 2,
         createdAt = "2024-11-23T12:00:00Z",
-        updatedAt = null,
+        updatedAt = "null",
         attachments = emptyList()
     )
 
@@ -796,7 +796,7 @@ object MockData {
     )
 
     val mockForumQuestions = listOf(mockForumQuestion1, mockForumQuestion2)
-    val mockForumAnswers = listOf(mockForumAnswer1)
+    val mockForumAnswers = mutableListOf(mockForumAnswer1)
     val mockForumCategories = listOf(mockForumCategory1, mockForumCategory2)
     val mockForumTags = listOf(mockForumTag1, mockForumTag2)
 

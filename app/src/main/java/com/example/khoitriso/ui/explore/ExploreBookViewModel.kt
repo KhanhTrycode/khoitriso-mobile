@@ -34,7 +34,7 @@ import javax.inject.Inject
 class ExploreBookViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val savedStateHandle: SavedStateHandle,
-    private val bookUsecase: BookUsecase
+    private val bookUsecase: BookUsecase,
 ) : BaseViewModel() {
 
     private val _books = MutableStateFlow<UiState<MyResponese<Book>>>(UiState.Loading)
@@ -44,30 +44,35 @@ class ExploreBookViewModel @Inject constructor(
         getBook()
     }
 
-    private fun getBook(){
-        loadData(_books, MyResponese<Book>(
-            items = MockData.mockBooks,
-            page = 1,
-            pageSize = MockData.mockBooks.size/2,
-            total = MockData.mockBooks.size,
-            totalPages = 10
-        )) {
-            bookUsecase.getBook()
-        }
+    private fun getBook() {
+        loadData(
+            _books, MyResponese<Book>(
+                items = MockData.mockBooks,
+                page = 1,
+                pageSize = MockData.mockBooks.size / 2,
+                total = MockData.mockBooks.size,
+                totalPages = 10,
+            ),
+            apiCall = {
+                bookUsecase.getBook()
+            })
     }
 
-    fun changePage(page: Int){
-        loadData(_books, MyResponese<Book>(
-            items = MockData.mockBooks,
-            page = page,
-            pageSize = MockData.mockBooks.size/2,
-            total = MockData.mockBooks.size,
-            totalPages = 10
-        )) {
-            bookUsecase.getBook(
-                GetBookRequest(page)
-            )
-        }
+    fun changePage(page: Int) {
+        loadData(
+            _books, MyResponese<Book>(
+                items = MockData.mockBooks,
+                page = page,
+                pageSize = MockData.mockBooks.size / 2,
+                total = MockData.mockBooks.size,
+                totalPages = 10
+            ),
+            apiCall = {
+                bookUsecase.getBook(
+                    GetBookRequest(page)
+                )
+            }
+        )
     }
 
 }

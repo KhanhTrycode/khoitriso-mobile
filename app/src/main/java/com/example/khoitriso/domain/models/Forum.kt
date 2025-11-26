@@ -30,13 +30,13 @@ data class ForumAnswer(
     val content: String,
     val userId: Int,
     val userName: String,
-    val userAvatar: String? = null,
+    val userAvatar: String = "",
     val isAccepted: Boolean = false,
     val isDeleted: Boolean = false,
     val voteCount: Int = 0,
     val commentCount: Int = 0,
     val createdAt: String,
-    val updatedAt: String? = null,
+    val updatedAt: String,
     val attachments: List<ForumAttachment> = emptyList()
 )
 
@@ -47,17 +47,17 @@ data class ForumComment(
     val content: String,
     val userId: Int,
     val userName: String,
-    val userAvatar: String? = null,
+    val userAvatar: String,
     val createdAt: String,
-    val updatedAt: String? = null
+    val updatedAt: String
 )
 
 data class ForumCategory(
     val id: String,
     val name: String,
-    val description: String? = null,
-    val color: String? = null,
-    val icon: String? = null,
+    val description: String,
+    val color: String,
+    val icon: String,
     val isActive: Boolean = true,
     val sortOrder: Int = 0
 )
@@ -65,8 +65,8 @@ data class ForumCategory(
 data class ForumTag(
     val id: String,
     val name: String,
-    val description: String? = null,
-    val color: String? = null,
+    val description: String,
+    val color: String,
     val isActive: Boolean = true
 )
 
@@ -74,7 +74,7 @@ data class ForumAttachment(
     val fileName: String,
     val fileUrl: String,
     val fileSize: Long,
-    val fileType: String? = null
+    val fileType: String
 )
 
 data class ForumStats(

@@ -20,6 +20,8 @@ abstract class BaseViewModel : ViewModel() {
         mockData: T,
         isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<T>,
+        onSuccess: (UiState.Success<T>) -> Unit = {},
+        onFailure: () -> Unit = {}
     ) {
         viewModelScope.launch {
             stateFlow.value = UiState.Loading
@@ -31,6 +33,7 @@ abstract class BaseViewModel : ViewModel() {
                     result.fold(
                         onSuccess = { item ->
                             stateFlow.value = UiState.Success(item)
+                            onSuccess(stateFlow.value as UiState.Success<T>)
                         },
                         onFailure = { exception ->
                             // Nếu thất bại, cập nhật state với thông báo lỗi
@@ -38,12 +41,42 @@ abstract class BaseViewModel : ViewModel() {
                                 exception.message ?: ("An unknown error " +
                                         "occurred")
                             )
+                            onFailure()
                         }
                     )
                 } catch (e: Exception) {
                     // Xử lý lỗi nếu cần
                     e.printStackTrace()
                     UiState.Error(e.message ?: "Unknown error")
+                }
+            }
+        }
+    }
+
+    protected fun <T> loadDataWithNoResult(
+        stateFlow: MutableStateFlow<T>,
+        mockData: T,
+        isTestMode: Boolean = _isTestMode,
+        apiCall: suspend () -> Result<T>,
+    ) {
+        viewModelScope.launch {
+            if (isTestMode) {
+                stateFlow.value = mockData
+            } else {
+                try {
+                    val result = apiCall()
+                    result.fold(
+                        onSuccess = { item ->
+                            stateFlow.value = item
+                        },
+                        onFailure = { exception ->
+                            // Nếu thất bại, cập nhật state với thông báo lỗi
+                            stateFlow.value = 0 as T
+                        }
+                    )
+                } catch (e: Exception) {
+                    // Xử lý lỗi nếu cần
+                    e.printStackTrace()
                 }
             }
         }

@@ -48,13 +48,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun getCategory() {
-        loadData(_categories, MockData.mockCategories) {
+        loadData(_categories, MockData.mockCategories, apiCall = {
             categoryUsecase.getCategory()
-        }
+        })
     }
 
     fun getBooks() {
-        loadDataWithPage(_books, mockData = MockData.mockBooks
+        loadDataWithPage(
+            _books, mockData = MockData.mockBooks
         ) {
             bookUsecase.getBook()
         }
@@ -71,9 +72,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getCourse() {
-        loadData(_courses, MockData.mockCourses) {
+        loadData(_courses, MockData.mockCourses, apiCall = {
             courseUsecase.getCourse()
-        }
+        })
         viewModelScope.launch {
             _courses.collectLatest { courseState ->
                 if (courseState is UiState.Success<List<Course>>) {

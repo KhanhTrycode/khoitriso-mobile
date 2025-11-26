@@ -138,7 +138,7 @@ class GetVotes(private val repo: ForumRepository) {
 }
 
 class GetUserVote(private val repo: ForumRepository) {
-    suspend operator fun invoke(targetType: Int, targetId: String, userId: Int): Result<Int?> {
+    suspend operator fun invoke(targetType: Int, targetId: String, userId: Int): Result<Int> {
         return repo.getUserVote(targetType, targetId, userId)
     }
 }

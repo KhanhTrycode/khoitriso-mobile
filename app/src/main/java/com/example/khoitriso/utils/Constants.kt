@@ -12,7 +12,7 @@ object Constants {
     val NAV_HEIGHT: Int = 60
     val THRESHOLD_SCROLL:Int = 120
     val BOOK_DEFAULT_COVER_IMAGE = R.drawable.book_placeholder
-    val DEBUG = BuildConfig.DEBUG
+    val DEBUG = true
 }
 
 fun debug(message: String,tag: String = "MyDebugLog", ) {

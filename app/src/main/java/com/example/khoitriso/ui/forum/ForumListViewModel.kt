@@ -19,6 +19,7 @@ import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
+import com.example.khoitriso.ui.behavior.ForumViewModel
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,8 +27,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.remove
 
 @HiltViewModel
 class ForumListViewModel @Inject constructor(
@@ -35,7 +38,11 @@ class ForumListViewModel @Inject constructor(
     private val tokenManager: TokenManager,
     private val userManager: UserManager,
     private val authUsecase: AuthUsecase,
-) : BaseViewModel() {
+) : ForumViewModel(
+    authUsecase = authUsecase,
+    forumUsecase = forumUsecase,
+    userManager = userManager,
+) {
     // Questions list
     private val _questions = MutableStateFlow<UiState<MyResponese<ForumQuestion>>>(UiState.Loading)
     val questions: StateFlow<UiState<MyResponese<ForumQuestion>>> = _questions
@@ -91,20 +98,8 @@ class ForumListViewModel @Inject constructor(
 
 
     init {
-        loadCurrentUser()
+        loadCurrentUser(_currentUser)
         loadQuestions(1)
-    }
-
-    private fun loadCurrentUser() {
-        viewModelScope.launch {
-            loadData(
-                stateFlow = _currentUser,
-                mockData = MockData.mockUser1,
-                apiCall = {
-                    authUsecase.loadCurrentUserInfo(userManager)
-                }
-            )
-        }
     }
 
 
@@ -244,50 +239,24 @@ class ForumListViewModel @Inject constructor(
     }
 
     fun vote(targetType: Int, targetId: String, userId: Int, voteType: Int) {
-        viewModelScope.launch {
-            val request = ForumVoteRequest(
-                targetId = targetId,
-                targetType = targetType,
-                userId = userId,
-                voteType = voteType
-            )
-//            val result = forumUsecase.vote(request)
-            debug("vote in ForumListViewModel", "TestMode")
-            val result = Result.success(1)
-            result.fold(
-                onSuccess = { total ->
-                    // Update user vote state
-                    val key = "$targetType-$targetId"
-                    _userVotes.value = _userVotes.value.toMutableMap().apply {
-                        // Toggle vote: if same voteType, remove (set to 0), otherwise set to voteType
-                        val currentVote = get(key) ?: 0
-                        if (currentVote == voteType) {
-                            remove(key) // Toggle off
-                        } else {
-                            put(key, voteType)
-                        }
-                    }
-                },
-                onFailure = {
-
+        voteInParent(targetType, targetId, userId, voteType, onSuccess = {
+            // Update user vote state
+            val key = "$targetType-$targetId"
+            _userVotes.value = _userVotes.value.toMutableMap().apply {
+                // Toggle vote: if same voteType, remove (set to 0), otherwise set to voteType
+                val currentVote = get(key) ?: 0
+                if (currentVote == voteType) {
+                    remove(key) // Toggle off
+                } else {
+                    put(key, voteType)
                 }
-            )
-
-        }
+            }
+        })
     }
 
     fun toggleBookmark(questionId: String, userId: Int) {
-        viewModelScope.launch {
-            val isBookmarked = _bookmarks.value.contains(questionId)
-            val result = if (isBookmarked) {
-//                forumUsecase.removeBookmark(questionId, userId)
-                Result.success(Unit)
-                debug("removeBookmark in ForumListViewModel", "TestMode")
-            } else {
-//                forumUsecase.addBookmark(questionId, userId)
-                Result.success(Unit)
-                debug("addBookmark in ForumListViewModel", "TestMode")
-            }
+        val isBookmarked = _bookmarks.value.contains(questionId)
+        toggleBookmarkInParent(questionId, userId, isBookmarked, onSuccess = {
             _bookmarks.value = _bookmarks.value.toMutableSet().apply {
                 if (isBookmarked) {
                     remove(questionId)
@@ -295,20 +264,9 @@ class ForumListViewModel @Inject constructor(
                     add(questionId)
                 }
             }
-//            result.fold(
-//                onSuccess = {
-//                    _bookmarks.value = _bookmarks.value.toMutableSet().apply {
-//                        if (isBookmarked) {
-//                            remove(questionId)
-//                        } else {
-//                            add(questionId)
-//                        }
-//                    }
-//
-//                },
-//                onFailure = {  }
-//            )
-        }
+        })
+
+
     }
 }
 

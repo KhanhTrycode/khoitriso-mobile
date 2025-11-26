@@ -35,13 +35,13 @@ fun ForumAnswerDto.toDomain(): ForumAnswer {
         content = Content,
         userId = UserId,
         userName = UserName,
-        userAvatar = UserAvatar,
+        userAvatar = UserAvatar?: "",
         isAccepted = IsAccepted,
         isDeleted = IsDeleted,
         voteCount = VoteCount,
         commentCount = CommentCount,
         createdAt = CreatedAt,
-        updatedAt = UpdatedAt,
+        updatedAt = UpdatedAt?: "",
         attachments = Attachments?.map { it.toDomain() } ?: emptyList()
     )
 }
@@ -54,9 +54,9 @@ fun ForumCommentDto.toDomain(): ForumComment {
         content = Content,
         userId = UserId,
         userName = UserName,
-        userAvatar = UserAvatar,
+        userAvatar = UserAvatar?: "",
         createdAt = CreatedAt,
-        updatedAt = UpdatedAt
+        updatedAt = UpdatedAt?: ""
     )
 }
 
@@ -64,9 +64,9 @@ fun ForumCategoryDto.toDomain(): ForumCategory {
     return ForumCategory(
         id = Id,
         name = Name,
-        description = Description,
-        color = Color,
-        icon = Icon,
+        description = Description?: "",
+        color = Color?: "",
+        icon = Icon?: "",
         isActive = IsActive,
         sortOrder = SortOrder
     )
@@ -76,8 +76,8 @@ fun ForumTagDto.toDomain(): ForumTag {
     return ForumTag(
         id = Id,
         name = Name,
-        description = Description,
-        color = Color,
+        description = Description?: "",
+        color = Color?: "",
         isActive = IsActive
     )
 }
@@ -87,7 +87,7 @@ fun ForumAttachmentDto.toDomain(): ForumAttachment {
         fileName = FileName,
         fileUrl = FileUrl,
         fileSize = FileSize,
-        fileType = FileType
+        fileType = FileType?: ""
     )
 }
 
