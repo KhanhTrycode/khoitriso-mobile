@@ -11,7 +11,7 @@ object Converter{
 fun Int.toDecimal(): String {
     return "%,d".format(this)
 }
-fun Int.toVND(): String {
+fun Double.toVND(): String {
     val formatted = NumberFormat.getNumberInstance(Locale.US).format(this)
     return "${formatted}₫"
 }

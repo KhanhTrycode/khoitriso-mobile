@@ -1,7 +1,6 @@
 package com.example.khoitriso.domain.models
 
 
-import android.os.Parcelable
 
 data class Chapter(
     val bookId: Int,
@@ -10,7 +9,7 @@ data class Chapter(
     val id: Int,
     val orderIndex: Int,
     val questionCount: Int,
-    val questions: List<Any>,
+    val questions: List<Question>,
     val title: String,
     val updatedAt: String
 )

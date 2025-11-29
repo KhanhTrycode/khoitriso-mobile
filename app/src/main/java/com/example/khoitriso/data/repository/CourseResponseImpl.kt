@@ -2,10 +2,11 @@ package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.CourseApi
 import com.example.khoitriso.data.dto.MyCourseDto
-import com.example.khoitriso.data.dto.toDetailDomain
+import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.CourseDetail
+import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -16,9 +17,17 @@ class CourseResponseImpl @Inject constructor(
     private val courseApi: CourseApi,
     private val gson: Gson
 ) : CourseRepository {
-    override suspend fun getCourse(): Result<List<Course>> {
+    override suspend fun getCourse(getPagingRequest: PagingRequest?): Result<List<Course>> {
         return try {
-            val response = courseApi.getCourse()
+            val response = courseApi.getCourse(
+                page = getPagingRequest?.page ?: 1,
+                pageSize = getPagingRequest?.pageSize ?: 20,
+                search = getPagingRequest?.search,
+                approvalStatus = getPagingRequest?.approvalStatus,
+                authorId = getPagingRequest?.authorId,
+                sortBy = getPagingRequest?.sortBy,
+                sortOrder = getPagingRequest?.sortOrder
+            )
             if (response.isSuccessful) {
                 Result.success(response.body()?.Result?.Items?.map { it.toDomain() } ?: emptyList())
             } else {
@@ -34,7 +43,7 @@ class CourseResponseImpl @Inject constructor(
             val response = courseApi.getCourseById(id)
             if (response.isSuccessful) {
                 Result.success(
-                    response.body()?.Result?.toDetailDomain() ?: throw Exception
+                    response.body()?.Result?.toDomain() ?: throw Exception
                         (
                         "Course" +
                                 " not found"
@@ -49,21 +58,14 @@ class CourseResponseImpl @Inject constructor(
 
     }
 
-    override suspend fun getMyCourse(): Result<List<Course>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getMyCourses(): Result<List<MyCourseDto>> {
+    override suspend fun getMyCourses(): Result<List<MyCourse>> {
         return try {
             val response = courseApi.getMyCourses(page = 1, pageSize = 100)
             if (response.isSuccessful) {
                 val body = response.body()?.Result
                 if (body != null) {
-                    // Parse using Gson
-                    val items = body.Items
-                    val type = object : TypeToken<List<MyCourseDto>>() {}.type
-                    val myCourses: List<MyCourseDto> = gson.fromJson(gson.toJson(items), type)
-                    Result.success(myCourses)
+                    val items = body.Items?.map { it.toDomain() }?: emptyList()
+                    Result.success(items)
                 } else {
                     Result.failure(Exception("Response body or Result is null"))
                 }

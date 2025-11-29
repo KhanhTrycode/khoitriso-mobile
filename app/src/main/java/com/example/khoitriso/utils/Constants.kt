@@ -20,3 +20,15 @@ fun debug(message: String,tag: String = "MyDebugLog", ) {
         Log.d(tag,message)
     }
 }
+
+object ItemType{
+    val Book = 0
+    val Course = 1
+}
+
+object QuestionType{
+    val MultipleChoice = 0
+    val TrueFalse = 1
+    val ShortAnswer = 2
+    val GroupType = 3
+}

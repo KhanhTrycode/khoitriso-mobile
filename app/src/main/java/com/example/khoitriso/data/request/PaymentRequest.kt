@@ -1,4 +1,4 @@
-package com.example.khoitriso.data.dto
+package com.example.khoitriso.data.request
 
 data class PaymentRequest(
     val PaymentMethod: String,

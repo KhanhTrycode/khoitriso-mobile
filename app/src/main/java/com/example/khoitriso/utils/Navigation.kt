@@ -1,10 +1,12 @@
 package com.example.khoitriso.utils
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeviceHub
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
@@ -13,28 +15,34 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 object  NavRoute {
 
-    val exploreBook: String = "exloreBook"
-    val login: String = "login"
-    val home: String = "home"
-    val profile: String = "profile"
-    val search : String = "search"
-    val learningPath = "learningPath"
-    val courseDetail = "courseDetail"
-    val bookDetail = "bookDetail"
-    val forum = "forum"
-    val forumAsk = "forum/ask"
-    val forumBookmarks = "forum/bookmarks"
-    val notifications = "notifications"
-    val cart = "cart"
-    val checkout = "checkout"
-    val myPurchases = "myPurchases"
+    val EXPLORE_BOOK: String = "exloreBook"
+    val LOGIN: String = "login"
+    val HOME: String = "home"
+    val PROFILE: String = "profile"
+    val SEARCH : String = "search"
+    val LEARNING_PATH = "learningPath"
+    val COURSE_DETAIL = "courseDetail"
+    const val LEARNING_COURSE = "learningCourse"
+    const val LEARNING_BOOK = "learningBook"
+    val BOOK_DETAIL = "bookDetail"
+    val FORUM = "forum"
+    val FORUM_ASK = "forum/ask"
+    val FORUM_BOOKMARKS = "forum/bookmarks"
+    val NOTIFICATIONS = "notifications"
+    val CART = "cart"
+    val CHECKOUT = "checkout"
+    val MY_PURCHASES = "myPurchases"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
+    const val LearningCourseWithArgs = "$LEARNING_COURSE/{courseId}"
+    const val LearningBookWithArgs = "$LEARNING_BOOK/{bookId}"
     const val BookDetailWithArgs = "bookDetail/{bookId}"
     const val ForumDetailWithArgs = "forum/{questionId}"
     const val MyPurchasesWithTab = "myPurchases?tab={tab}"
     const val PaymentResultWithArgs = "paymentResult?success={success}&orderCode={orderCode}"
-    fun NavCourseDetail(courseId: Int) = "$courseDetail/$courseId"
-    fun NavBookDetail(bookId: Int) = "$bookDetail/$bookId"
+    fun NavCourseDetail(courseId: Int) = "$COURSE_DETAIL/$courseId"
+    fun NavLearningCourse(courseId: Int) = "$LEARNING_COURSE/$courseId"
+    fun NavLearningBook(bookId: Int) = "$LEARNING_BOOK/$bookId"
+    fun NavBookDetail(bookId: Int) = "$BOOK_DETAIL/$bookId"
     fun NavForumDetail(questionId: String) = "forum/$questionId"
     fun NavMyPurchases(tab: String = "courses") = "myPurchases?tab=$tab"
     fun NavPaymentResult(success: Boolean, orderCode: String?) = 
@@ -49,22 +57,27 @@ data class MyNavigationBarItem(
 
 val navigationBarItems = listOf(
     MyNavigationBarItem(
-        label = NavRoute.home,
+        label = NavRoute.HOME,
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     ),
     MyNavigationBarItem(
-        label = NavRoute.search,
+        label = NavRoute.SEARCH,
         selectedIcon = Icons.Filled.Search,
         unselectedIcon = Icons.Outlined.Search
     ),
     MyNavigationBarItem(
-        label = NavRoute.learningPath,
+        label = NavRoute.MY_PURCHASES,
         selectedIcon = Icons.Filled.Menu,
         unselectedIcon = Icons.Outlined.Menu
     ),
     MyNavigationBarItem(
-        label = NavRoute.profile,
+        label = NavRoute.FORUM,
+        selectedIcon = Icons.Filled.DeviceHub,
+        unselectedIcon = Icons.Outlined.DeviceHub
+    ),
+    MyNavigationBarItem(
+        label = NavRoute.PROFILE,
         selectedIcon = Icons.Filled.Person,
         unselectedIcon = Icons.Outlined.Person
     )

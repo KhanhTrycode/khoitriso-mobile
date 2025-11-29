@@ -1,12 +1,11 @@
 package com.example.khoitriso.domain.models
 
-data class Item(
+data class OrderItem(
     val id: Int,
     val itemId: Int,
     val itemName: String,
     val itemType: Int,
-    val itemTypeName: String,
-    val price: Int,
+    val price: Double,
     val quantity: Int,
     val subTotal: Int
 )

@@ -5,6 +5,8 @@ import com.example.khoitriso.domain.models.Author
 import com.example.khoitriso.domain.models.Authorization
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.CartItem
+import com.example.khoitriso.domain.models.Carts
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Chapter
 import com.example.khoitriso.domain.models.Coupon
@@ -18,18 +20,134 @@ import com.example.khoitriso.domain.models.ForumQuestion
 import com.example.khoitriso.domain.models.ForumStats
 import com.example.khoitriso.domain.models.ForumTag
 import com.example.khoitriso.domain.models.Instructor
-import com.example.khoitriso.domain.models.Item
+import com.example.khoitriso.domain.models.OrderItem
 import com.example.khoitriso.domain.models.LearningPath
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.domain.models.Material
+import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyCart
+import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.models.Notification
+import com.example.khoitriso.domain.models.Option
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.Question
 import com.example.khoitriso.domain.models.User
+import com.example.khoitriso.utils.ItemType
+import com.example.khoitriso.utils.QuestionType
+import java.time.LocalDateTime
+import kotlin.text.format
 
 object MockData {
+
+    // 2. Mock Data
+    val mockQuestionList: List<Question> = listOf(
+        // Question 1: Câu hỏi hướng dẫn (ID 295)
+        Question(
+            id = 295,
+            contextType = 6,
+            contextId = 19,
+            questionContent = "Phần 1: Thí sinh trả lời từ câu 1 đến câu 12. Mỗi câu hỏi thí sinh chỉ chọn một phương án.",
+            questionType = 3,
+            difficultyLevel = 0,
+            defaultPoints = 0.25,
+            orderIndex = 0,
+            isActive = true,
+            options = emptyList(),
+            createdAt = "2025-11-18T17:20:59.017291Z",
+            updatedAt = "" // JSON ghi nhận là null, dùng ""
+        ),
+
+        // Question 2: Câu hỏi trắc nghiệm có công thức (ID 296)
+        Question(
+            id = 296,
+            contextType = 6,
+            contextId = 19,
+            questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mfrac><mrow><mstyle><msup><mrow><mstyle><mi>x</mi></mstyle></mrow><mrow><mstyle><mn>2</mn></mstyle></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>4</mn></mstyle></mrow><mrow><mstyle><mi>x</mi><mo>−</mo><mn>2</mn></mstyle></mrow></mfrac></math>. Hàm số đã cho đồng biến trên khoảng nào sau đây?""",
+            questionType = 0,
+            difficultyLevel = 0,
+            defaultPoints = 0.5,
+            orderIndex = 0,
+            isActive = true,
+            options = listOf(
+                Option(
+                    id = 850,
+                    questionId = 296,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mo>(</mo><mn>0</mn><mo>;</mo><mn>4</mn><mo>)</mo></math>""",
+                    orderIndex = 0,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 851,
+                    questionId = 296,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mo>(</mo><mn>2</mn><mo>;</mo><mn>4</mn><mo>)</mo></math>""",
+                    orderIndex = 1,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 852,
+                    questionId = 296,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mo>(</mo><mn>2</mn><mo>;</mo><mo>+</mo><mi>∞</mi><mo>)</mo></math>""",
+                    orderIndex = 2,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 853,
+                    questionId = 296,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mo>(</mo><mo>−</mo><mi>∞</mi><mo>;</mo><mn>0</mn><mo>)</mo></math>""",
+                    orderIndex = 3,
+                    pointsValue = 0
+                )
+            ),
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = "2025-11-18T17:32:37.34435Z"
+        ),
+
+        // Question 3: Câu hỏi trắc nghiệm có công thức (ID 297)
+        Question(
+            id = 297,
+            contextType = 6,
+            contextId = 19,
+            questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
+            questionType = 0,
+            difficultyLevel = 0,
+            defaultPoints = 0.5,
+            orderIndex = 0,
+            isActive = true,
+            options = listOf(
+                Option(
+                    id = 854,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>0</mn></math>""",
+                    orderIndex = 0,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 855,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>1</mn></math>""",
+                    orderIndex = 1,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 856,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>2</mn></math>""",
+                    orderIndex = 2,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 857,
+                    questionId = 297,
+                    optionText = "Không có điểm cực tiểu",
+                    orderIndex = 3,
+                    pointsValue = 0
+                )
+            ),
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = "" // JSON ghi nhận là null, dùng ""
+        )
+    )
 
     // Mock Users
     val mockUser1 = User(
@@ -60,6 +178,44 @@ object MockData {
     )
 
     val mockUsers = listOf(mockUser1, mockUser2, mockUser3)
+    // Mock Assignments
+    val mockAssignment1 = Assignment(
+        description = "Bài tập về cú pháp cơ bản Kotlin",
+        dueDate = "2024-12-01T23:59:59Z",
+        id = 1,
+        isPublished = true,
+        lessonId = 1,
+        maxAttempts = 3,
+        maxScore = 100,
+        passingScore = 70,
+        questions =mockQuestionList ,
+        showAnswersAfter = 1,
+        shuffleOptions = true,
+        shuffleQuestions = false,
+        timeLimit = 3600,
+        title = "Bài tập 1: Cú pháp Kotlin",
+        userAttempts = listOf(mockUser1)
+    )
+
+    val mockAssignment2 = Assignment(
+        description = "Bài tập về Functions và Lambdas",
+        dueDate = "2024-12-10T23:59:59Z",
+        id = 2,
+        isPublished = true,
+        lessonId = 3,
+        maxAttempts = 2,
+        maxScore = 100,
+        passingScore = 75,
+        questions = mockQuestionList,
+        showAnswersAfter = 2,
+        shuffleOptions = true,
+        shuffleQuestions = true,
+        timeLimit = 2700,
+        title = "Bài tập 2: Functions",
+        userAttempts = emptyList()
+    )
+
+
 
     // Mock Authors
     val mockAuthor1 = Author(
@@ -178,16 +334,12 @@ object MockData {
 
     val mockMaterials = listOf(mockMaterial1, mockMaterial2)
 
-    // Mock Questions
-    val mockQuestion1 = Question(id = 1)
-    val mockQuestion2 = Question(id = 2)
-    val mockQuestion3 = Question(id = 3)
 
-    val mockQuestions = listOf(mockQuestion1, mockQuestion2, mockQuestion3)
+    val mockAssignments = listOf(mockAssignment1, mockAssignment2)
 
     // Mock Lessons
     val mockLesson1 = Lesson(
-        contentText = 0,
+        contentText = "Giới thiệu về Kotlin và cài đặt môi trường",
         courseId = 1,
         description = "Giới thiệu về Kotlin và cài đặt môi trường",
         id = 1,
@@ -198,11 +350,12 @@ object MockData {
         title = "Bài 1: Giới thiệu Kotlin",
         userProgress = null,
         videoDuration = 1800,
-        videoUrl = "https://example.com/videos/kotlin_intro.mp4"
+        videoUrl = "https://example.com/videos/kotlin_intro.mp4",
+        assignments = mockAssignments
     )
 
     val mockLesson2 = Lesson(
-        contentText = 0,
+        contentText = "Giới thiệu về Kotlin và cài đặt môi trường",
         courseId = 1,
         description = "Các kiểu dữ liệu cơ bản trong Kotlin",
         id = 2,
@@ -213,11 +366,12 @@ object MockData {
         title = "Bài 2: Kiểu dữ liệu",
         userProgress = null,
         videoDuration = 2400,
-        videoUrl = "https://example.com/videos/kotlin_datatypes.mp4"
+        videoUrl = "https://example.com/videos/kotlin_datatypes.mp4",
+        assignments = mockAssignments
     )
 
     val mockLesson3 = Lesson(
-        contentText = 0,
+        contentText = "Giới thiệu về Kotlin và cài đặt môi trường",
         courseId = 1,
         description = "Functions và lambdas trong Kotlin",
         id = 3,
@@ -228,7 +382,8 @@ object MockData {
         title = "Bài 3: Functions",
         userProgress = null,
         videoDuration = 3000,
-        videoUrl = "https://example.com/videos/kotlin_functions.mp4"
+        videoUrl = "https://example.com/videos/kotlin_functions.mp4",
+        assignments = mockAssignments
     )
 
     val mockLessons = listOf(mockLesson1, mockLesson2, mockLesson3)
@@ -240,8 +395,8 @@ object MockData {
         description = "Khái quát về lập trình hướng đối tượng",
         id = 1,
         orderIndex = 1,
-        questionCount = 5,
-        questions = emptyList(),
+        questionCount = mockQuestionList.size,
+        questions = mockQuestionList,
         title = "Chương 1: Giới thiệu OOP",
         updatedAt = "2024-11-01T08:00:00Z"
     )
@@ -252,8 +407,8 @@ object MockData {
         description = "Tính kế thừa và đa hình",
         id = 2,
         orderIndex = 2,
-        questionCount = 8,
-        questions = emptyList(),
+        questionCount = mockQuestionList.size,
+        questions = mockQuestionList,
         title = "Chương 2: Kế thừa và Đa hình",
         updatedAt = "2024-11-02T08:00:00Z"
     )
@@ -283,7 +438,7 @@ object MockData {
         edition = "Lần 1",
         id = 1,
         language = "Tiếng Việt",
-        price = 150000,
+        price = 150000.0,
         publicationYear = 2024,
         rating = 4.5f,
         title = "Lập trình Kotlin cho người mới bắt đầu",
@@ -301,7 +456,7 @@ object MockData {
         edition = "Lần 5",
         id = 2,
         language = "Tiếng Việt",
-        price = 85000,
+        price = 85000.0,
         publicationYear = 2023,
         rating = 4.8f,
         title = "Tắt Đèn",
@@ -319,7 +474,7 @@ object MockData {
         edition = "Lần 3",
         id = 3,
         language = "Tiếng Việt",
-        price = 65000,
+        price = 65000.0,
         publicationYear = 2023,
         rating = 4.7f,
         title = "Chí Phèo",
@@ -344,7 +499,7 @@ object MockData {
         isOwned = true,
         isbn = "978-604-2-24567-8",
         language = "Tiếng Việt",
-        price = 150000,
+        price = 150000.0,
         publicationYear = 2024,
         rating = 4.5f,
         reviewNotes = null,
@@ -364,7 +519,7 @@ object MockData {
         instructor = mockInstructor1,
         isFree = false,
         level = 1,
-        price = 299000,
+        price = 299000.0,
         rating = 4.6f,
         thumbnail = "https://picsum.photos/400/300?random=11",
         title = "Kotlin Android Development",
@@ -382,7 +537,7 @@ object MockData {
         instructor = mockInstructor2,
         isFree = false,
         level = 2,
-        price = 399000,
+        price = 399000.0,
         rating = 4.8f,
         thumbnail = "https://picsum.photos/400/300?random=12",
         title = "ReactJS Từ A-Z",
@@ -400,7 +555,7 @@ object MockData {
         instructor = mockInstructor3,
         isFree = true,
         level = 1,
-        price = 0,
+        price = 0.0,
         rating = 4.3f,
         thumbnail = "https://picsum.photos/400/300?random=13",
         title = "Flutter Cơ Bản",
@@ -411,19 +566,114 @@ object MockData {
 
     val mockCourses = listOf(mockCourse1, mockCourse2, mockCourse3)
 
+    val mockEnrolledCourse1 = Course(
+        id = 101,
+        title = "Khóa học Lập trình Android Jetpack Compose",
+        description = "Học cách xây dựng ứng dụng Android hiện đại với Jetpack Compose.",
+        thumbnail = "https://example.com/thumbnail_compose.png",
+        instructor = mockInstructor1,
+        category = mockCategory3,
+        level = 2,
+        isFree = false,
+        price = 500000.0,
+        rating = 4.8f,
+        totalReviews = 120,
+        totalStudents = 1500,
+        createdAt = "2025-01-01T00:00:00Z",
+        estimatedDuration = 20,
+        totalLessons = 50
+    )
+
+    val mockEnrolledCourse2 = Course(
+        id = 102,
+        title = "Khóa học Thiết kế UI/UX cho người mới bắt đầu",
+        description = "Các nguyên tắc cơ bản về thiết kế giao diện và trải nghiệm người dùng.",
+        thumbnail = "https://example.com/thumbnail_uiux.png",
+        instructor = mockInstructor1,
+        category = mockCategory3,
+        level = 1,
+        isFree = false,
+        price = 300000.0,
+        rating = 4.9f,
+        totalReviews = 250,
+        totalStudents = 3000,
+        createdAt = "2025-02-15T00:00:00Z",
+        estimatedDuration = 15,
+        totalLessons = 30
+    )
+
+
+    val mockMyBookInProgress = MyBook(
+        bookId = 201,
+        book = mockBook1,
+        activatedAt = "2025-11-01T10:00:00Z",
+        totalChapters = 20,
+        completedChapters = 8 // Đã đọc 8/20 chương
+    )
+
+    // Ví dụ về một cuốn sách đã đọc xong
+    val mockMyBookCompleted = MyBook(
+        bookId = 202,
+        book = mockBook2,
+        activatedAt = "2025-10-20T15:30:00Z",
+        totalChapters = 15,
+        completedChapters = 15 // Đã đọc hết 15/15 chương
+    )
+
+    // Ví dụ về một cuốn sách mới kích hoạt, chưa đọc
+    val mockMyBookNew = MyBook(
+        bookId = 203, // Giả sử có một cuốn sách khác
+        book = mockBook3,
+        activatedAt = "", // Lấy thời gian hiện tại
+        totalChapters = 25,
+        completedChapters = 0 // Chưa đọc chương nào
+    )
+
+
+    // 3. Tạo một danh sách các cuốn sách của tôi
+    val mockMyBooksList = listOf(mockMyBookInProgress, mockMyBookCompleted, mockMyBookNew)
+
+
+
+// 2. Tạo các đối tượng MyCourse giả lập
+
+    // Ví dụ về một khóa học đang học dở
+    val mockMyCourseInProgress = MyCourse(
+        courseId = 101,
+        course = mockEnrolledCourse1,
+        progressPercentage = 45.5,
+        enrolledAt = "2025-10-15T09:30:00Z",
+        lastAccessed = "2025-11-26T14:00:00Z",
+        isCompleted = false,
+        completedAt = "" // Chưa hoàn thành nên là null
+    )
+
+    // Ví dụ về một khóa học đã hoàn thành
+    val mockMyCourseCompleted = MyCourse(
+        courseId = 102,
+        course = mockEnrolledCourse2,
+        progressPercentage = 100.0,
+        enrolledAt = "2025-09-01T18:00:00Z",
+        lastAccessed = "2025-11-20T11:25:00Z",
+        isCompleted = true,
+        completedAt = "2025-11-20T11:25:00Z" // Đã hoàn thành
+    )
+
+    // 3. Tạo một danh sách các khóa học của tôi
+    val mockMyCoursesList = listOf(mockMyCourseInProgress, mockMyCourseCompleted)
+
     // Mock CourseDetail
     val mockCourseDetail1 = CourseDetail(
         category = mockCategory3,
         createdAt = "2024-09-01T08:00:00Z",
         description = "Khóa học Kotlin toàn diện cho Android Development với các dự án thực tế",
-        estimatedDuration = 40,
         id = 1,
         instructor = mockInstructor1,
         isEnrolled = true,
         isFree = false,
         lessons = mockLessons,
         level = 1,
-        price = 299000,
+        price = 299000.0,
         rating = 4.6f,
         requirements = listOf(
             "Kiến thức cơ bản về lập trình",
@@ -432,7 +682,6 @@ object MockData {
         ),
         thumbnail = "https://picsum.photos/400/300?random=11",
         title = "Kotlin Android Development",
-        totalLessons = 45,
         totalReviews = 189,
         totalStudents = 1250,
         updatedAt = "2024-11-22T08:00:00Z",
@@ -444,45 +693,6 @@ object MockData {
             "Kết nối API và xử lý dữ liệu"
         )
     )
-
-    // Mock Assignments
-    val mockAssignment1 = Assignment(
-        description = "Bài tập về cú pháp cơ bản Kotlin",
-        dueDate = "2024-12-01T23:59:59Z",
-        id = 1,
-        isPublished = true,
-        lessonId = 1,
-        maxAttempts = 3,
-        maxScore = 100,
-        passingScore = 70,
-        questions = mockQuestion1,
-        showAnswersAfter = 1,
-        shuffleOptions = true,
-        shuffleQuestions = false,
-        timeLimit = 3600,
-        title = "Bài tập 1: Cú pháp Kotlin",
-        userAttempts = listOf(mockUser1)
-    )
-
-    val mockAssignment2 = Assignment(
-        description = "Bài tập về Functions và Lambdas",
-        dueDate = "2024-12-10T23:59:59Z",
-        id = 2,
-        isPublished = true,
-        lessonId = 3,
-        maxAttempts = 2,
-        maxScore = 100,
-        passingScore = 75,
-        questions = mockQuestion2,
-        showAnswersAfter = 2,
-        shuffleOptions = true,
-        shuffleQuestions = true,
-        timeLimit = 2700,
-        title = "Bài tập 2: Functions",
-        userAttempts = emptyList()
-    )
-
-    val mockAssignments = listOf(mockAssignment1, mockAssignment2)
 
     // Mock Coupons
     val mockCoupon1 = Coupon(
@@ -526,35 +736,32 @@ object MockData {
     val mockCoupons = listOf(mockCoupon1, mockCoupon2)
 
     // Mock Items
-    val mockItem1 = Item(
+    val mockItem1 = OrderItem(
         id = 1,
         itemId = 1,
         itemName = "Kotlin Android Development",
         itemType = 1,
-        itemTypeName = "Course",
-        price = 299000,
+        price = 299000.0,
         quantity = 1,
         subTotal = 299000
     )
 
-    val mockItem2 = Item(
+    val mockItem2 = OrderItem(
         id = 2,
         itemId = 1,
         itemName = "Lập trình Kotlin cho người mới bắt đầu",
         itemType = 2,
-        itemTypeName = "Book",
-        price = 150000,
+        price = 150000.0,
         quantity = 1,
         subTotal = 150000
     )
 
-    val mockItem3 = Item(
+    val mockItem3 = OrderItem(
         id = 3,
         itemId = 2,
         itemName = "ReactJS Từ A-Z",
         itemType = 1,
-        itemTypeName = "Course",
-        price = 399000,
+        price = 399000.0,
         quantity = 1,
         subTotal = 399000
     )
@@ -880,9 +1087,11 @@ object MockData {
         totalPages = 3
     )
 
+    var mockCartItems : MutableList<CartItem> = emptyList<CartItem>().toMutableList()
     // Mock Cart
-    val mockCart = MyCart(
-        items = mockItems,
-        total = 3
+    val mockCart = Carts(
+        cartItems = mockCartItems,
+        totalItems = mockCartItems.size,
+        totalPrice = 0.0
     )
 }

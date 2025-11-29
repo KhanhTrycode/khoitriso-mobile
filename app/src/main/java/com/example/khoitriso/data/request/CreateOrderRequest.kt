@@ -1,4 +1,4 @@
-package com.example.khoitriso.data.dto
+package com.example.khoitriso.data.request
 
 data class CreateOrderRequest(
     val CartItemIds: List<Int>,

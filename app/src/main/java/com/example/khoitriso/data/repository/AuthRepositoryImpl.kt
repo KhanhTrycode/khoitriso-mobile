@@ -2,7 +2,7 @@ package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.AuthApi
 import com.example.khoitriso.data.api.PublicApi
-import com.example.khoitriso.data.dto.auth.GoogleAuthRequest
+import com.example.khoitriso.data.dto.request.GoogleAuthRequest
 import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.Authorization
 import com.example.khoitriso.domain.models.User

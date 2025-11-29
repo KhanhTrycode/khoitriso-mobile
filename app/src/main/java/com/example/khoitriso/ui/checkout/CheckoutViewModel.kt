@@ -2,8 +2,8 @@ package com.example.khoitriso.ui.checkout
 
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.data.dto.CartDto
-import com.example.khoitriso.data.dto.CreateOrderRequest
-import com.example.khoitriso.data.dto.VNPayPaymentRequest
+import com.example.khoitriso.data.request.CreateOrderRequest
+import com.example.khoitriso.data.request.VNPayPaymentRequest
 import com.example.khoitriso.domain.repository.CartRepository
 import com.example.khoitriso.domain.repository.OrderRepository
 import com.example.khoitriso.domain.repository.VNPayRepository
@@ -30,23 +30,23 @@ class CheckoutViewModel @Inject constructor(
     }
 
     fun loadCart() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            cartRepository.getCart().fold(
-                onSuccess = { cart ->
-                    _uiState.value = _uiState.value.copy(
-                        cart = cart,
-                        isLoading = false
-                    )
-                },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Không thể tải giỏ hàng"
-                    )
-                }
-            )
-        }
+//        viewModelScope.launch {
+//            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+//            cartRepository.getCart().fold(
+//                onSuccess = { cart ->
+//                    _uiState.value = _uiState.value.copy(
+//                        cart = cart,
+//                        isLoading = false
+//                    )
+//                },
+//                onFailure = { exception ->
+//                    _uiState.value = _uiState.value.copy(
+//                        isLoading = false,
+//                        error = exception.message ?: "Không thể tải giỏ hàng"
+//                    )
+//                }
+//            )
+//        }
     }
 
     fun checkout(onPaymentUrlReady: (String) -> Unit) {
@@ -58,7 +58,7 @@ class CheckoutViewModel @Inject constructor(
             val cartItemIds = cart.CartItems.map { it.Id }
             val discount = _uiState.value.discountAmount ?: 0.0
             val finalTotal = maxOf(0.0, cart.TotalAmount - discount)
-            
+
             val orderRequest = CreateOrderRequest(
                 CartItemIds = cartItemIds,
                 CouponCode = _uiState.value.couponCode.ifEmpty { null },
@@ -66,7 +66,7 @@ class CheckoutViewModel @Inject constructor(
                 PaymentGateway = if (finalTotal <= 0) "FREE" else "VNPAY"
             )
 
-            orderRepository.createOrder(orderRequest).fold(
+            orderRepository.payment(orderRequest).fold(
                 onSuccess = { order ->
                     // Step 2: Check if free order
                     // Use FinalAmount if available, otherwise TotalAmount

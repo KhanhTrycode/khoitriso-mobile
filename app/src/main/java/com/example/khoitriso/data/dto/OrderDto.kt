@@ -2,7 +2,7 @@ package com.example.khoitriso.data.dto
 
 import com.example.khoitriso.domain.models.Order
 
-data class OrderDto(
+data class  OrderDto(
     val Currency: String,
     val DiscountAmount: Int,
     val ExchangeRate: Int,

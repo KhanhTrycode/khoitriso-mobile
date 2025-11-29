@@ -9,7 +9,6 @@ data class BookDto(
     val AuthorId: Int,
     val Category: CategoryDto,
     val CategoryId: Int,
-    val Chapters: List<ChapterDto>,
     val CoverImage: String,
     val CreatedAt: String,
     val Description: String,
@@ -17,16 +16,41 @@ data class BookDto(
     val Edition: String,
     val Id: Int,
     val IsActive: Boolean,
-    val IsOwned: Boolean,
     val Isbn: String,
     val Language: String,
-    val Price: Int,
+    val Price: Double,
+    val PublicationYear: Int,
+    val Rating: Float?,
+    val StaticPagePath: String,
+    val Title: String,
+    val TotalReviews: Int?,
+    val UpdatedAt: String
+)
+
+data class BookDetailDto(
+    val ApprovalStatus: Int,
+    val Author: AuthorDto,
+    val AuthorId: Int,
+    val Category: CategoryDto,
+    val CategoryId: Int,
+    val Chapters: List<ChapterDto>?,
+    val CoverImage: String,
+    val CreatedAt: String,
+    val Description: String,
+    val EbookFile: String,
+    val Edition: String,
+    val Id: Int,
+    val IsActive: Boolean,
+    val IsOwned: Boolean?,
+    val Isbn: String,
+    val Language: String,
+    val Price: Double,
     val PublicationYear: Int,
     val Rating: Float?,
     val ReviewNotes: String?,
     val StaticPagePath: String,
     val Title: String,
-    val TotalReviews: Int,
+    val TotalReviews: Int?,
     val UpdatedAt: String
 )
 
@@ -44,22 +68,22 @@ fun BookDto.toDomain() : Book = Book(
     publicationYear = PublicationYear,
     rating = Rating?: 0f,
     title = Title,
-    totalReviews = TotalReviews,
+    totalReviews = TotalReviews?: 0,
     updatedAt = UpdatedAt
 )
 
-fun BookDto.toDetailDomain() : BookDetail = BookDetail(
+fun BookDetailDto.toDomain() : BookDetail = BookDetail(
     approvalStatus = ApprovalStatus,
     author = Author.toDomain(),
     category = Category.toDomain(),
-    chapters = Chapters.map { it.toDomain() },
+    chapters = Chapters?.map { it.toDomain() }?: emptyList(),
     coverImage = CoverImage,
     createdAt = CreatedAt,
     description = Description,
     ebookFile = EbookFile,
     edition = Edition,
     id = Id,
-    isOwned = IsOwned,
+    isOwned = IsOwned?: false,
     isbn = Isbn,
     language = Language,
     price = Price,
@@ -68,6 +92,6 @@ fun BookDto.toDetailDomain() : BookDetail = BookDetail(
     reviewNotes = ReviewNotes?: "",
     staticPagePath = StaticPagePath,
     title = Title,
-    totalReviews = TotalReviews,
+    totalReviews = TotalReviews?: 0,
     updatedAt = UpdatedAt
 )

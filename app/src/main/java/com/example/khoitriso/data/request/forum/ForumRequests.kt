@@ -65,7 +65,6 @@ data class ForumBookmarkRequestDto(
     val QuestionId: String,
     val UserId: Int
 )
-
 data class ForumBookmarkedResponse(
     val IsBookmarked: Boolean
 )
@@ -99,3 +98,4 @@ data class ForumStatsDto(
     val TotalUsers: Int = 0,
     val SolvedQuestions: Int = 0
 )
+

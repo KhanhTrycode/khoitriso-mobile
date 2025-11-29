@@ -9,7 +9,7 @@ data class Assignment(
     val maxAttempts: Int,
     val maxScore: Int,
     val passingScore: Int,
-    val questions: Question?,
+    val questions: List<Question>,
     val showAnswersAfter: Int,
     val shuffleOptions: Boolean,
     val shuffleQuestions: Boolean,

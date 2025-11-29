@@ -9,7 +9,7 @@ data class ChapterDto (
     val Id: Int,
     val OrderIndex: Int,
     val QuestionCount: Int,
-    val Questions: List<Any>,
+    val Questions: List<QuestionDto>,
     val Title: String,
     val UpdatedAt: String
 )
@@ -21,7 +21,7 @@ fun ChapterDto.toDomain() : Chapter = Chapter(
     id = Id,
     orderIndex = OrderIndex,
     questionCount = QuestionCount,
-    questions = Questions,
+    questions = Questions.map { it.toDomain() },
     title = Title,
     updatedAt = UpdatedAt
 )

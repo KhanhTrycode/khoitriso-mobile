@@ -4,7 +4,7 @@ import com.example.khoitriso.domain.models.Lesson
 
 data class LessonDto(
     val Assignments: List<AssignmentDto>,
-    val ContentText: Int,
+    val ContentText: String?,
     val CourseId: Int,
     val Description: String,
     val Id: Int,
@@ -19,7 +19,8 @@ data class LessonDto(
 )
 
 fun LessonDto.toDomain() = Lesson(
-    contentText = ContentText,
+    assignments = Assignments.map { it.toDomain() },
+    contentText = ContentText?: "",
     courseId = CourseId,
     description = Description,
     id = Id,

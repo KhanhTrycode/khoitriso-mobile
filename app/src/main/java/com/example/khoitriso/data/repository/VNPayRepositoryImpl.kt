@@ -1,9 +1,9 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.VNPayApi
-import com.example.khoitriso.data.dto.VNPayPaymentRequest
 import com.example.khoitriso.data.dto.VNPayPaymentResponse
 import com.example.khoitriso.data.dto.VNPayQueryResponse
+import com.example.khoitriso.data.request.VNPayPaymentRequest
 import com.example.khoitriso.domain.repository.VNPayRepository
 import javax.inject.Inject
 

@@ -1,11 +1,9 @@
 package com.example.khoitriso.ui.mypurchase
 
 import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -27,36 +25,26 @@ import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.data.dto.MyBookDto
 import com.example.khoitriso.data.dto.MyCourseDto
+import com.example.khoitriso.domain.models.MyBook
+import com.example.khoitriso.domain.models.MyCourse
+import com.example.khoitriso.ui.behavior.SafeImage
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiState
 import java.io.File
 import java.io.FileOutputStream
-import java.text.NumberFormat
 import java.util.*
 
 @Composable
 fun MyPurchaseScreen(
     navController: NavHostController,
-    initialTab: String = "courses",
-    viewModel: MyPurchaseViewModel = hiltViewModel()
+    viewModel: MyPurchaseViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val courseState by viewModel.courses.collectAsState()
+    val bookState by viewModel.books.collectAsState()
+    val activeTab by viewModel.activeTab.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        if (uiState.activeTab != initialTab) {
-            viewModel.setActiveTab(initialTab)
-        }
-    }
 
-    // Handle exported book download
-    LaunchedEffect(uiState.exportedBookBytes, uiState.exportedBookId) {
-        uiState.exportedBookBytes?.let { bytes ->
-            uiState.exportedBookId?.let { bookId ->
-                downloadBookFile(context, bytes, bookId)
-                viewModel.clearExportedBook()
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -80,10 +68,10 @@ fun MyPurchaseScreen(
                 .padding(paddingValues)
         ) {
             // Tabs
-            TabRow(selectedTabIndex = if (uiState.activeTab == "courses") 0 else 1) {
+            TabRow(selectedTabIndex = if (activeTab == 0) 0 else 1) {
                 Tab(
-                    selected = uiState.activeTab == "courses",
-                    onClick = { viewModel.setActiveTab("courses") },
+                    selected = activeTab == 0,
+                    onClick = { viewModel.setActiveTab(0) },
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -97,14 +85,15 @@ fun MyPurchaseScreen(
                     }
                 )
                 Tab(
-                    selected = uiState.activeTab == "books",
-                    onClick = { viewModel.setActiveTab("books") },
+                    selected = activeTab == 1,
+                    onClick = { viewModel.setActiveTab(1) },
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Book,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp))
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.books_tab))
                         }
@@ -113,70 +102,44 @@ fun MyPurchaseScreen(
             }
 
             // Content
-            when (uiState.activeTab) {
-                "courses" -> {
-                    if (uiState.isLoadingCourses) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else if (uiState.courses.isEmpty()) {
-                        EmptyState(
-                            title = stringResource(R.string.no_courses),
-                            onAction = { navController.navigate(NavRoute.home) },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(uiState.courses) { course ->
-                                MyCourseCard(
-                                    course = course,
-                                    onClick = {
-                                        navController.navigate(NavRoute.NavCourseDetail(course.CourseId))
-                                    }
-                                )
+            when (activeTab) {
+                0 -> {
+                    when (val courses = courseState) {
+                        is UiState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
+                        }
+
+                        is UiState.Error -> {
+                            Text(courses.message)
+
+                        }
+                        is UiState.Success<List<MyCourse>> -> {
+                            MyCourseTab(courses.data,navController = navController)
                         }
                     }
                 }
-                "books" -> {
-                    if (uiState.isLoadingBooks) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else if (uiState.books.isEmpty()) {
-                        EmptyState(
-                            title = stringResource(R.string.no_books),
-                            onAction = { navController.navigate(NavRoute.home) },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(uiState.books) { book ->
-                                MyBookCard(
-                                    book = book,
-                                    isExporting = uiState.exportingBookId == book.BookId,
-                                    onClick = {
-                                        navController.navigate(NavRoute.NavBookDetail(book.BookId))
-                                    },
-                                    onExportWord = {
-                                        viewModel.exportBookToWord(book.BookId, includeExplanation = false)
-                                    }
-                                )
+                1-> {
+                    when(val books = bookState){
+                        is UiState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
+                        }
+
+                        is UiState.Error -> {
+                            Text(books.message)
+
+                        }
+                        is UiState.Success<List<MyBook>> -> {
+                            MyBookTab(books.data,navController = navController)
                         }
                     }
                 }
@@ -186,9 +149,27 @@ fun MyPurchaseScreen(
 }
 
 @Composable
+private fun MyCourseTab(courses: List<MyCourse>,navController: NavHostController) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(courses.size) { i ->
+            MyCourseCard(
+                course = courses[i],
+                onClick = {
+                    navController.navigate(NavRoute.NavLearningCourse(courses[i].courseId))
+                }
+            )
+        }
+    }
+}
+
+@Composable
 private fun MyCourseCard(
-    course: MyCourseDto,
-    onClick: () -> Unit
+    course: MyCourse,
+    onClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -201,9 +182,9 @@ private fun MyCourseCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Thumbnail
-            AsyncImage(
-                model = course.Course.Thumbnail ?: "",
-                contentDescription = course.Course.Title,
+            SafeImage(
+                url = course.course.thumbnail,
+                contentDescription = course.course.title,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(8.dp)),
@@ -215,18 +196,18 @@ private fun MyCourseCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = course.Course.Title ?: "",
+                    text = course.course.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${stringResource(R.string.progress)}: ${course.ProgressPercentage.toInt()}%",
+                    text = "${stringResource(R.string.progress)}: ${course.progressPercentage.toInt()}%",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
-                    progress = (course.ProgressPercentage / 100).toFloat(),
+                    progress = (course.progressPercentage / 100).toFloat(),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -239,11 +220,30 @@ private fun MyCourseCard(
 }
 
 @Composable
+private fun MyBookTab(books: List<MyBook>, navController: NavHostController) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(books.size) { i ->
+            MyBookCard(
+                book = books[i],
+                onClick = {
+                    navController.navigate(NavRoute.NavLearningBook(books[i].bookId))
+                },
+                isExporting = false,
+                onExportWord = {}
+            )
+        }
+    }
+}
+@Composable
 private fun MyBookCard(
-    book: MyBookDto,
+    book: MyBook,
     isExporting: Boolean,
     onClick: () -> Unit,
-    onExportWord: () -> Unit
+    onExportWord: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -256,9 +256,9 @@ private fun MyBookCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Cover
-            AsyncImage(
-                model = book.Book.CoverImage ?: "",
-                contentDescription = book.Book.Title,
+            SafeImage(
+                url = book.book.coverImage,
+                contentDescription = book.book.title,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(8.dp)),
@@ -270,13 +270,14 @@ private fun MyBookCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = book.Book.Title ?: "",
+                    text =  book.book.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${book.CompletedChapters}/${book.TotalChapters} ${stringResource(R.string.chapters)}",
+                    text = "${book.completedChapters}/${book.totalChapters} ${stringResource(R.string
+                        .chapters)}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -306,7 +307,7 @@ private fun MyBookCard(
 private fun EmptyState(
     title: String,
     onAction: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.padding(32.dp),

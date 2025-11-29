@@ -42,9 +42,11 @@ import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.NavRoute
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
@@ -57,17 +59,30 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.Person
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Observer
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import com.example.khoitriso.domain.models.Instructor
 import com.example.khoitriso.ui.theme.StarColor
 import com.example.khoitriso.utils.debug
 import com.example.khoitriso.utils.toDecimal
 import com.example.khoitriso.utils.toVND
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import okhttp3.Dispatcher
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -258,7 +273,7 @@ fun CourseCard(
 }
 
 @Composable
-fun ItemCardBottom(rating: Float, isFree: Boolean, price: Int, totalReviews: Int) {
+fun ItemCardBottom(rating: Float, isFree: Boolean, price: Double, totalReviews: Int) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -351,7 +366,7 @@ fun DetailHeader(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ActionButtons(price: Int, onBuy: () -> Unit, onCart: () -> Unit) {
+fun ActionButtons(price: Double, onBuy: () -> Unit, onCart: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -391,6 +406,23 @@ fun ActionButtons(price: Int, onBuy: () -> Unit, onCart: () -> Unit) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
+        }
+    }
+}
+
+@Composable
+fun <T> ObserverAsEvent(
+    flow: Flow<T>,
+    key1: Any? = null,
+    key2: Any? = null,
+    onEvent: suspend (T) -> Unit
+){
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(key1, key2) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+            withContext(Dispatchers.Main.immediate){
+                flow.collect(onEvent)
+            }
         }
     }
 }
@@ -471,3 +503,57 @@ fun PaginationControls(
         ) { Text("Sau") }
     }
 }
+
+@Composable
+fun Media3AndroidView(player: ExoPlayer?, modifier: Modifier = Modifier) {
+    if (player != null) {
+        AndroidView(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            factory = { context ->
+                PlayerView(context).apply {
+                    this.player = player
+                }
+            },
+            update = { playerView ->
+                playerView.player = player
+            }
+        )
+    }
+}
+
+@Composable
+fun ErrorDisplay(
+    message: String,
+    modifier: Modifier = Modifier,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = modifier.fillMaxSize().padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Lỗi",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+            Button(onClick = onRetry) {
+                Text("Thử lại")
+            }
+        }
+    }
+}
+
+

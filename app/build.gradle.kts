@@ -149,5 +149,13 @@ dependencies {
     implementation("com.microsoft.signalr:signalr:6.0.8")
     implementation("androidx.compose.material:material-icons-extended:1.7.8") // Check for the latest version
 
+    // Markwon core
+    implementation ("io.noties.markwon:core:4.6.2")
+    // Hỗ trợ HTML tag
+    implementation ("io.noties.markwon:html:4.6.2")
+    // Hỗ trợ LaTeX (Toán học)
+    implementation ("io.noties.markwon:ext-latex:4.6.2")
+    // Hỗ trợ Inline parser (để xử lý text tốt hơn)
+    implementation ("io.noties.markwon:inline-parser:4.6.2")
 }
 

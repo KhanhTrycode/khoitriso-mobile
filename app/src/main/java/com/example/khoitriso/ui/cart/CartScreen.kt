@@ -1,22 +1,23 @@
 package com.example.khoitriso.ui.cart
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,17 +25,21 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.khoitriso.R
-import com.example.khoitriso.data.dto.CartItemDto
+import com.example.khoitriso.domain.models.CartItem
+import com.example.khoitriso.domain.models.Carts
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiState
 import java.text.NumberFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     navController: NavHostController,
-    viewModel: CartViewModel = hiltViewModel()
+    viewModel: CartViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    // Lắng nghe trạng thái từ ViewModel. 'cartState' bây giờ là một đối tượng UiState<Cart>
+    val cartState by viewModel.carts.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadCart()
@@ -42,7 +47,6 @@ fun CartScreen(
 
     Scaffold(
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = { Text(stringResource(R.string.cart_title)) },
                 navigationIcon = {
@@ -56,18 +60,23 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            if (uiState.cart != null && uiState.cart!!.CartItems.isNotEmpty()) {
-                CartBottomBar(
-                    totalAmount = uiState.cart!!.TotalAmount,
-                    onCheckout = {
-                        navController.navigate(NavRoute.checkout)
-                    }
-                )
+            // Chỉ hiển thị bottom bar khi trạng thái là Success và giỏ hàng không rỗng
+            if (cartState is UiState.Success) {
+                val cart = (cartState as UiState.Success<Carts>).data
+                if (cart.cartItems.isNotEmpty()) {
+                    CartBottomBar(
+                        totalAmount = cart.totalPrice,
+                        onCheckout = {
+
+                        }
+                    )
+                }
             }
         }
     ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
+        // Sử dụng when để xử lý các trạng thái khác nhau của UiState
+        when (val state = cartState) {
+            is UiState.Loading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -77,52 +86,61 @@ fun CartScreen(
                     CircularProgressIndicator()
                 }
             }
-            uiState.error != null -> {
+
+            is UiState.Error -> {
                 ErrorCard(
-                    message = uiState.error!!,
+                    message = state.message,
                     onRetry = { viewModel.loadCart() },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
-            uiState.cart == null || uiState.cart!!.CartItems.isEmpty() -> {
-                EmptyCartScreen(
-                    onContinueShopping = {
-                        navController.navigate(NavRoute.home)
-                    },
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    item {
-                        Text(
-                            text = "${uiState.cart!!.TotalItems} ${stringResource(R.string.items)}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    items(
-                        items = uiState.cart!!.CartItems,
-                        key = { it.Id }
-                    ) { item ->
-                        CartItemCard(
-                            item = item,
-                            onRemove = { viewModel.removeItem(item.Id) },
-                            isRemoving = uiState.isRemoving == item.Id,
-                            onItemClick = {
-                                when (item.ItemType) {
-                                    0 -> navController.navigate(NavRoute.NavBookDetail(item.ItemId))
-                                    1 -> navController.navigate(NavRoute.NavCourseDetail(item.ItemId))
-                                    else -> {}
-                                }
+
+            is UiState.Success -> {
+                val cart = state.data
+                if (cart.cartItems.isEmpty()) {
+                    EmptyCartScreen(
+                        onContinueShopping = {
+                            navController.navigate(NavRoute.HOME) {
+                                popUpTo(NavRoute.HOME) { inclusive = true }
                             }
-                        )
+                        },
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = "${cart.totalItems} ${stringResource(R.string.items)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        items(
+                            items = cart.cartItems,
+                            key = { it.id } // Sử dụng id từ model CartItem
+                        ) { item ->
+                            CartItemCard(
+                                item = item,
+                                onRemove = { viewModel.removeItem(item.id) },
+                                // isRemoving cần được lấy từ ViewModel nếu bạn muốn hiển thị loading cho từng item
+                                // Hiện tại, chúng ta sẽ không hiển thị loading cho từng item để đơn giản hóa
+                                isRemoving = false,
+                                onItemClick = {
+                                    // Chuyển sang màn hình chi tiết dựa trên loại item
+                                    // Giả sử ItemType là một enum hoặc const
+                                    when (item.itemType) {
+                                        0 -> navController.navigate(NavRoute.NavBookDetail(item.itemId))
+                                        1 -> navController.navigate(NavRoute.NavCourseDetail(item.itemId))
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -132,10 +150,10 @@ fun CartScreen(
 
 @Composable
 private fun CartItemCard(
-    item: CartItemDto,
+    item: CartItem, // Sử dụng model CartItem của tầng domain
     onRemove: () -> Unit,
     isRemoving: Boolean,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -145,12 +163,12 @@ private fun CartItemCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Thumbnail
             AsyncImage(
-                model = item.CoverImage ?: "",
-                contentDescription = item.Title,
+                model = item.coverImage,
+                contentDescription = item.title,
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(8.dp))
@@ -158,23 +176,21 @@ private fun CartItemCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Content
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(onClick = onItemClick)
             ) {
                 Text(
-                    text = item.Title ?: "Unknown",
+                    text = item.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = when (item.ItemType) {
+                    text = when (item.itemType) {
                         0 -> stringResource(R.string.book)
                         1 -> stringResource(R.string.course)
-                        2 -> stringResource(R.string.learning_path)
                         else -> ""
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -182,14 +198,13 @@ private fun CartItemCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = formatPrice(item.Price),
+                    text = formatPrice(item.price),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            // Remove button
             IconButton(
                 onClick = onRemove,
                 enabled = !isRemoving
@@ -211,7 +226,7 @@ private fun CartItemCard(
 @Composable
 private fun CartBottomBar(
     totalAmount: Double,
-    onCheckout: () -> Unit
+    onCheckout: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -239,10 +254,7 @@ private fun CartBottomBar(
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = onCheckout,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = stringResource(R.string.checkout),
@@ -256,7 +268,7 @@ private fun CartBottomBar(
 @Composable
 private fun EmptyCartScreen(
     onContinueShopping: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -294,7 +306,7 @@ private fun EmptyCartScreen(
 private fun ErrorCard(
     message: String,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
@@ -306,8 +318,16 @@ private fun ErrorCard(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            Text(
+                text = stringResource(R.string.items),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -321,7 +341,10 @@ private fun ErrorCard(
 }
 
 private fun formatPrice(price: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
-    return formatter.format(price)
+    return try {
+        val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+        formatter.format(price)
+    } catch (e: Exception) {
+        price.toString()
+    }
 }
-

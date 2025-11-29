@@ -10,7 +10,7 @@ data class Book(
     val edition: String,
     val id: Int,
     val language: String,
-    val price: Int,
+    val price: Double,
     val publicationYear: Int,
     val rating: Float,
     val title: String,

@@ -1,7 +1,5 @@
 package com.example.khoitriso.ui.checkout
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -103,7 +100,7 @@ fun CheckoutScreen(
             }
             uiState.cart == null || uiState.cart!!.CartItems.isEmpty() -> {
                 EmptyCartState(
-                    onBackToCart = { navController.navigate(NavRoute.cart) },
+                    onBackToCart = { navController.navigate(NavRoute.CART) },
                     modifier = Modifier.padding(paddingValues)
                 )
             }

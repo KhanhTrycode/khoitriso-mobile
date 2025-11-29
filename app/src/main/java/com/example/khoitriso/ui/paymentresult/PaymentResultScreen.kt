@@ -88,7 +88,7 @@ fun PaymentResultScreen(
                     Button(
                         onClick = {
                             navController.navigate(NavRoute.NavMyPurchases("courses")) {
-                                popUpTo(NavRoute.home) { inclusive = false }
+                                popUpTo(NavRoute.HOME) { inclusive = false }
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -98,8 +98,8 @@ fun PaymentResultScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = {
-                            navController.navigate(NavRoute.home) {
-                                popUpTo(NavRoute.home) { inclusive = true }
+                            navController.navigate(NavRoute.HOME) {
+                                popUpTo(NavRoute.HOME) { inclusive = true }
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -124,8 +124,8 @@ fun PaymentResultScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = {
-                            navController.navigate(NavRoute.checkout) {
-                                popUpTo(NavRoute.checkout) { inclusive = true }
+                            navController.navigate(NavRoute.CHECKOUT) {
+                                popUpTo(NavRoute.CHECKOUT) { inclusive = true }
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -135,8 +135,8 @@ fun PaymentResultScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = {
-                            navController.navigate(NavRoute.cart) {
-                                popUpTo(NavRoute.cart) { inclusive = true }
+                            navController.navigate(NavRoute.CART) {
+                                popUpTo(NavRoute.CART) { inclusive = true }
                             }
                         },
                         modifier = Modifier.fillMaxWidth()

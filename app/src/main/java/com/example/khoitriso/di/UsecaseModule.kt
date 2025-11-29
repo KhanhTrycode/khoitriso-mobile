@@ -4,10 +4,12 @@ import com.example.khoitriso.data.api.BooksApi
 import com.example.khoitriso.data.repository.BookRepositoryImpl
 import com.example.khoitriso.domain.repository.AuthRepository
 import com.example.khoitriso.domain.repository.BookRepository
+import com.example.khoitriso.domain.repository.CartRepository
 import com.example.khoitriso.domain.repository.CategoryRepository
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
+import com.example.khoitriso.domain.repository.OrderRepository
 import com.example.khoitriso.domain.usecase.auth.AuthGoogleSDK
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.auth.GetMe
@@ -16,6 +18,8 @@ import com.example.khoitriso.domain.usecase.auth.RefreshToken
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.book.GetBook
 import com.example.khoitriso.domain.usecase.book.GetBookById
+import com.example.khoitriso.domain.usecase.book.GetChapterOfBook
+import com.example.khoitriso.domain.usecase.book.GetMyBook
 import com.example.khoitriso.domain.usecase.book.SearchBook
 import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.category.GetCategory
@@ -25,6 +29,16 @@ import com.example.khoitriso.domain.usecase.course.GetCourseById
 import com.example.khoitriso.domain.usecase.course.GetMyCourse
 import com.example.khoitriso.domain.usecase.forum.*
 import com.example.khoitriso.domain.usecase.notification.*
+import com.example.khoitriso.domain.usecase.order.AddToCart
+import com.example.khoitriso.domain.usecase.order.CartUsecase
+import com.example.khoitriso.domain.usecase.order.ClearCart
+import com.example.khoitriso.domain.usecase.order.CreateOrder
+import com.example.khoitriso.domain.usecase.order.GetCart
+import com.example.khoitriso.domain.usecase.order.GetOrder
+import com.example.khoitriso.domain.usecase.order.GetOrderById
+import com.example.khoitriso.domain.usecase.order.OrderUsecase
+import com.example.khoitriso.domain.usecase.order.PaymentProgress
+import com.example.khoitriso.domain.usecase.order.RemoveFromCart
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,6 +56,8 @@ object UsecaseModule {
             getBook = GetBook(bookRepository),
             getBookById = GetBookById(bookRepository),
             searckBook = SearchBook(bookRepository),
+            getMyBook = GetMyBook(bookRepository),
+            getChapterOfBook = GetChapterOfBook(bookRepository)
         )
     }
 
@@ -112,6 +128,28 @@ object UsecaseModule {
             getNotificationById = GetNotificationById(notificationRepository),
             markAsRead = MarkAsRead(notificationRepository),
             markAllAsRead = MarkAllAsRead(notificationRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCartUsecase(cartRepository: CartRepository): CartUsecase {
+        return CartUsecase(
+            getCart = GetCart(cartRepository),
+            addToCart = AddToCart(cartRepository),
+            removeFromCart = RemoveFromCart(cartRepository),
+            clearCart = ClearCart(cartRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideOrderUsecase(orderRepository: OrderRepository): OrderUsecase {
+        return OrderUsecase(
+            createOrder = CreateOrder(orderRepository),
+            paymentProgress = PaymentProgress(orderRepository),
+            getOrderById = GetOrderById(orderRepository),
+            getOrder = GetOrder(orderRepository)
         )
     }
 }

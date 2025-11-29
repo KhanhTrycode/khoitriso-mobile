@@ -9,7 +9,7 @@ data class Course(
     val instructor: Instructor,
     val isFree: Boolean,
     val level: Int,
-    val price: Int,
+    val price: Double,
     val rating: Float,
     val thumbnail: String,
     val title: String,

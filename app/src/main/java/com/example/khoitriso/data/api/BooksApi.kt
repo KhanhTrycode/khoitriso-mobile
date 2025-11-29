@@ -2,7 +2,11 @@ package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
+import com.example.khoitriso.data.dto.BookDetailDto
 import com.example.khoitriso.data.dto.BookDto
+import com.example.khoitriso.data.dto.ChapterDto
+import com.example.khoitriso.data.dto.MyBookDto
+import com.example.khoitriso.domain.models.BookDetail
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -23,17 +27,22 @@ interface BooksApi {
     @GET("books/{id}")
     suspend fun getBookById(
         @Path("id") bookId: Int
-    ) : Response<ApiRespone<BookDto>>
+    ) : Response<ApiRespone<BookDetailDto>>
 
     @GET("books/my-books")
     suspend fun getMyBooks(
         @Query("page") page: Int = 1,
         @Query("pageSize") pageSize: Int = 100
-    ): Response<ApiResponeData<Any>> // Returns MyBookDto wrapped in ApiResponeData
+    ): Response<ApiResponeData<MyBookDto>>
 
     @GET("books/{id}/export-word/my-purchase")
     suspend fun exportBookToWord(
         @Path("id") bookId: Int,
         @Query("includeExplanation") includeExplanation: Boolean = false
     ): Response<okhttp3.ResponseBody> // Returns file download
+
+    @GET("books/{id}/chapters")
+    suspend fun getChapterOfBook(
+        @Path("id") bookId: Int
+    ) : Response<ApiRespone<List<ChapterDto>>>
 }

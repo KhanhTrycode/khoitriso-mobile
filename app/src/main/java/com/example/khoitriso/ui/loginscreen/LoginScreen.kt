@@ -1,10 +1,6 @@
 package com.example.khoitriso.ui.loginscreen
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,19 +27,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.R
-import com.example.khoitriso.ui.theme.KhoiTriSoTheme
 import com.example.khoitriso.utils.NavRoute
 import androidx.compose.runtime.getValue
 import com.example.khoitriso.utils.UiState
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.tasks.Task
 
 data class IntroSlide(
     val title: Int,
@@ -188,21 +178,16 @@ fun LoginArea(
             txtButton = "Google",
             iconVector = R.drawable.icon_google,
             onClick = {
-                navController.navigate(NavRoute.home) {
-                    // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
-                    popUpTo(NavRoute.login) {
-                        inclusive = true
-                    }
-                }
+                viewModel.startGoogleSignIn(context)
             }
         )
         SignInButton(
             txtButton = " google",
             iconVector = R.drawable.icon_google,
             onClick = {
-                navController.navigate(NavRoute.home) {
+                navController.navigate(NavRoute.HOME) {
                     // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
-                    popUpTo(NavRoute.login) {
+                    popUpTo(NavRoute.LOGIN) {
                         inclusive = true
                     }
                 }
@@ -220,25 +205,25 @@ fun LoginScreen(
 ) {
     val tokenState by viewModel.token.collectAsState()
     val pagerState = rememberPagerState(pageCount = { slides.size })
-//    LaunchedEffect(tokenState) {
-//        if (tokenState is UiState.Success) {
-//            navController.navigate(NavRoute.home) {
-//                // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
-//                popUpTo(NavRoute.login) {
-//                    inclusive = true
-//                }
-//            }
-//        }
-//    }
-//    val googleLauncher = rememberLauncherForActivityResult(
-//        contract     = ActivityResultContracts.StartActivityForResult(),
-//        onResult = { result ->
-//            viewModel.handleGoogleSignInResult(result.data)
-//        }
-//    )
-//    LaunchedEffect(Unit) {
-//        viewModel.setGoogleSignInLauncher(googleLauncher)
-//    }
+    LaunchedEffect(tokenState) {
+        if (tokenState is UiState.Success) {
+            navController.navigate(NavRoute.HOME) {
+                // Đảm bảo người dùng không thể quay lại màn hình đăng nhập
+                popUpTo(NavRoute.LOGIN) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+    val googleLauncher = rememberLauncherForActivityResult(
+        contract     = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            viewModel.handleGoogleSignInResult(result.data)
+        }
+    )
+    LaunchedEffect(Unit) {
+        viewModel.setGoogleSignInLauncher(googleLauncher)
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
 

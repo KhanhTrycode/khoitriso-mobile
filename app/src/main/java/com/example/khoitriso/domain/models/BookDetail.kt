@@ -15,7 +15,7 @@ data class BookDetail(
     val isOwned: Boolean,
     val isbn: String,
     val language: String,
-    val price: Int,
+    val price: Double,
     val publicationYear: Int,
     val rating: Float,
     val reviewNotes: Any?,

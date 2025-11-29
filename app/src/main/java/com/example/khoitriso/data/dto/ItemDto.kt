@@ -1,6 +1,6 @@
 package com.example.khoitriso.data.dto
 
-import com.example.khoitriso.domain.models.Item
+import com.example.khoitriso.domain.models.OrderItem
 
 data class ItemDto(
     val Id: Int,
@@ -8,17 +8,16 @@ data class ItemDto(
     val ItemName: String,
     val ItemType: Int,
     val ItemTypeName: String,
-    val Price: Int,
+    val Price: Double,
     val Quantity: Int,
     val SubTotal: Int
 )
 
-fun ItemDto.toDomain() = Item(
+fun ItemDto.toDomain() = OrderItem(
     id = Id,
     itemId = ItemId,
     itemName = ItemName,
     itemType = ItemType,
-    itemTypeName = ItemTypeName,
     price = Price,
     quantity = Quantity,
     subTotal = SubTotal

@@ -2,7 +2,6 @@ package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.UserDTO
-import com.example.khoitriso.data.dto.auth.GoogleAuthRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

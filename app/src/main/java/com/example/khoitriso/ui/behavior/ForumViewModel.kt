@@ -102,4 +102,5 @@ abstract class ForumViewModel(
             )
         }
     }
+
 }

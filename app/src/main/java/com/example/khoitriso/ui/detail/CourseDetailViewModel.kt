@@ -18,21 +18,35 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.core.net.toUri
 import androidx.media3.common.PlaybackException
+import com.example.khoitriso.domain.models.CartItem
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
+import com.example.khoitriso.domain.usecase.order.CartUsecase
+import com.example.khoitriso.domain.usecase.order.OrderUsecase
+import com.example.khoitriso.test.MockData.mockCart
+import com.example.khoitriso.test.MockData.mockCartItems
 import com.example.khoitriso.ui.behavior.BaseViewModel
+import com.example.khoitriso.utils.ItemType
+import com.example.khoitriso.utils.UiEvent
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @HiltViewModel
 class CourseDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val courseUsecase: CourseUsecase
+    private val courseUsecase: CourseUsecase,
+    private val cartUsecase: CartUsecase,
+    private val orderUsecase: OrderUsecase,
 ) : BaseViewModel() {
     private val _course: MutableStateFlow<UiState<CourseDetail>> = MutableStateFlow(UiState.Loading)
     val course: StateFlow<UiState<CourseDetail>> = _course
     val courseId = savedStateHandle.get<Int>("courseId")!!
     private val _playerState = MutableStateFlow<ExoPlayer?>(null)
     val playerState: StateFlow<ExoPlayer?> = _playerState
-    init{
+    private val _events = Channel<UiEvent>()
+    val events = _events.receiveAsFlow()
+
+    init {
         getCourse()
     }
 
@@ -48,58 +62,48 @@ class CourseDetailViewModel @Inject constructor(
         context: Context,
         videoUrl: String,
     ) {
-        if (_playerState.value == null) {
-            viewModelScope.launch {
-                val exoPlayer = ExoPlayer.Builder(context).build().also {
-                    val mediaItem = MediaItem.fromUri(videoUrl.toUri())
-                    it.setMediaItem(mediaItem)
-                    it.prepare()
-                    it.playWhenReady = false
-                    it.addListener(object : Player.Listener {
-                        override fun onPlayerError(error: PlaybackException) {
-                            handleError(error)
-                        }
-                    })
-                }
-                _playerState.value = exoPlayer
-            }
-        }
+        initializePlayerInParent(_playerState, context)
+        changeVideoSource(_playerState, videoUrl)
     }
 
     fun releasePlayer() {
-        _playerState.value?.release()
-        _playerState.value = null
+        releasePlayerInParent(_playerState)
     }
 
-    private fun handleError(error: PlaybackException) {
-        when (error.errorCode) {
-            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED -> {
-                // Handle network connection error
-                println("Network connection error")
+    fun addToCart(itemId: Int) {
+        viewModelScope.launch {
+            val currentCourse = (_course.value as? UiState.Success)?.data
+            val result = if (_isTestMode) {
+                Result.success(true)
+            } else {
+                cartUsecase.addToCart(itemId = itemId, itemType = ItemType.Course)
             }
-
-            PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND -> {
-                // Handle file not found error
-                println("File not found")
-            }
-
-            PlaybackException.ERROR_CODE_DECODER_INIT_FAILED -> {
-                // Handle decoder initialization error
-                println("Decoder initialization error")
-            }
-
-            else -> {
-                // Handle other types of errors
-                println("Other error: ${error.message}")
-            }
+            result.fold(
+                onSuccess = {
+                    // Chỉ cập nhật mock data khi ở chế độ test
+                    if (_isTestMode && currentCourse != null) {
+                        val newCartItem = CartItem(
+                            id = mockCartItems.size + 1,
+                            itemId = itemId,
+                            itemType = ItemType.Course,
+                            price = currentCourse.price,
+                            coverImage = currentCourse.thumbnail,
+                            title = currentCourse.title
+                        )
+                        mockCartItems.add(newCartItem)
+                    }
+                    // Gửi sự kiện thành công lên UI
+                    _events.send(UiEvent.ShowSnackbar("Đã thêm vào giỏ hàng thành công!"))
+                },
+                onFailure = { error ->
+                    // Gửi sự kiện thất bại lên UI
+                    _events.send(UiEvent.ShowSnackbar("Lỗi: ${error.message}"))
+                }
+            )
         }
     }
 
-    fun addToCart(){
-
-    }
-
-    fun buyNow(){
+    fun buyNow() {
 
     }
 }

@@ -46,7 +46,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.khoitriso.R
-import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.explore.ExploreBookScreen
@@ -54,12 +53,13 @@ import com.example.khoitriso.ui.forum.ForumListScreen
 import com.example.khoitriso.ui.forum.ForumDetailScreen
 import com.example.khoitriso.ui.notification.NotificationScreen
 import com.example.khoitriso.ui.homescreen.HomeScreen
-import com.example.khoitriso.ui.learningpath.LearningPathScreen
 import com.example.khoitriso.ui.loginscreen.LoginScreen
 import com.example.khoitriso.ui.profilescreen.ProfileScreen
 import com.example.khoitriso.ui.searchscreen.SearchScreen
 import com.example.khoitriso.ui.cart.CartScreen
 import com.example.khoitriso.ui.checkout.CheckoutScreen
+import com.example.khoitriso.ui.learning.LearningBookScreen
+import com.example.khoitriso.ui.learning.LearningCourseScreen
 import com.example.khoitriso.ui.mypurchase.MyPurchaseScreen
 import com.example.khoitriso.ui.paymentresult.PaymentResultScreen
 import com.example.khoitriso.utils.Constants
@@ -70,29 +70,29 @@ import com.example.khoitriso.utils.navigationBarItems
 fun NavHostContainer(navController: NavHostController) {
     val lazyListState = rememberLazyListState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: NavRoute.login
+    val currentRoute = navBackStackEntry?.destination?.route ?: NavRoute.LOGIN
 
-    val noHeaderNavScreens = listOf(NavRoute.login)
+    val noHeaderNavScreens = listOf(NavRoute.LOGIN)
 
     NavHost(
         navController = navController,
-        startDestination = NavRoute.login
+        startDestination = NavRoute.LOGIN
     ) {
-        composable(NavRoute.login) {
+        composable(NavRoute.LOGIN) {
             LoginScreen(navController) // navigate("home") sẽ tìm được
         }
-        composable(NavRoute.home) {
+        composable(NavRoute.HOME) {
 
             HeaderNavScaffold(lazyListState, navController) {
                 HomeScreen(lazyListState, navController = navController)
             }
         }
-        composable(NavRoute.search) {
+        composable(NavRoute.SEARCH) {
             HeaderNavScaffold(lazyListState, navController) {
                 SearchScreen(navController)
             }
         }
-        composable(NavRoute.profile) {
+        composable(NavRoute.PROFILE) {
 
             HeaderNavScaffold(lazyListState, navController) {
                 ProfileScreen(
@@ -101,10 +101,10 @@ fun NavHostContainer(navController: NavHostController) {
                 )
             }
         }
-        composable(NavRoute.learningPath) {
+        composable(NavRoute.LEARNING_PATH) {
 
             HeaderNavScaffold(lazyListState, navController) {
-                LearningPathScreen(lazyListState,navController)
+                MyPurchaseScreen(navController)
             }
         }
         composable(
@@ -115,6 +115,20 @@ fun NavHostContainer(navController: NavHostController) {
                 navController
             )
         }
+
+        composable(
+            NavRoute.LearningCourseWithArgs,
+            arguments = listOf(navArgument("courseId") { type = NavType.IntType })
+        ) {
+            LearningCourseScreen(navController)
+        }
+        composable(
+            NavRoute.LearningBookWithArgs,
+            arguments = listOf(navArgument("bookId") { type = NavType.IntType })
+        ) {
+            LearningBookScreen(navController)
+        }
+
         composable(
             NavRoute.BookDetailWithArgs,
             arguments = listOf(navArgument("bookId") { type = NavType.IntType})
@@ -123,7 +137,7 @@ fun NavHostContainer(navController: NavHostController) {
                 navController
             )
         }
-        composable(NavRoute.forum) {
+        composable(NavRoute.FORUM) {
             ForumListScreen(navController)
         }
         composable(
@@ -132,29 +146,30 @@ fun NavHostContainer(navController: NavHostController) {
         ) { backStackEntry ->
             ForumDetailScreen(navController)
         }
-        composable(NavRoute.forumAsk) {
+        composable(NavRoute.FORUM_ASK) {
 //            ForumAskScreen(navController)
         }
-        composable(NavRoute.forumBookmarks) {
+        composable(NavRoute.FORUM_BOOKMARKS) {
 //            ForumBookmarksScreen(navController)
         }
-        composable(NavRoute.notifications) {
+        composable(NavRoute.NOTIFICATIONS) {
             NotificationScreen(navController)
         }
 
-        composable(NavRoute.exploreBook) {
+        composable(NavRoute.EXPLORE_BOOK) {
             ExploreBookScreen(navController)
         }
 
         // Cart
-        composable(NavRoute.cart) {
+        composable(NavRoute.CART) {
             CartScreen(navController)
         }
 
         // Checkout
-        composable(NavRoute.checkout) {
+        composable(NavRoute.CHECKOUT) {
             CheckoutScreen(navController)
         }
+
 
         // My Purchases
         composable(
@@ -162,7 +177,7 @@ fun NavHostContainer(navController: NavHostController) {
             arguments = listOf(navArgument("tab") { type = NavType.StringType; defaultValue = "courses" })
         ) { backStackEntry ->
             val tab = backStackEntry.arguments?.getString("tab") ?: "courses"
-            MyPurchaseScreen(navController = navController, initialTab = tab)
+            MyPurchaseScreen(navController = navController)
         }
 
         // Payment Result
@@ -289,7 +304,7 @@ fun HeaderScreen(
 
         IconButton(
             modifier = Modifier,
-            onClick = { navController.navigate(NavRoute.cart) }
+            onClick = { navController.navigate(NavRoute.CART) }
         ) {
             Icon(
                 imageVector = Icons.Outlined.ShoppingCart,
@@ -300,7 +315,7 @@ fun HeaderScreen(
         // Notification button
         IconButton(
             modifier = Modifier,
-            onClick = { navController.navigate(NavRoute.notifications) }
+            onClick = { navController.navigate(NavRoute.NOTIFICATIONS) }
         ) {
             Icon(
                 imageVector = Icons.Outlined.Notifications,

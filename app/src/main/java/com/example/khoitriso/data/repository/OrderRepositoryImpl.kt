@@ -1,18 +1,22 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.OrdersApi
-import com.example.khoitriso.data.dto.CreateOrderRequest
 import com.example.khoitriso.data.dto.OrderDto
-import com.example.khoitriso.data.dto.PaymentRequest
 import com.example.khoitriso.data.dto.PaymentResultDto
+import com.example.khoitriso.data.dto.toDomain
+import com.example.khoitriso.data.request.CreateOrderRequest
+import com.example.khoitriso.data.request.PaymentRequest
+import com.example.khoitriso.domain.models.MyResponese
+import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.repository.OrderRepository
+import com.example.khoitriso.domain.request.GetOrderRequest
 import javax.inject.Inject
 
 class OrderRepositoryImpl @Inject constructor(
-    private val ordersApi: OrdersApi
+    private val ordersApi: OrdersApi,
 ) : OrderRepository {
 
-    override suspend fun createOrder(request: CreateOrderRequest): Result<OrderDto> {
+    override suspend fun payment(request: CreateOrderRequest): Result<OrderDto> {
         return try {
             val response = ordersApi.createOrder(request)
             if (response.isSuccessful) {
@@ -30,7 +34,10 @@ class OrderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun processFreeOrder(orderId: Int, orderCode: String): Result<PaymentResultDto> {
+    override suspend fun processFreeOrder(
+        orderId: Int,
+        orderCode: String,
+    ): Result<PaymentResultDto> {
         return try {
             val request = PaymentRequest(
                 PaymentMethod = "FREE",
@@ -43,6 +50,48 @@ class OrderRepositoryImpl @Inject constructor(
                 val result = response.body()?.Result
                 if (result != null) {
                     Result.success(result)
+                } else {
+                    Result.failure(Exception("Response body is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getOrderById(orderId: Int): Result<Order> {
+        return try {
+            val response = ordersApi.getOrderById(orderId)
+            if (response.isSuccessful) {
+                val result = response.body()?.Result
+                if (result != null) {
+                    Result.success(result.toDomain())
+                } else {
+                    Result.failure(Exception("Response body is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMyOrder(getOrderRequest: GetOrderRequest): Result<MyResponese<Order>> {
+        return try {
+            val response = ordersApi.getOrder(
+                status = getOrderRequest.status,
+                search = getOrderRequest.search,
+                page = getOrderRequest.page,
+                pageSize = getOrderRequest.pageSize
+            )
+            if (response.isSuccessful) {
+                // Lấy ra đối tượng ApiResponeData<OrderDto> từ body
+                val result = response.body()?.Result
+                if (result != null) {
+                    Result.success(result.toDomain { it.toDomain() })
                 } else {
                     Result.failure(Exception("Response body is null"))
                 }

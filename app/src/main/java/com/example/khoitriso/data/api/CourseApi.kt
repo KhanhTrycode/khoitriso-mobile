@@ -2,7 +2,10 @@ package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
+import com.example.khoitriso.data.dto.CourseDetailDto
 import com.example.khoitriso.data.dto.CourseDto
+import com.example.khoitriso.data.dto.LessonDto
+import com.example.khoitriso.data.dto.MyCourseDto
 import com.example.khoitriso.domain.models.Book
 import retrofit2.Response
 import retrofit2.http.GET
@@ -25,11 +28,13 @@ interface CourseApi {
     @GET("courses/{id}")
     suspend fun getCourseById(
         @Path("id") id: Int
-    ): Response<ApiRespone<CourseDto>>
+    ): Response<ApiRespone<CourseDetailDto>>
 
     @GET("courses/my-courses")
     suspend fun getMyCourses(
         @Query("page") page: Int = 1,
         @Query("pageSize") pageSize: Int = 100
-    ): Response<ApiResponeData<Any>> // Returns MyCourseDto wrapped in ApiResponeData
+    ): Response<ApiResponeData<MyCourseDto>>
+
+
 }

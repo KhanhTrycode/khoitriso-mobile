@@ -18,6 +18,6 @@ data class Order(
     val transactionId: String,
     val userId: Int,
     val coupon: Coupon?,
-    val items: List<Item>,
+    val items: List<OrderItem>,
     val createdAt: String
 )

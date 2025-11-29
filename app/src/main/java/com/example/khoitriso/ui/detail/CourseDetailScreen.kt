@@ -30,6 +30,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -45,6 +47,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.Instructor
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -60,8 +63,12 @@ import com.example.khoitriso.ui.behavior.ActionButtons
 import com.example.khoitriso.ui.behavior.CreateBy
 import com.example.khoitriso.ui.behavior.DetailHeader
 import com.example.khoitriso.ui.behavior.FractionalRatingStars
+import com.example.khoitriso.ui.behavior.Media3AndroidView
+import com.example.khoitriso.ui.behavior.ObserverAsEvent
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiEvent
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import com.example.khoitriso.utils.toVND
 
 @Composable
@@ -72,7 +79,9 @@ fun CourseDetailScreen(
     val context = LocalContext.current
     val courseState by viewModel.course.collectAsState()
     val player by viewModel.playerState.collectAsState()
-
+    val snackBarState = remember{
+        SnackbarHostState()
+    }
     LaunchedEffect(Unit) {
         viewModel.initializePlayer(
             context,
@@ -84,7 +93,20 @@ fun CourseDetailScreen(
             viewModel.releasePlayer()
         }
     }
+
+    ObserverAsEvent(viewModel.events){event ->
+        when(event){
+            is UiEvent.ShowSnackbar ->{
+                debug(event.message,"CourseDetailScreen")
+                snackBarState.showSnackbar(event.message)
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarState)
+        },
         topBar = {
             DetailHeader(onBack = {
                 navController.popBackStack()
@@ -95,7 +117,12 @@ fun CourseDetailScreen(
                 ActionButtons(
                     price = (courseState as UiState.Success<CourseDetail>).data.price,
                     onBuy = { viewModel.buyNow() },
-                    onCart = { viewModel.addToCart() }
+                    onCart = {
+                        viewModel.addToCart(
+                            (courseState as UiState.Success<CourseDetail>)
+                                .data.id
+                        )
+                    }
                 )
             }
         }
@@ -115,8 +142,6 @@ fun CourseDetailScreen(
 
     }
 }
-
-
 
 
 @Composable
@@ -216,26 +241,6 @@ private fun LessonRow(
     }
 }
 
-
-
-@Composable
-fun Media3AndroidView(player: ExoPlayer?, modifier: Modifier = Modifier) {
-    if (player != null) {
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            factory = { context ->
-                PlayerView(context).apply {
-                    this.player = player
-                }
-            },
-            update = { playerView ->
-                playerView.player = player
-            }
-        )
-    }
-}
 
 @Composable
 fun CourseInfo(course: CourseDetail) {

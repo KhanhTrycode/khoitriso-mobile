@@ -1,9 +1,9 @@
 package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
-import com.example.khoitriso.data.dto.VNPayPaymentRequest
 import com.example.khoitriso.data.dto.VNPayPaymentResponse
 import com.example.khoitriso.data.dto.VNPayQueryResponse
+import com.example.khoitriso.data.request.VNPayPaymentRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

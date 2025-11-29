@@ -1,22 +1,39 @@
 package com.example.khoitriso.domain.usecase.book
 
-import android.util.Log
+import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.Chapter
+import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.repository.BookRepository
-import com.example.khoitriso.domain.request.GetBookRequest
-import javax.inject.Inject
 import kotlin.getOrElse
 
 data class BookUsecase (
     val getBook: GetBook,
     val getBookById: GetBookById,
-    val searckBook: SearchBook
+    val searckBook: SearchBook,
+    val getMyBook: GetMyBook,
+    val getChapterOfBook: GetChapterOfBook,
 )
+
+class GetChapterOfBook(private val repo: BookRepository) {
+    suspend operator fun invoke(bookId: Int): Result<List<Chapter>> {
+        return repo.getChaptersOfBook(bookId)
+    }
+}
+
+class GetMyBook(private val repo: BookRepository) {
+    suspend operator fun invoke(): Result<List<MyBook>> {
+        return repo.getMyBooks()
+    }
+
+}
+
+
 class GetBook(private val repo: BookRepository) {
-    suspend operator fun invoke(getBookRequest: GetBookRequest? = null): Result<MyResponese<Book>> {
-        return repo.getBooks(getBookRequest)
+    suspend operator fun invoke(getPagingRequest: PagingRequest? = null): Result<MyResponese<Book>> {
+        return repo.getBooks(getPagingRequest)
     }
 
 }

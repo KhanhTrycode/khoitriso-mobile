@@ -83,8 +83,9 @@ fun BookDetailScreen(
             if (bookState is UiState.Success) {
                 ActionButtons(
                     price = (bookState as UiState.Success<BookDetail>).data.price,
-                    onBuy = { viewModel.onBuy() },
-                    onCart = { viewModel.onCart() }
+                    onBuy = { viewModel.buyNow() },
+                    onCart = { viewModel.addToCart((bookState as UiState.Success<BookDetail>)
+                        .data.id) }
                 )
             }
         }

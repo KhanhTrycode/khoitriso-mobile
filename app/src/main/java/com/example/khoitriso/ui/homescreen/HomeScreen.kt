@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Category
@@ -85,7 +84,7 @@ fun HomeScreen(
 
         item {
             SectionTitle("Recommended Book", "See all", onClickAction = {
-                navController.navigate(NavRoute.exploreBook)
+                navController.navigate(NavRoute.EXPLORE_BOOK)
             })
         }
         item {
@@ -94,7 +93,7 @@ fun HomeScreen(
 
         item {
             SectionTitle("Trending Courses", "View all", onClickAction = {
-                navController.navigate(NavRoute.forum)
+                navController.navigate(NavRoute.FORUM)
             })
         }
         item {

@@ -3,13 +3,14 @@ package com.example.khoitriso.data.repository
 import com.example.khoitriso.data.api.BooksApi
 import com.example.khoitriso.data.dto.BookDto
 import com.example.khoitriso.data.dto.MyBookDto
-import com.example.khoitriso.data.dto.toDetailDomain
+import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.Chapter
+import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.repository.BookRepository
-import com.example.khoitriso.domain.request.GetBookRequest
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import javax.inject.Inject
@@ -18,18 +19,18 @@ class BookRepositoryImpl @Inject constructor(
     private val bookApi: BooksApi,
     private val gson: Gson
 ) : BookRepository {
-    override suspend fun getBooks(getBookRequest: GetBookRequest?):
+    override suspend fun getBooks(getPagingRequest: PagingRequest?):
             Result<MyResponese<Book>> { // Sửa kiểu trả về cho khớp
         return try {
-            val response = if (getBookRequest != null){
+            val response = if (getPagingRequest != null){
                  bookApi.getBooks(
-                    page = getBookRequest.page,
-                    pageSize = getBookRequest.pageSize,
-                    search = getBookRequest.search,
-                    approvalStatus = getBookRequest.approvalStatus,
-                    authorId = getBookRequest.authorId,
-                    sortBy = getBookRequest.sortBy,
-                    sortOrder = getBookRequest.sortOrder
+                    page = getPagingRequest.page,
+                    pageSize = getPagingRequest.pageSize,
+                    search = getPagingRequest.search,
+                    approvalStatus = getPagingRequest.approvalStatus,
+                    authorId = getPagingRequest.authorId,
+                    sortBy = getPagingRequest.sortBy,
+                    sortOrder = getPagingRequest.sortOrder
                 )
             } else bookApi.getBooks()
 
@@ -52,30 +53,28 @@ class BookRepositoryImpl @Inject constructor(
         return try{
             val response = bookApi.getBookById(id)
             if (response.isSuccessful) {
-                Result.success(response.body()?.Result?.toDetailDomain() ?: throw Exception("Book not found"))
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.toDomain())
                 } else {
-                throw Exception("Api error: ${response.code()}")
+                    Result.failure(Exception("Response body or Result is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun getMyBook(): Result<List<Book>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getMyBooks(): Result<List<MyBookDto>> {
+    override suspend fun getMyBooks(): Result<List<MyBook>> {
         return try {
             val response = bookApi.getMyBooks(page = 1, pageSize = 100)
             if (response.isSuccessful) {
                 val body = response.body()?.Result
                 if (body != null) {
                     // Parse using Gson
-                    val items = body.Items
-                    val type = object : TypeToken<List<MyBookDto>>() {}.type
-                    val myBooks: List<MyBookDto> = gson.fromJson(gson.toJson(items), type)
-                    Result.success(myBooks)
+                    Result.success(body.Items?.map { it.toDomain() }?: emptyList())
                 } else {
                     Result.failure(Exception("Response body or Result is null"))
                 }
@@ -108,4 +107,24 @@ class BookRepositoryImpl @Inject constructor(
     override fun searchBook(string: String): Result<List<Book>> {
         TODO("Not yet implemented")
     }
+
+    override suspend fun getChaptersOfBook(id: Int): Result<List<Chapter>> {
+        return try {
+            val response = bookApi.getChapterOfBook(bookId = id)
+            if (response.isSuccessful) {
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.map { it.toDomain() })
+                } else {
+                    Result.failure(Exception("Response body or Result is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }

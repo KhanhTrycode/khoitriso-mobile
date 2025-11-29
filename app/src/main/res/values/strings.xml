@@ -28,6 +28,12 @@
         Mua Ngay
     </string>
 
+<!--    Book Learning-->
+    <string name="submitBT">
+        Nộp bài
+    </string>
+
+
     <!-- Profile -->
     <string name="profile_title">Hồ sơ</string>
     <string name="edit_profile">Chỉnh sửa thông tin</string>

@@ -1,4 +1,4 @@
-package com.example.khoitriso.data.dto.auth
+package com.example.khoitriso.data.dto.request
 
 data class GoogleAuthRequest(
     val idToken: String
