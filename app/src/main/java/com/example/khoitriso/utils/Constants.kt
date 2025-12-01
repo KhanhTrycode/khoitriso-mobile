@@ -39,3 +39,9 @@ object LevelType {
     val VanDungThap= 2
     val VanDungCao= 3
 }
+
+object SearchType {
+    val ALL = 0
+    val COURSE = 1
+    val BOOK = 2
+}

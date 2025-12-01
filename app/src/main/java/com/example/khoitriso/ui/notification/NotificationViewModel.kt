@@ -44,11 +44,8 @@ class NotificationViewModel @Inject constructor() : ViewModel() {
         _filterType
     ) { notifications, query, unreadOnly, type ->
 
-        // Giả lập Loading nhẹ khi filter đổi (để UI mượt hơn)
-        // Trong thực tế có thể bỏ qua nếu data local
 
         val filtered = notifications.filter { item ->
-            // 1. Lọc theo Search
             val matchQuery = query.isEmpty() ||
                     item.title.contains(query, ignoreCase = true) ||
                     (item.content?.contains(query, ignoreCase = true) == true)

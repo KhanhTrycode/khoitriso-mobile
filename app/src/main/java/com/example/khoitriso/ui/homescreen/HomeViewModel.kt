@@ -19,6 +19,7 @@ import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -27,11 +28,11 @@ class HomeViewModel @Inject constructor(
     private val bookUsecase: BookUsecase,
     private val courseUsecase: CourseUsecase,
     private val categoryUsecase: CategoryUsecase,
-    private val userManager: UserManager
+    private val userManager: UserManager,
 ) : BaseViewModel() {
 
     private val _categories = MutableStateFlow<UiState<List<Category>>>(UiState.Loading)
-    private val _courses = MutableStateFlow<UiState<List<Course>>>(UiState.Loading)
+    private val _courses = MutableStateFlow<UiState<MyResponese<Course>>>(UiState.Loading)
     private val _books = MutableStateFlow<UiState<MyResponese<Book>>>(UiState.Loading)
 
     val categories: StateFlow<UiState<List<Category>>> = _categories
@@ -59,11 +60,10 @@ class HomeViewModel @Inject constructor(
         getMyCourse()
     }
 
-    private fun getUser(){
-        if(_isTestMode){
+    private fun getUser() {
+        if (_isTestMode) {
             _user.value = MockData.mockUser1
-        }
-        else{
+        } else {
             loadUser(_user, userManager)
         }
     }
@@ -76,23 +76,19 @@ class HomeViewModel @Inject constructor(
 
     fun getBooks() {
         loadDataWithPage(
-            _books, mockData = MockData.mockBooks
-        ) {
-            bookUsecase.getBook()
-        }
-        viewModelScope.launch {
-            _books.collectLatest { bookState ->
-                if (bookState is UiState.Success<MyResponese<Book>>) {
-                    val books = bookState.data.items
-                    val recommendedBooks = books.shuffled().take(5)
-                    _recommendedBooks.value = UiState.Success(recommendedBooks)
-
-                }
-            }
-        }
+            _books,
+            mockData = MockData.mockBooks,
+            apiCall = {
+                bookUsecase.getBook()
+            },
+            onSuccess = { bookState ->
+                val books = bookState.data.items
+                val recommendedBooks = books.shuffled().take(5)
+                _recommendedBooks.value = UiState.Success(recommendedBooks)
+            })
     }
 
-    fun getMyCourse(){
+    fun getMyCourse() {
         loadData(
             stateFlow = _myCourses,
             mockData = MockData.mockMyCoursesList,
@@ -103,18 +99,19 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getCourse() {
-        loadData(_courses, MockData.mockCourses, apiCall = {
-            courseUsecase.getCourse()
-        })
-        viewModelScope.launch {
-            _courses.collectLatest { courseState ->
-                if (courseState is UiState.Success<List<Course>>) {
-                    val courses = courseState.data
-                    val trendingCourses = courses.shuffled().take(5)
-                    _trendingCourses.value = UiState.Success(trendingCourses)
-                    _tryCourses.value = UiState.Success(trendingCourses.first())
-                }
+        loadDataWithPage(
+            _courses,
+            MockData.mockCourses,
+            apiCall = {
+                courseUsecase.getCourse()
+            },
+            onSuccess = { courseState ->
+                val courses = courseState.data.items
+                val trendingCourses = courses.shuffled().take(5)
+                _trendingCourses.value = UiState.Success(trendingCourses)
+                _tryCourses.value = UiState.Success(trendingCourses.first())
             }
-        }
+        )
+
     }
 }

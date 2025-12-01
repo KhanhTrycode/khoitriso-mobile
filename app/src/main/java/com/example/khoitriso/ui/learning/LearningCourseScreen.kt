@@ -7,9 +7,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -28,11 +34,13 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Assignment
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
+import com.example.khoitriso.domain.models.Material
 import com.example.khoitriso.ui.behavior.ErrorDisplay
 import com.example.khoitriso.ui.behavior.Media3AndroidView
 import com.example.khoitriso.ui.behavior.MyLoadingProcessing
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.toFileSize
 
 // --- MÀN HÌNH CHÍNH (SCAFFOLD) ---
 
@@ -118,7 +126,7 @@ fun ContentScreen(
                     )
 
                     is UiState.Success -> {
-                        viewModel.onLessonClicked(lesson.data,context)
+                        viewModel.onLessonClicked(lesson.data, context)
                         CurrentLessonInfo(
                             lesson = lesson.data
                         )
@@ -129,8 +137,12 @@ fun ContentScreen(
                             onLessonClick = { lesson ->
                                 viewModel.onLessonClicked(lesson, context)
                             },
-                            onAssignmentClick = { assignment->
+                            onAssignmentClick = { assignment ->
                                 navController.navigate(NavRoute.NavAssignment(assignment.id))
+                            },
+                            onMaterialClick = {material ->
+                                viewModel.downloadMaterial(context = context, url = material.fileUrl,
+                                    fileName = material.title, fileType = material.fileType)
                             }
                         )
                     }
@@ -172,7 +184,8 @@ fun CourseContentTabs(
     course: CourseDetail,
     currentLesson: Lesson?,
     onLessonClick: (Lesson) -> Unit,
-    onAssignmentClick: (Assignment) -> Unit
+    onAssignmentClick: (Assignment) -> Unit,
+    onMaterialClick: (Material) -> Unit
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Tổng quan", "Bài tập", "Tài liệu", "Hỏi đáp")
@@ -197,13 +210,160 @@ fun CourseContentTabs(
             )
 
             1 -> AssignmentList(
-                assignments = currentLesson?.assignments?: emptyList(),
+                assignments = currentLesson?.assignments ?: emptyList(),
                 currentLesson = currentLesson,
                 onAssignmentClick = onAssignmentClick
             )
-            2 -> PlaceholderContent(text = "Tính năng Bài tập sắp ra mắt")
+
+            2 -> MaterialList(
+                materials = currentLesson?.materials ?: emptyList(),
+                onMaterialClick = onMaterialClick
+            )
+
             3 -> PlaceholderContent(text = "Tính năng Tài liệu sắp ra mắt")
         }
+    }
+}
+
+@Composable
+fun MaterialList(materials: List<Material>, onMaterialClick: (Material) -> Unit) {
+    if (materials.isEmpty()) {
+        PlaceholderContent(text = "Bài học này không có tài liệu đính kèm.")
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 8.dp)
+    ) {
+        itemsIndexed(materials) { index, material ->
+            MaterialItem(
+                material = material,
+                onClick = { onMaterialClick(material) }
+            )
+            Divider()
+        }
+    }
+}
+
+@Composable
+fun MaterialItem(
+    material: Material,
+    onClick: () -> Unit,
+) {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var selectedMaterial by remember { mutableStateOf<Material?>(null) }
+    // Chọn icon dựa trên loại file
+    val icon = when (material.fileType.lowercase()) {
+        "pdf" -> Icons.Default.PictureAsPdf
+        "zip", "rar" -> Icons.Default.CloudDownload
+        else -> Icons.AutoMirrored.Filled.InsertDriveFile
+    }
+
+    val iconColor = when (material.fileType.lowercase()) {
+        "pdf" -> Color(0xFFE53935) // Đỏ cho PDF
+        "zip" -> Color(0xFFFFB300) // Vàng cho Zip
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon File
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Thông tin File
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = material.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = material.fileType.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = material.fileSize.toFileSize(), // Nếu có size
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // Nút Download
+            IconButton(onClick = {
+                selectedMaterial = material
+                showConfirmDialog = true
+            }) {
+                Icon(
+                    imageVector = Icons.Default.CloudDownload,
+                    contentDescription = "Tải về",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+
+    if (showConfirmDialog && selectedMaterial != null) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) },
+            title = { Text(text = "Tải xuống tài liệu?") },
+            text = {
+                Text("Bạn có muốn tải xuống file \"${selectedMaterial!!.fileName}\" không?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onClick()
+                        showConfirmDialog = false
+                    }
+                ) {
+                    Text("Tải ngay")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
     }
 }
 
@@ -227,6 +387,7 @@ fun AssignmentList(
         }
     }
 }
+
 @Composable
 fun AssignmentItem(assignment: Assignment, index: Int, isPlaying: Boolean, onClick: () -> Unit) {
     // Sử dụng Card để có shadow và bo góc

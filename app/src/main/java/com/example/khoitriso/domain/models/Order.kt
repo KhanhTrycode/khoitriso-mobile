@@ -2,9 +2,9 @@ package com.example.khoitriso.domain.models
 
 data class Order(
     val currency: String,
-    val discountAmount: Int,
+    val discountAmount: Double,
     val exchangeRate: Int,
-    val finalAmount: Int,
+    val finalAmount: Double,
     val id: Int,
     val orderCode: String,
     val orderNotes: String,
@@ -13,8 +13,8 @@ data class Order(
     val paymentMethod: String,
     val status: Int,
     val statusName: String,
-    val taxAmount: Int,
-    val totalAmount: Int,
+    val taxAmount: Double,
+    val totalAmount: Double,
     val transactionId: String,
     val userId: Int,
     val coupon: Coupon?,

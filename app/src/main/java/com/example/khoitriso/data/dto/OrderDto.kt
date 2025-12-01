@@ -4,9 +4,9 @@ import com.example.khoitriso.domain.models.Order
 
 data class  OrderDto(
     val Currency: String,
-    val DiscountAmount: Int,
+    val DiscountAmount: Double,
     val ExchangeRate: Int,
-    val FinalAmount: Int,
+    val FinalAmount: Double,
     val Id: Int,
     val OrderCode: String,
     val OrderNotes: String?,
@@ -15,8 +15,8 @@ data class  OrderDto(
     val PaymentMethod: String,
     val Status: Int,
     val StatusName: String,
-    val TaxAmount: Int,
-    val TotalAmount: Int,
+    val TaxAmount: Double,
+    val TotalAmount: Double,
     val TransactionId: String,
     val UserId: Int,
     val billingAddress: String?,

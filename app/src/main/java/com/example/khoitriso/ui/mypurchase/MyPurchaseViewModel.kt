@@ -1,5 +1,6 @@
 package com.example.khoitriso.ui.mypurchase
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.data.dto.MyBookDto
 import com.example.khoitriso.data.dto.MyCourseDto
@@ -25,19 +26,26 @@ import javax.inject.Inject
 @HiltViewModel
 class MyPurchaseViewModel @Inject constructor(
     private val courseUsecase: CourseUsecase,
-    private val bookUsecase: BookUsecase
+    private val bookUsecase: BookUsecase,
+    private val savedStateHandle: SavedStateHandle
 ) : BaseViewModel() {
+    val _activeTab: MutableStateFlow<Int> = MutableStateFlow(0)
+
 
     private val _courses = MutableStateFlow<UiState<List<MyCourse>>>(UiState.Loading)
     val courses: StateFlow<UiState<List<MyCourse>>> = _courses
     private val _books = MutableStateFlow<UiState<List<MyBook>>>(UiState.Loading)
     val books: StateFlow<UiState<List<MyBook>>> = _books
 
-    val _activeTab: MutableStateFlow<Int> = MutableStateFlow(0)
     val activeTab: StateFlow<Int> = _activeTab
 
 
     init {
+        when(savedStateHandle.get<String>("tab")){
+            "courses" -> setActiveTab(0)
+            "books" -> setActiveTab(1)
+        }
+
         loadCourses()
         loadBooks()
     }

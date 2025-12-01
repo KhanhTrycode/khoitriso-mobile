@@ -10,6 +10,7 @@ import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
 import com.example.khoitriso.domain.repository.OrderRepository
+import com.example.khoitriso.domain.repository.VNPayRepository
 import com.example.khoitriso.domain.usecase.auth.AuthGoogleSDK
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.auth.GetMe
@@ -37,8 +38,11 @@ import com.example.khoitriso.domain.usecase.order.GetCart
 import com.example.khoitriso.domain.usecase.order.GetOrder
 import com.example.khoitriso.domain.usecase.order.GetOrderById
 import com.example.khoitriso.domain.usecase.order.OrderUsecase
+import com.example.khoitriso.domain.usecase.order.PaymentFreeOrder
 import com.example.khoitriso.domain.usecase.order.PaymentProgress
+import com.example.khoitriso.domain.usecase.order.QueryTransaction
 import com.example.khoitriso.domain.usecase.order.RemoveFromCart
+import com.example.khoitriso.domain.usecase.order.VNPayCreatePaymentUrl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -144,12 +148,15 @@ object UsecaseModule {
 
     @Provides
     @Singleton
-    fun provideOrderUsecase(orderRepository: OrderRepository): OrderUsecase {
+    fun provideOrderUsecase(orderRepository: OrderRepository, vnPayRepository: VNPayRepository): OrderUsecase {
         return OrderUsecase(
             createOrder = CreateOrder(orderRepository),
             paymentProgress = PaymentProgress(orderRepository),
             getOrderById = GetOrderById(orderRepository),
-            getOrder = GetOrder(orderRepository)
+            getOrder = GetOrder(orderRepository),
+            paymentFreeOrder = PaymentFreeOrder(orderRepository),
+            vnpayCreatePaymentUrl = VNPayCreatePaymentUrl(vnPayRepository),
+            queryTransaction = QueryTransaction(vnPayRepository)
         )
     }
 }

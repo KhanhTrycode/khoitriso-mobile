@@ -9,7 +9,9 @@ import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
+import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,42 +23,46 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class SearchFilter {
-    ALL, COURSES, BOOKS
-}
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-     private val bookUsecase: BookUsecase, // Uncomment khi dùng thật
-     private val courseUsecase: CourseUsecase,
+    private val bookUsecase: BookUsecase, // Uncomment khi dùng thật
+    private val courseUsecase: CourseUsecase,
 ) : BaseViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _activeFilter = MutableStateFlow(SearchFilter.ALL)
+    private val _activeFilter = MutableStateFlow(SearchType.ALL)
     val activeFilter = _activeFilter.asStateFlow()
 
     private val _isSearching = MutableStateFlow(false)
     val isSearching = _isSearching.asStateFlow()
     private val _rawResults = MutableStateFlow<UiState<List<Any>>>(UiState.Success(emptyList()))
 
-    val searchResults: StateFlow<UiState<List<Any>>> = combine(_rawResults, _activeFilter) { rawState, filter ->
-        if (rawState is UiState.Success) {
-            val filtered = when (filter) {
-                SearchFilter.ALL -> rawState.data
-                SearchFilter.COURSES -> rawState.data.filterIsInstance<Course>()
-                SearchFilter.BOOKS -> rawState.data.filterIsInstance<Book>()
+    val searchResults: StateFlow<UiState<List<Any>>> =
+        combine(_rawResults, _activeFilter) { rawState, filter ->
+            if (rawState is UiState.Success) {
+                val filtered = when (filter) {
+                    SearchType.ALL -> rawState.data
+                    SearchType.COURSE -> rawState.data.filterIsInstance<Course>()
+                    SearchType.BOOK -> rawState.data.filterIsInstance<Book>()
+                    else -> rawState.data
+                }
+                UiState.Success(filtered)
+            } else {
+                rawState
             }
-            UiState.Success(filtered)
-        } else {
-            rawState
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UiState.Success(emptyList())
-    )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UiState.Success(emptyList())
+        )
+
+    fun initTab(tab: Int) {
+        setFilter(tab)
+        performSearch(isSkip = true)
+    }
 
     fun onSearchFocusChanged(isFocused: Boolean) {
         _isSearching.value = isFocused
@@ -69,26 +75,66 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun setFilter(filter: SearchFilter) {
+    fun setFilter(filter: Int) {
         _activeFilter.value = filter
     }
 
-    fun performSearch() {
+    fun performSearch(isSkip: Boolean = false) {
         val query = _searchQuery.value.trim()
-        if (query.isBlank()) return
-
-        viewModelScope.launch {
-            _rawResults.value = UiState.Loading
-            val foundBooks = bookUsecase.getBook(PagingRequest(search = query))
-            val foundCourses = courseUsecase.getCourse(PagingRequest(search = query))
-
+        if (query.isBlank()) {
+            if (!isSkip) {
+                _rawResults.value = UiState.Success(emptyList()) // Xóa kết quả nếu query rỗng
+                return
+            }
+        }
+        _rawResults.value = UiState.Loading
+        if (_isTestMode) {
+            val foundBooks = MockData.mockBooks.filter {
+                it.title.contains(
+                    _searchQuery.value,
+                    ignoreCase = true
+                )
+            }
+            val foundCourses = MockData.mockCourses.filter {
+                it.title.contains(
+                    _searchQuery.value,
+                    ignoreCase = true
+                )
+            }
             val combinedResults = foundBooks + foundCourses
+            _rawResults.value = UiState.Success(combinedResults)
+        } else {
+            viewModelScope.launch {
+                // Gọi use case và nhận về Result
+                val booksResult = bookUsecase.getBook(PagingRequest(search = query))
+                val coursesResult = courseUsecase.getCourse(PagingRequest(search = query))
 
-            _rawResults.value = if (combinedResults.isEmpty()) {
-                UiState.Success(emptyList()) // Hoặc UiState.Error("No results") tùy logic
-            } else {
-                UiState.Success(combinedResults)
+                val foundBooks: List<Book> = booksResult.fold(
+                    onSuccess = { response -> response.items },
+                    onFailure = { emptyList() }
+                )
+
+                val foundCourses: List<Course> = coursesResult.fold(
+                    onSuccess = { response -> response.items },
+                    onFailure = { emptyList() }
+                )
+
+                if (booksResult.isFailure && coursesResult.isFailure) {
+                    val error = booksResult.exceptionOrNull() ?: coursesResult.exceptionOrNull()
+                    _rawResults.value =
+                        UiState.Error(error?.message ?: "Đã xảy ra lỗi không xác định")
+                    return@launch
+                }
+
+                val combinedResults = foundBooks + foundCourses
+
+                _rawResults.value = if (combinedResults.isEmpty()) {
+                    UiState.Error("Không tìm thấy kết quả phù hợp.")
+                } else {
+                    UiState.Success(combinedResults)
+                }
             }
         }
     }
+
 }

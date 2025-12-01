@@ -27,18 +27,21 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.ui.behavior.BookCard
 import com.example.khoitriso.ui.behavior.CourseCard
+import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
 
 @Composable
 fun SearchScreen(
     navController: NavController,
     paddingValues: PaddingValues, // Padding từ MainScreen (BottomBar)
+    initialTab: Int? = null,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val query by viewModel.searchQuery.collectAsState()
@@ -47,6 +50,9 @@ fun SearchScreen(
     val isSearching by viewModel.isSearching.collectAsState()
     val focusManager = LocalFocusManager.current
 
+    if(initialTab!= null){
+        viewModel.initTab(initialTab)
+    }
     // Scaffold giúp quản lý cấu trúc màn hình tốt hơn
     Scaffold(
         modifier = Modifier
@@ -108,12 +114,12 @@ fun SearchScreen(
 @Composable
 fun SearchHeader(
     query: String,
-    activeFilter: SearchFilter,
+    activeFilter: Int,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     onBack: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
-    onFilterSelected: (SearchFilter) -> Unit
+    onFilterSelected: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -154,7 +160,7 @@ private fun SearchBarField(
         modifier = modifier
             .fillMaxWidth()
             .onFocusChanged { onFocusChanged(it.isFocused) },
-        placeholder = { Text("Tìm kiếm sách, khóa học...") },
+        placeholder = { Text("Tìm kiếm sách, khóa học...", fontSize = 10.sp) },
         leadingIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -185,8 +191,8 @@ private fun SearchBarField(
 
 @Composable
 private fun FilterChipsRow(
-    selectedFilter: SearchFilter,
-    onFilterSelected: (SearchFilter) -> Unit,
+    selectedFilter: Int,
+    onFilterSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Dùng LazyRow để có thể cuộn ngang nếu nhiều filter
@@ -196,23 +202,23 @@ private fun FilterChipsRow(
     ) {
         item {
             FilterChipItem(
-                selected = selectedFilter == SearchFilter.ALL,
+                selected = selectedFilter == SearchType.ALL,
                 label = "Tất cả",
-                onClick = { onFilterSelected(SearchFilter.ALL) }
+                onClick = { onFilterSelected(SearchType.ALL) }
             )
         }
         item {
             FilterChipItem(
-                selected = selectedFilter == SearchFilter.COURSES,
+                selected = selectedFilter == SearchType.COURSE,
                 label = "Khóa học",
-                onClick = { onFilterSelected(SearchFilter.COURSES) }
+                onClick = { onFilterSelected(SearchType.COURSE) }
             )
         }
         item {
             FilterChipItem(
-                selected = selectedFilter == SearchFilter.BOOKS,
+                selected = selectedFilter == SearchType.BOOK,
                 label = "Sách",
-                onClick = { onFilterSelected(SearchFilter.BOOKS) }
+                onClick = { onFilterSelected(SearchType.BOOK) }
             )
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -20,6 +21,9 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.ui.behavior.*
 import com.example.khoitriso.utils.Constants
+import com.example.khoitriso.utils.ItemBuyNow
+import com.example.khoitriso.utils.ItemType
+import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +42,16 @@ fun BookDetailScreen(
             if (bookState is UiState.Success) {
                 ActionButtons(
                     price = (bookState as UiState.Success<BookDetail>).data.price,
-                    onBuy = { viewModel.buyNow() },
+                    onBuy = {
+                        val book =(bookState as UiState.Success<BookDetail>).data
+                        navController.navigate(ItemBuyNow(
+                            itemId = book.id,
+                            itemType = ItemType.Book,
+                            coverImage = book.coverImage,
+                            price = book.price,
+                            title = book.title,
+                        ))
+                    },
                     onCart = { viewModel.addToCart((bookState as UiState.Success<BookDetail>).data.id) }
                 )
             }
@@ -201,7 +214,7 @@ private fun BookHeaderSection(book: BookDetail) {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -1,5 +1,7 @@
 package com.example.khoitriso.ui.behavior
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -44,6 +46,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.explore.ExploreBookScreen
@@ -61,11 +64,14 @@ import com.example.khoitriso.ui.learning.AssignmentScreen
 import com.example.khoitriso.ui.learning.LearningBookScreen
 import com.example.khoitriso.ui.learning.LearningCourseScreen
 import com.example.khoitriso.ui.mypurchase.MyPurchaseScreen
+import com.example.khoitriso.ui.mypurchase.OrderScreen
 import com.example.khoitriso.ui.paymentresult.PaymentResultScreen
 import com.example.khoitriso.utils.Constants
+import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.navigationBarItems
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavHostContainer(navController: NavHostController) {
     val lazyListState = rememberLazyListState()
@@ -96,24 +102,42 @@ fun NavHostContainer(navController: NavHostController) {
                 )
             }
         }
-        composable(NavRoute.SEARCH) {
-            HeaderNavScaffold(lazyListState, navController) {
-                SearchScreen(navController,it)
+        composable(
+            route = NavRoute.SEARCH,
+            arguments = listOf(navArgument("initialQuery") {
+                type = NavType.StringType
+                nullable = true
+            })
+        ) { backStackEntry ->
+            // Lấy tham số ra từ backStackEntry
+            val initialTab = backStackEntry.arguments?.getInt("tab")
+            HeaderNavScaffold(
+                lazyListState = lazyListState,
+                navController = navController
+            ) {
+                SearchScreen(
+                    navController = navController,
+                    paddingValues = it,
+                    initialTab = initialTab // Truyền vào màn hình
+                )
             }
         }
         composable(NavRoute.PROFILE) {
 
-            HeaderNavScaffold(lazyListState, navController) { paddingValue->
+            HeaderNavScaffold(lazyListState, navController) { paddingValue ->
                 ProfileScreen(
                     lazyListState = lazyListState,
                     paddingValues = paddingValue,
-                    navController = navController)
+                    navController = navController
+                )
             }
         }
-        composable(NavRoute.MY_PURCHASES) {
+        composable(NavRoute.MyPurchasesWithTab,
+            arguments = listOf(navArgument("tab") { type = NavType.StringType })
+        ) {
 
             HeaderNavScaffold(lazyListState, navController) {
-                MyPurchaseScreen(navController,it)
+                MyPurchaseScreen(navController, it)
             }
         }
         composable(
@@ -124,6 +148,14 @@ fun NavHostContainer(navController: NavHostController) {
                 navController
             )
         }
+
+        composable(
+            NavRoute.ORDER_HISTORY
+        )
+        {
+            OrderScreen(navController)
+        }
+
 
         composable(
             NavRoute.LearningCourseWithArgs,
@@ -140,8 +172,8 @@ fun NavHostContainer(navController: NavHostController) {
 
         composable(
             NavRoute.BookDetailWithArgs,
-            arguments = listOf(navArgument("bookId") { type = NavType.IntType})
-        ){
+            arguments = listOf(navArgument("bookId") { type = NavType.IntType })
+        ) {
             BookDetailScreen(
                 navController
             )
@@ -151,7 +183,7 @@ fun NavHostContainer(navController: NavHostController) {
                 lazyListState,
                 navController
             ) {
-                ForumListScreen(navController,it)
+                ForumListScreen(navController, it)
             }
 
         }
@@ -188,6 +220,11 @@ fun NavHostContainer(navController: NavHostController) {
             CheckoutScreen(navController)
         }
 
+        composable<ItemBuyNow>{
+            val args = it.toRoute<ItemBuyNow>()
+            CheckoutScreen(navController, args)
+        }
+
         composable(
             NavRoute.AssignmentWithArgs,
             arguments = listOf(navArgument("assignmentId") { type = NavType.IntType })
@@ -206,7 +243,11 @@ fun NavHostContainer(navController: NavHostController) {
         ) { backStackEntry ->
             val success = backStackEntry.arguments?.getBoolean("success") ?: false
             val orderCode = backStackEntry.arguments?.getString("orderCode")
-            PaymentResultScreen(navController = navController, success = success, orderCode = orderCode)
+            PaymentResultScreen(
+                navController = navController,
+                success = success,
+                orderCode = orderCode
+            )
         }
     }
 }
@@ -216,7 +257,7 @@ fun NavHostContainer(navController: NavHostController) {
 fun HeaderNavScaffold(
     lazyListState: LazyListState,
     navController: NavHostController,
-    content: @Composable (PaddingValues) -> Unit= {}, // Sửa: Truyền PaddingValues xuống
+    content: @Composable (PaddingValues) -> Unit = {}, // Sửa: Truyền PaddingValues xuống
 ) {
 
 
@@ -362,7 +403,7 @@ fun MyNavigationBar(navController: NavHostController, modifier: Modifier = Modif
                 selected = isSelected,
                 onClick = {
 
-                    if (!isSelected){
+                    if (!isSelected) {
                         navController.navigate(item.label) {
                             launchSingleTop = true
                             restoreState = true

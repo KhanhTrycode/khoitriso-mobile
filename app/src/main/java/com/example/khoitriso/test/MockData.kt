@@ -399,7 +399,7 @@ object MockData {
         filePath = "/materials/course1/",
         fileSize = 2048000,
         fileType = "pdf",
-        fileUrl = "https://example.com/materials/slide_bai_1.pdf",
+        fileUrl = "https://cdn1.epicgames.com/offer/24b9b5e323bc40eea252a10cdd3b2f10/EGS_LeagueofLegends_RiotGames_S1_2560x1440-47eb328eac5ddd63ebd096ded7d0d5ab",
         id = 1,
         lessonId = 1,
         title = "Slide bài giảng 1",
@@ -858,9 +858,9 @@ object MockData {
     // Mock Orders
     val mockOrder1 = Order(
         currency = "VND",
-        discountAmount = 89700,
+        discountAmount = 89700.0,
         exchangeRate = 1,
-        finalAmount = 359300,
+        finalAmount = 359300.0,
         id = 1,
         orderCode = "ORD20241120001",
         orderNotes = "Giao hàng vào giờ hành chính",
@@ -869,8 +869,8 @@ object MockData {
         paymentMethod = "ATM",
         status = 2,
         statusName = "Completed",
-        taxAmount = 0,
-        totalAmount = 449000,
+        taxAmount = 0.0,
+        totalAmount = 449000.0,
         transactionId = "VNP20241120143000",
         userId = 1,
         coupon = mockCoupon1,
@@ -880,9 +880,9 @@ object MockData {
 
     val mockOrder2 = Order(
         currency = "VND",
-        discountAmount = 0,
+        discountAmount = 0.0,
         exchangeRate = 1,
-        finalAmount = 399000,
+        finalAmount = 399000.0,
         id = 2,
         orderCode = "ORD20241121002",
         orderNotes = "",
@@ -891,8 +891,8 @@ object MockData {
         paymentMethod = "E-Wallet",
         status = 1,
         statusName = "Processing",
-        taxAmount = 0,
-        totalAmount = 399000,
+        taxAmount = 0.0,
+        totalAmount = 399000.0,
         transactionId = "MOMO20241121091500",
         userId = 2,
         coupon = null,
@@ -900,7 +900,7 @@ object MockData {
         createdAt = "2024-11-21T09:00:00Z"
     )
 
-    val mockOrders = listOf(mockOrder1, mockOrder2)
+    val mockOrders = mutableListOf(mockOrder1, mockOrder2)
 
     // Mock Notifications
 

@@ -17,13 +17,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 
 object NavRoute {
-
+    val ORDER_HISTORY : String = "orderHistory"
     val EXPLORE_BOOK: String = "exloreBook"
     val EXPLORE_COURSE: String = "exloreCourse"
     val LOGIN: String = "login"
     val HOME: String = "home"
     val PROFILE: String = "profile"
-    val SEARCH: String = "search"
+    const val SEARCH = "search?tab={tab}"
     val LEARNING_PATH = "learningPath"
     val COURSE_DETAIL = "courseDetail"
     const val LEARNING_COURSE = "learningCourse"
@@ -34,9 +34,10 @@ object NavRoute {
     val FORUM_BOOKMARKS = "forum/bookmarks"
     val NOTIFICATIONS = "notifications"
     val CART = "cart"
-    val CHECKOUT = "checkout"
+    const val CHECKOUT = "checkout"
     val MY_PURCHASES = "myPurchases"
     const val ASSIGNMENT = "assignment"
+    const val CheckoutWithArgs = "$CHECKOUT?itemType={itemType}&itemId={itemId}"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val LearningCourseWithArgs = "$LEARNING_COURSE/{courseId}"
     const val LearningBookWithArgs = "$LEARNING_BOOK/{bookId}"
@@ -54,6 +55,8 @@ object NavRoute {
     fun NavMyPurchases(tab: String = "courses") = "myPurchases?tab=$tab"
     fun NavPaymentResult(success: Boolean, orderCode: String?) =
         "paymentResult?success=$success&orderCode=${orderCode ?: ""}"
+    fun NavSearchTab(tab:Int) = "search?tab=$tab" //0 = course, 1 = book
+    fun NavCheckOutNow(itemType: Int, itemId: Int) = "$CHECKOUT?itemType=$itemType&itemId=$itemId"
 }
 
 
@@ -61,6 +64,15 @@ data class MyNavigationBarItem(
     val label: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
+)
+
+@Serializable
+data class ItemBuyNow(
+    val itemId: Int,
+    val itemType: Int,
+    val coverImage: String,
+    val price: Double,
+    val title: String
 )
 
 val navigationBarItems = listOf(
@@ -75,7 +87,7 @@ val navigationBarItems = listOf(
         unselectedIcon = Icons.Outlined.Search
     ),
     MyNavigationBarItem(
-        label = NavRoute.MY_PURCHASES,
+        label = NavRoute.NavMyPurchases("courses"),
         selectedIcon = Icons.Filled.Menu,
         unselectedIcon = Icons.Outlined.Menu
     ),

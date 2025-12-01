@@ -1,6 +1,10 @@
 package com.example.khoitriso.ui.behavior
 
+import android.app.DownloadManager
 import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +16,7 @@ import com.example.khoitriso.data.local.UserManager
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -20,7 +25,7 @@ abstract class BaseViewModel : ViewModel() {
     // Nên đặt là isTestMode cho rõ ràng hơn
     protected val _isTestMode = true // Dùng protected để lớp con có thể truy cập
 
-    protected fun loadUser(user: MutableStateFlow<User?>, userManager: UserManager){
+    protected fun loadUser(user: MutableStateFlow<User?>, userManager: UserManager) {
         viewModelScope.launch {
             user.value = userManager.getCurrentUser()
         }
@@ -32,7 +37,7 @@ abstract class BaseViewModel : ViewModel() {
         isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<T>,
         onSuccess: (UiState.Success<T>) -> Unit = {},
-        onFailure: () -> Unit = {}
+        onFailure: () -> Unit = {},
     ) {
         viewModelScope.launch {
             stateFlow.value = UiState.Loading
@@ -88,11 +93,13 @@ abstract class BaseViewModel : ViewModel() {
         mockData: List<T>,
         isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<MyResponese<T>>,
+        onFailure: () -> Unit = {},
+        onSuccess: (UiState.Success<MyResponese<T>>) -> Unit = {},
     ) {
         viewModelScope.launch {
             stateFlow.value = UiState.Loading
-            if (isTestMode) {
-                stateFlow.value = UiState.Success(
+            val result = if (isTestMode) {
+                Result.success(
                     MyResponese(
                         items = mockData,
                         page = 1,
@@ -102,31 +109,33 @@ abstract class BaseViewModel : ViewModel() {
                     )
                 )
             } else {
-                try {
-                    val result = apiCall()
-                    result.fold(
-                        onSuccess = { item ->
-                            stateFlow.value = UiState.Success(item)
-                        },
-                        onFailure = { exception ->
-                            // Nếu thất bại, cập nhật state với thông báo lỗi
-                            stateFlow.value = UiState.Error(
-                                exception.message ?: ("An unknown error " +
-                                        "occurred")
-                            )
-                        }
-                    )
-                } catch (e: Exception) {
-                    // Xử lý lỗi nếu cần
-                    e.printStackTrace()
-                    UiState.Error(e.message ?: "Unknown error")
-                }
+                apiCall()
+            }
+            try {
+                result.fold(
+                    onSuccess = { item ->
+                        stateFlow.value = UiState.Success(item)
+                        onSuccess(UiState.Success(item))
+                    },
+                    onFailure = { exception ->
+                        stateFlow.value = UiState.Error(
+                            exception.message ?: ("An unknown error " +
+                                    "occurred")
+                        )
+                        onFailure()
+                    }
+                )
+            } catch (e: Exception) {
+                // Xử lý lỗi nếu cần
+                e.printStackTrace()
+                UiState.Error(e.message ?: "Unknown error")
             }
         }
     }
+
     protected fun initializePlayerInParent(
         playerState: MutableStateFlow<ExoPlayer?>,
-        context: Context
+        context: Context,
     ) {
         // Chỉ tạo player nếu nó chưa tồn tại
         if (playerState.value == null) {
@@ -151,7 +160,8 @@ abstract class BaseViewModel : ViewModel() {
     ) {
         // Lấy player hiện tại
         val currentPlayer = playerState.value ?: return
-        var url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        var url =
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         viewModelScope.launch {
             // Tạo media item mới từ URL
             val mediaItem = MediaItem.fromUri(url.toUri())
@@ -195,6 +205,38 @@ abstract class BaseViewModel : ViewModel() {
                 // Handle other types of errors
                 println("Other error: ${error.message}")
             }
+        }
+    }
+
+
+    fun downloadMaterial(context: Context, url: String, fileName: String,fileType: String) {
+        try {
+            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val uri = url.toUri()
+
+            // 1. Xử lý tên file để tránh lỗi ký tự đặc biệt
+            val cleanFileName = fileName.replace("[^a-zA-Z0-9.\\-]".toRegex(), "_") + ".$fileType"
+
+            val fileExtension = MimeTypeMap.getFileExtensionFromUrl(url)
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+                ?: "*/*" // Nếu không đoán được thì để mặc định
+
+            val request = DownloadManager.Request(uri)
+                .setTitle(fileName) // Tên hiện trên thanh thông báo
+                .setDescription("Đang tải xuống...")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setMimeType(mimeType)
+                // 3. QUAN TRỌNG: Đặt đường dẫn vào thư mục Downloads công khai
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanFileName)
+                // 4. Cho phép hiện trong ứng dụng "Downloads" của hệ thống
+                .setVisibleInDownloadsUi(true)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+            downloadManager.enqueue(request)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

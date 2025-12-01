@@ -1,6 +1,7 @@
 package com.example.khoitriso.ui.profilescreen
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -17,8 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,13 +28,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.ui.behavior.SafeImage
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiState
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -48,11 +48,15 @@ fun ProfileScreen(
     navController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState() // State thông tin user
+    val activationState by viewModel.activationState.collectAsState() // State kích hoạt sách
+
     val context = LocalContext.current
-    var activationCode by remember { mutableStateOf("") }
 
+    // State quản lý hiển thị Dialog kích hoạt
+    var showActivationDialog by remember { mutableStateOf(false) }
 
+    // Xử lý chọn ảnh Avatar
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -72,6 +76,22 @@ fun ProfileScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadUserInfo()
+    }
+
+    // Lắng nghe kết quả kích hoạt sách
+    LaunchedEffect(activationState) {
+        when (val state = activationState) {
+            is UiState.Success -> {
+                showActivationDialog = false
+                Toast.makeText(context, state.data, Toast.LENGTH_LONG).show()
+                viewModel.resetActivationState()
+                // TODO: Có thể reload lại danh sách sách của tôi ở đây nếu cần
+            }
+            is UiState.Error -> {
+                // Lỗi sẽ hiển thị trực tiếp trên Dialog, không cần Toast
+            }
+            else -> {}
+        }
     }
 
     LazyColumn(
@@ -103,30 +123,32 @@ fun ProfileScreen(
                         viewModel.updateEmail(user.email)
                     }
                 },
-                onAvatarClick = { imagePickerLauncher.launch("image/*") }
+
             )
         }
 
-        // Error message
         uiState.error?.let { error ->
-            item {
-                ErrorCard(error)
-            }
+            item { ErrorCard(error) }
         }
 
-        // -- Phần 2: Kích hoạt sách --
+        // -- Phần 2: Quản lý & Tiện ích (MỚI) --
         item {
-            ActivateBookSection(
-                code = activationCode,
-                onCodeChange = { activationCode = it },
-                onActivate = {
-                    // TODO: Gọi viewModel.activateBook(activationCode)
-                }
+            SettingsSection(
+                title = "Quản lý & Tiện ích",
+                items = listOf(
+                    // Item 1: Mở Dialog kích hoạt
+                    SettingsItemData("Kích hoạt sách", Icons.Default.VpnKey) {
+                        showActivationDialog = true
+                    },
+                    // Item 2: Xem lịch sử đơn hàng
+                    SettingsItemData("Lịch sử đơn hàng", Icons.Default.History) {
+                        navController.navigate(NavRoute.ORDER_HISTORY)
+                    }
+                )
             )
         }
 
-
-        // -- Phần 3: Cài đặt tài khoản --
+        // -- Phần 3: Thư viện của tôi --
         item {
             SettingsSection(
                 title = stringResource(R.string.account_settings),
@@ -146,8 +168,8 @@ fun ProfileScreen(
             SettingsSection(
                 title = stringResource(R.string.help_and_support),
                 items = listOf(
-                    SettingsItemData(stringResource(R.string.help_center), Icons.Default.Help) { /*TODO*/ },
-                    SettingsItemData(stringResource(R.string.contact_us), Icons.Default.ContactSupport) { /*TODO*/ },
+                    SettingsItemData(stringResource(R.string.help_center), Icons.Default.Help) { },
+                    SettingsItemData(stringResource(R.string.contact_us), Icons.Default.ContactSupport) { },
                 )
             )
         }
@@ -156,13 +178,94 @@ fun ProfileScreen(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SignOutButton {
-                // TODO: Xử lý logic đăng xuất
+                // TODO: viewModel.signOut()
+                navController.navigate(NavRoute.LOGIN) {
+                    popUpTo(0) // Xóa backstack
+                }
             }
         }
+    }
+
+    // --- HIỂN THỊ DIALOG KÍCH HOẠT ---
+    if (showActivationDialog) {
+        ActivationDialog(
+            onDismiss = {
+                showActivationDialog = false
+                viewModel.resetActivationState()
+            },
+            onActivate = { code -> viewModel.activateBook(code) },
+            uiState = activationState
+        )
     }
 }
 
 // --- COMPOSABLES CON ---
+
+@Composable
+fun ActivationDialog(
+    onDismiss: () -> Unit,
+    onActivate: (String) -> Unit,
+    uiState: UiState<String>
+) {
+    var code by remember { mutableStateOf("") }
+    val isLoading = uiState is UiState.Loading
+    val errorMessage = (uiState as? UiState.Error)?.message
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.VpnKey, contentDescription = null) },
+        title = { Text("Kích hoạt sách") },
+        text = {
+            Column {
+                Text(
+                    text = "Nhập mã kích hoạt được gửi trong hóa đơn mua hàng để thêm sách vào thư viện:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text("Mã code") },
+                    placeholder = { Text("VD: BOOK-XXXX-XXXX") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = errorMessage != null,
+                    enabled = !isLoading
+                )
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 8.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onActivate(code) },
+                enabled = !isLoading && code.isNotBlank()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Kích hoạt")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isLoading) {
+                Text("Hủy")
+            }
+        }
+    )
+}
 
 @Composable
 private fun ProfileInfo(
@@ -177,7 +280,7 @@ private fun ProfileInfo(
     onEditProfile: () -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
-    onAvatarClick: () -> Unit
+    onAvatarClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -201,6 +304,17 @@ private fun ProfileInfo(
             if (isUploading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
+            // Icon edit nhỏ ở góc avatar để user biết có thể đổi ảnh
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .padding(6.dp)
+                    .size(16.dp),
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
 
         AnimatedContent(targetState = editMode, label = "ProfileEditModeTransition") { isEditing ->
@@ -221,7 +335,7 @@ private fun ProfileInfo(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onEditProfile, enabled = !isLoading) {
+                    FilledTonalButton(onClick = onEditProfile, enabled = !isLoading) {
                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.edit_profile))
@@ -244,7 +358,8 @@ private fun ProfileInfo(
                         label = { Text(stringResource(R.string.email)) },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = false, // Không cho sửa email
-                        singleLine = true
+                        singleLine = true,
+                        supportingText = { Text("Email không thể thay đổi") }
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -255,7 +370,7 @@ private fun ProfileInfo(
                         }
                         Button(onClick = onSave, modifier = Modifier.weight(1f), enabled = !isLoading) {
                             if (isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                             } else {
                                 Text(stringResource(R.string.save))
                             }
@@ -267,38 +382,7 @@ private fun ProfileInfo(
     }
 }
 
-@Composable
-private fun ActivateBookSection(code: String, onCodeChange: (String) -> Unit, onActivate: () -> Unit) {
-    OutlinedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "Kích hoạt sách",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            OutlinedTextField(
-                value = code,
-                onValueChange = onCodeChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Nhập mã kích hoạt") },
-                leadingIcon = { Icon(Icons.Default.VpnKey, contentDescription = null) },
-                singleLine = true
-            )
-            Button(
-                onClick = onActivate,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = code.isNotBlank()
-            ) {
-                Text("Kích hoạt")
-            }
-        }
-    }
-}
-
+// Data class cho item settings
 private data class SettingsItemData(val title: String, val icon: ImageVector, val onClick: () -> Unit)
 
 @Composable
@@ -311,16 +395,22 @@ private fun SettingsSection(title: String, items: List<SettingsItemData>) {
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 8.dp)
         )
-        OutlinedCard {
+        // Sử dụng Card để gom nhóm các item
+        OutlinedCard(
+            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
             Column {
                 items.forEachIndexed { index, item ->
                     SettingsItem(title = item.title, icon = item.icon, onClick = item.onClick)
                     if (index < items.size - 1) {
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                        Divider(
+                            modifier = Modifier.padding(start = 56.dp, end = 16.dp), // Indent divider
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }
@@ -337,10 +427,23 @@ private fun SettingsItem(title: String, icon: ImageVector, onClick: () -> Unit) 
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary)
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = MaterialTheme.colorScheme.secondary
+        )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
     }
 }
 
@@ -348,7 +451,10 @@ private fun SettingsItem(title: String, icon: ImageVector, onClick: () -> Unit) 
 private fun SignOutButton(onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(50.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(50.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -363,14 +469,18 @@ private fun SignOutButton(onClick: () -> Unit) {
 @Composable
 private fun ErrorCard(error: String) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
-        Text(
-            text = error,
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onErrorContainer
-        )
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
     }
 }
-

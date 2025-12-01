@@ -62,6 +62,7 @@ import com.example.khoitriso.ui.behavior.RowBookCard
 import com.example.khoitriso.ui.behavior.RowCourseCard
 import com.example.khoitriso.ui.behavior.SafeImage
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
 
 
@@ -118,7 +119,7 @@ fun HomeScreen(
         // 5. Recommended Books
         item {
             SectionTitle("Sách gợi ý cho bạn", "Xem thêm", onClickAction = {
-                navController.navigate(NavRoute.EXPLORE_BOOK)
+                navController.navigate(NavRoute.NavSearchTab(SearchType.BOOK))
             }, modifier = Modifier.padding(horizontal = 4.dp))
             Spacer(modifier = Modifier.height(8.dp))
             RecommendedBook(recommendedBooks, navController)
@@ -126,8 +127,8 @@ fun HomeScreen(
 
         // 6. Trending Courses
         item {
-            SectionTitle("Khóa học nổi bật", "Tất cả", onClickAction = {
-                navController.navigate(NavRoute.EXPLORE_COURSE)
+            SectionTitle("Khóa học nổi bật", "Xem thêm", onClickAction = {
+                navController.navigate(NavRoute.NavSearchTab(SearchType.COURSE))
             }, modifier = Modifier.padding(horizontal = 4.dp))
             Spacer(modifier = Modifier.height(8.dp))
             TrendingCourse(trendingCourses, navController)

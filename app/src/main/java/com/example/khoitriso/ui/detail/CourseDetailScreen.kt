@@ -25,9 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
+import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.ui.behavior.*
+import com.example.khoitriso.utils.ItemBuyNow
+import com.example.khoitriso.utils.ItemType
+import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiEvent
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
@@ -69,19 +73,31 @@ fun CourseDetailScreen(
             if (courseState is UiState.Success) {
                 ActionButtons(
                     price = (courseState as UiState.Success<CourseDetail>).data.price,
-                    onBuy = { viewModel.buyNow() },
+                    onBuy = {
+                        val course =(courseState as UiState.Success<CourseDetail>).data
+                        navController.navigate(ItemBuyNow(
+                            itemId = course.id,
+                            itemType = ItemType.Book,
+                            coverImage = course.thumbnail,
+                            price = course.price,
+                            title = course.title,
+                        ))
+                    },
                     onCart = { viewModel.addToCart((courseState as UiState.Success<CourseDetail>).data.id) }
                 )
             }
         }
     ) { innerPadding ->
         when (courseState) {
-            is UiState.Error -> { /* Handle Error UI */ }
+            is UiState.Error -> { /* Handle Error UI */
+            }
+
             is UiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
+
             is UiState.Success<CourseDetail> -> {
                 val course = (courseState as UiState.Success<CourseDetail>).data
                 DetailContent(
@@ -226,7 +242,7 @@ private fun InfoSection(
     title: String,
     icon: ImageVector,
     items: List<String>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Text(
@@ -251,7 +267,9 @@ private fun InfoRow(text: String, icon: ImageVector) {
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp).padding(top = 2.dp)
+            modifier = Modifier
+                .size(20.dp)
+                .padding(top = 2.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(

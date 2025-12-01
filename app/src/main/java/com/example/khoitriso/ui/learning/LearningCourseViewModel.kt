@@ -9,11 +9,14 @@ import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
+import com.example.khoitriso.utils.UiEvent
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,6 +36,8 @@ class LearningCourseViewModel @Inject constructor(
     private val _currentLesson = MutableStateFlow<UiState<Lesson>>(UiState.Loading)
     val currentLesson: StateFlow<UiState<Lesson>> = _currentLesson
 
+    private val _events = Channel<UiEvent>()
+    val events = _events.receiveAsFlow()
 
     init {
         getCourseDetail()

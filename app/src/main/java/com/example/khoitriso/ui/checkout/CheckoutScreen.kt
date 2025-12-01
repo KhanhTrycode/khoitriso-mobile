@@ -21,6 +21,7 @@ import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.data.dto.CartItemDto
 import com.example.khoitriso.domain.models.CartItem
+import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 import java.text.NumberFormat
@@ -31,6 +32,7 @@ import kotlin.math.max
 @Composable
 fun CheckoutScreen(
     navController: NavHostController,
+    itemBuyNow: ItemBuyNow? = null,
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
     // Collect 2 states riêng biệt
@@ -38,6 +40,13 @@ fun CheckoutScreen(
     val checkoutState by viewModel.checkoutState.collectAsState()
 
     var showVNPayWebView by remember { mutableStateOf(false) }
+
+    if (itemBuyNow != null){
+        viewModel.loadSingleItemForCheckout(itemBuyNow)
+    }
+    else{
+        viewModel.loadCart()
+    }
 
     // Xử lý Payment URL
     LaunchedEffect(checkoutState.paymentUrl) {
@@ -162,7 +171,6 @@ fun CheckoutScreen(
         }
     }
 
-    // VNPay WebView Modal
     if (showVNPayWebView && checkoutState.paymentUrl != null) {
         VNPayWebView(
             url = checkoutState.paymentUrl!!,
