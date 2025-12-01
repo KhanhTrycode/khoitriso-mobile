@@ -1,6 +1,7 @@
 package com.example.khoitriso.domain.models
 
 import com.example.khoitriso.data.dto.OptionDto
+import kotlinx.serialization.Serializable
 
 data class Question(
     val contextId: Int,

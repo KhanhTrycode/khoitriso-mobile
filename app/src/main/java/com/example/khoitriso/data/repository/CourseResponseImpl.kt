@@ -1,12 +1,16 @@
 package com.example.khoitriso.data.repository
 
 import com.example.khoitriso.data.api.CourseApi
+import com.example.khoitriso.data.dto.BookDto
+import com.example.khoitriso.data.dto.CourseDto
 import com.example.khoitriso.data.dto.MyCourseDto
 import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.data.dto.toDomain
+import com.example.khoitriso.domain.models.Assignment
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.MyCourse
+import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -15,9 +19,9 @@ import javax.inject.Inject
 
 class CourseResponseImpl @Inject constructor(
     private val courseApi: CourseApi,
-    private val gson: Gson
+    private val gson: Gson,
 ) : CourseRepository {
-    override suspend fun getCourse(getPagingRequest: PagingRequest?): Result<List<Course>> {
+    override suspend fun getCourse(getPagingRequest: PagingRequest): Result<MyResponese<Course>> {
         return try {
             val response = courseApi.getCourse(
                 page = getPagingRequest?.page ?: 1,
@@ -29,7 +33,12 @@ class CourseResponseImpl @Inject constructor(
                 sortOrder = getPagingRequest?.sortOrder
             )
             if (response.isSuccessful) {
-                Result.success(response.body()?.Result?.Items?.map { it.toDomain() } ?: emptyList())
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.toDomain(CourseDto::toDomain))
+                } else {
+                    Result.failure(Exception("Response body or Result is null"))
+                }
             } else {
                 Result.failure(Exception("API error: ${response.code()}"))
             }
@@ -64,7 +73,7 @@ class CourseResponseImpl @Inject constructor(
             if (response.isSuccessful) {
                 val body = response.body()?.Result
                 if (body != null) {
-                    val items = body.Items?.map { it.toDomain() }?: emptyList()
+                    val items = body.Items?.map { it.toDomain() } ?: emptyList()
                     Result.success(items)
                 } else {
                     Result.failure(Exception("Response body or Result is null"))
@@ -80,5 +89,22 @@ class CourseResponseImpl @Inject constructor(
     override suspend fun SearchCourse(): Result<List<Course>> {
         TODO("Not yet implemented")
     }
-}
 
+    override suspend fun getAssignmentById(id: Int): Result<Assignment> {
+        return try {
+            val response = courseApi.getAssignmentById(id)
+            if (response.isSuccessful) {
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.toDomain())
+                } else {
+                    Result.failure(Exception("Response body or Result is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}

@@ -9,8 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import com.example.khoitriso.data.local.UserManager
 import com.example.khoitriso.domain.models.Category
+import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.domain.models.MyResponese
+import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
@@ -24,6 +27,7 @@ class HomeViewModel @Inject constructor(
     private val bookUsecase: BookUsecase,
     private val courseUsecase: CourseUsecase,
     private val categoryUsecase: CategoryUsecase,
+    private val userManager: UserManager
 ) : BaseViewModel() {
 
     private val _categories = MutableStateFlow<UiState<List<Category>>>(UiState.Loading)
@@ -41,10 +45,27 @@ class HomeViewModel @Inject constructor(
     private val _tryCourses = MutableStateFlow<UiState<Course>>(UiState.Loading)
     val tryCourses: StateFlow<UiState<Course>> = _tryCourses
 
+    private val _myCourses = MutableStateFlow<UiState<List<MyCourse>>>(UiState.Loading)
+    val myCourses: StateFlow<UiState<List<MyCourse>>> = _myCourses
+
+    private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user
+
     init {
+        getUser()
         getCourse()
         getBooks()
         getCategory()
+        getMyCourse()
+    }
+
+    private fun getUser(){
+        if(_isTestMode){
+            _user.value = MockData.mockUser1
+        }
+        else{
+            loadUser(_user, userManager)
+        }
     }
 
     private fun getCategory() {
@@ -69,6 +90,16 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun getMyCourse(){
+        loadData(
+            stateFlow = _myCourses,
+            mockData = MockData.mockMyCoursesList,
+            apiCall = {
+                courseUsecase.getMyCourse()
+            }
+        )
     }
 
     fun getCourse() {

@@ -66,6 +66,7 @@ class BookDetailViewModel @Inject constructor(
                             title = currentBook.title
                         )
                         mockCartItems.add(newCartItem)
+                        MockData.mockCart.cartItems = mockCartItems
                     }
                     // Gửi sự kiện thành công lên UI
                     _events.send(UiEvent.ShowSnackbar("Đã thêm vào giỏ hàng thành công!"))

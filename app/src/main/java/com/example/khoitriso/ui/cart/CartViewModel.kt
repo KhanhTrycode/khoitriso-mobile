@@ -38,20 +38,9 @@ class CartViewModel @Inject constructor(
     }
 
     fun removeItem(itemId: Int) {
-//        viewModelScope.launch {
-//            _uiState.value = _uiState.value.copy(isRemoving = itemId, error = null)
-//            cartRepository.removeFromCart(itemId).fold(
-//                onSuccess = {
-//                    loadCart() // Reload cart after removal
-//                },
-//                onFailure = { exception ->
-//                    _uiState.value = _uiState.value.copy(
-//                        isRemoving = null,
-//                        error = "Không thể xóa sản phẩm. Vui lòng thử lại sau."
-//                    )
-//                }
-//            )
-//        }
+        viewModelScope.launch {
+            cartUsecase.removeFromCart(itemId)
+        }
     }
 
     fun clearCart() {

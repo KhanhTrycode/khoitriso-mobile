@@ -12,14 +12,18 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.khoitriso.domain.models.Question
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
 
-object  NavRoute {
+object NavRoute {
 
     val EXPLORE_BOOK: String = "exloreBook"
+    val EXPLORE_COURSE: String = "exloreCourse"
     val LOGIN: String = "login"
     val HOME: String = "home"
     val PROFILE: String = "profile"
-    val SEARCH : String = "search"
+    val SEARCH: String = "search"
     val LEARNING_PATH = "learningPath"
     val COURSE_DETAIL = "courseDetail"
     const val LEARNING_COURSE = "learningCourse"
@@ -32,22 +36,26 @@ object  NavRoute {
     val CART = "cart"
     val CHECKOUT = "checkout"
     val MY_PURCHASES = "myPurchases"
+    const val ASSIGNMENT = "assignment"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val LearningCourseWithArgs = "$LEARNING_COURSE/{courseId}"
     const val LearningBookWithArgs = "$LEARNING_BOOK/{bookId}"
     const val BookDetailWithArgs = "bookDetail/{bookId}"
     const val ForumDetailWithArgs = "forum/{questionId}"
     const val MyPurchasesWithTab = "myPurchases?tab={tab}"
+    const val AssignmentWithArgs = "assignment/{assignmentId}"
     const val PaymentResultWithArgs = "paymentResult?success={success}&orderCode={orderCode}"
     fun NavCourseDetail(courseId: Int) = "$COURSE_DETAIL/$courseId"
     fun NavLearningCourse(courseId: Int) = "$LEARNING_COURSE/$courseId"
     fun NavLearningBook(bookId: Int) = "$LEARNING_BOOK/$bookId"
     fun NavBookDetail(bookId: Int) = "$BOOK_DETAIL/$bookId"
     fun NavForumDetail(questionId: String) = "forum/$questionId"
+    fun NavAssignment(assignmentId: Int) = "assignment/$assignmentId"
     fun NavMyPurchases(tab: String = "courses") = "myPurchases?tab=$tab"
-    fun NavPaymentResult(success: Boolean, orderCode: String?) = 
+    fun NavPaymentResult(success: Boolean, orderCode: String?) =
         "paymentResult?success=$success&orderCode=${orderCode ?: ""}"
 }
+
 
 data class MyNavigationBarItem(
     val label: String,

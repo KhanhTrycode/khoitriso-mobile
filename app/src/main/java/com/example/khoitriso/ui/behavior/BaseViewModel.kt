@@ -8,7 +8,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.example.khoitriso.data.local.UserManager
 import com.example.khoitriso.domain.models.MyResponese
+import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.utils.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -17,6 +19,12 @@ abstract class BaseViewModel : ViewModel() {
 
     // Nên đặt là isTestMode cho rõ ràng hơn
     protected val _isTestMode = true // Dùng protected để lớp con có thể truy cập
+
+    protected fun loadUser(user: MutableStateFlow<User?>, userManager: UserManager){
+        viewModelScope.launch {
+            user.value = userManager.getCurrentUser()
+        }
+    }
 
     protected fun <T> loadData(
         stateFlow: MutableStateFlow<UiState<T>>,

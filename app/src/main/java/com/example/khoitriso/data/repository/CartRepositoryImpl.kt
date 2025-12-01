@@ -51,9 +51,9 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun removeFromCart(itemId: Int): Result<Boolean> {
+    override suspend fun removeFromCart(cartId: Int): Result<Boolean> {
         return try {
-            val response = cartApi.removeFromCart(itemId)
+            val response = cartApi.removeFromCart(cartId)
             if (response.isSuccessful) {
                 Result.success(response.body()?.Result == true)
             } else {

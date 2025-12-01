@@ -8,11 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,7 +27,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Book
@@ -32,131 +35,252 @@ import com.example.khoitriso.ui.behavior.BookCard
 import com.example.khoitriso.ui.behavior.CourseCard
 import com.example.khoitriso.utils.UiState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     navController: NavController,
+    paddingValues: PaddingValues, // Padding từ MainScreen (BottomBar)
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val query by viewModel.searchQuery.collectAsState()
     val results by viewModel.searchResults.collectAsState()
     val activeFilter by viewModel.activeFilter.collectAsState()
-    val isSearching by viewModel.isSearching.collectAsState() // Lấy trạng thái focus
+    val isSearching by viewModel.isSearching.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    // Box là container chính để chứa tất cả các lớp
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        Scaffold(
-            topBar = { }
-        ) { paddingValues ->
-            SearchContent(
-                results = results,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues), // Padding mặc định của Scaffold
-                navController = navController,
-                query = query
-            )
-        }
-
-        AnimatedVisibility(
-            visible = isSearching,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    // Click vào lớp phủ này sẽ làm mất focus
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null // không có hiệu ứng gợn sóng
-                    ) {
-                        viewModel.onSearchFocusChanged(false)
-                        focusManager.clearFocus()
-                    }
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .align(Alignment.TopCenter) // Đặt nó ở trên cùng
-        ) {
-            SearchBar(
+    // Scaffold giúp quản lý cấu trúc màn hình tốt hơn
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues), // Áp dụng padding của bottom bar vào toàn bộ màn hình
+        topBar = {
+            // Header chứa SearchBar và Filter
+            // Đặt ở topBar để nó luôn cố định khi scroll list kết quả
+            SearchHeader(
                 query = query,
+                activeFilter = activeFilter,
                 onQueryChange = viewModel::onQueryChange,
                 onSearch = {
                     viewModel.performSearch()
                     focusManager.clearFocus()
                 },
-                onBack = {
-                    focusManager.clearFocus()
-                },
-                onFocusChanged = { viewModel.onSearchFocusChanged(it) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                onBack = { navController.popBackStack() }, // Logic back thực tế
+                onFocusChanged = viewModel::onSearchFocusChanged,
+                onFilterSelected = viewModel::setFilter
             )
-            FilterChips(
-                selectedFilter = activeFilter,
-                onFilterSelected = { viewModel.setFilter(it) },
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+        }
+    ) { innerPadding ->
+
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
+
+            // 1. Nội dung kết quả tìm kiếm (Nằm dưới cùng)
+            SearchContent(
+                results = results,
+                navController = navController,
+                modifier = Modifier.fillMaxSize()
             )
+
+            // 2. Lớp phủ mờ khi đang focus tìm kiếm (Nằm đè lên nội dung, nhưng dưới SearchBar vì SearchBar ở TopBar)
+            // Lớp phủ này giúp tập trung sự chú ý vào thanh tìm kiếm
+            AnimatedVisibility(
+                visible = isSearching,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            focusManager.clearFocus() // Ẩn bàn phím và bỏ focus khi click ra ngoài
+                        }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun SearchContent(
-    results: UiState<List<Any>>, query: String, navController: NavController,
-    modifier:
-    Modifier =
-        Modifier,
+fun SearchHeader(
+    query: String,
+    activeFilter: SearchFilter,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onBack: () -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    onFilterSelected: (SearchFilter) -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 8.dp) // Khoảng cách nhẹ với content
     ) {
-        // ... (Toàn bộ logic when (state = results) không thay đổi)
+        SearchBarField(
+            query = query,
+            onQueryChange = onQueryChange,
+            onSearch = onSearch,
+            onBack = onBack,
+            onFocusChanged = onFocusChanged,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        FilterChipsRow(
+            selectedFilter = activeFilter,
+            onFilterSelected = onFilterSelected,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun SearchBarField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onBack: () -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Sử dụng OutlinedTextField với shape tròn cho hiện đại
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged { onFocusChanged(it.isFocused) },
+        placeholder = { Text("Tìm kiếm sách, khóa học...") },
+        leadingIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                }
+            } else {
+                // Icon search trang trí khi chưa có text
+                Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp), // Bo tròn như Google Search Bar
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() })
+    )
+}
+
+@Composable
+private fun FilterChipsRow(
+    selectedFilter: SearchFilter,
+    onFilterSelected: (SearchFilter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Dùng LazyRow để có thể cuộn ngang nếu nhiều filter
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            FilterChipItem(
+                selected = selectedFilter == SearchFilter.ALL,
+                label = "Tất cả",
+                onClick = { onFilterSelected(SearchFilter.ALL) }
+            )
+        }
+        item {
+            FilterChipItem(
+                selected = selectedFilter == SearchFilter.COURSES,
+                label = "Khóa học",
+                onClick = { onFilterSelected(SearchFilter.COURSES) }
+            )
+        }
+        item {
+            FilterChipItem(
+                selected = selectedFilter == SearchFilter.BOOKS,
+                label = "Sách",
+                onClick = { onFilterSelected(SearchFilter.BOOKS) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterChipItem(selected: Boolean, label: String, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = if (selected) {
+            { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) }
+        } else null,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    )
+}
+
+@Composable
+fun SearchContent(
+    results: UiState<List<Any>>,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (val state = results) {
             is UiState.Loading -> {
-                if (query.isNotEmpty()) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                } else {
-                    MessageFullScreen("Search for books and courses")
-                }
+                CircularProgressIndicator()
             }
-
             is UiState.Error -> {
-                MessageFullScreen(state.message)
+                EmptyStateMessage(
+                    message = state.message,
+                    icon = Icons.Default.SentimentDissatisfied
+                )
             }
-
             is UiState.Success -> {
-                if (state.data.isEmpty()) {
-                    if (query.isEmpty()) {
-                        MessageFullScreen("Search for books and courses")
-                    } else {
-                        MessageFullScreen("No results found for \"$query\"")
-                    }
+                val data = state.data
+                if (data.isEmpty()) {
+                    // Trạng thái trống ban đầu hoặc không tìm thấy
+                    EmptyStateMessage(
+                        message = "Nhập từ khóa để tìm kiếm\nSách hoặc Khóa học",
+                        icon = Icons.Default.Search
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.data.size) { i ->
-                            when (val item = state.data[i]) {
+                        items(data.size, key = { index ->
+                            // Tốt nhất nên dùng ID thật của item làm key thay vì index
+                            // Ví dụ: if (item is Book) item.id else (item as Course).id
+                            index
+                        }) { i ->
+                            when (val item = data[i]) {
                                 is Book -> BookCard(
                                     book = item,
                                     navController = navController,
-                                    modifier = Modifier.clickable { /* Nav */ }
+                                    modifier = Modifier.clickable { /* Nav to Detail */ }
                                 )
-
                                 is Course -> CourseCard(
                                     course = item,
                                     navController = navController,
-                                    modifier = Modifier.clickable { /* Nav */ }
+                                    modifier = Modifier.clickable { /* Nav to Detail */ }
                                 )
                             }
                         }
@@ -168,83 +292,22 @@ fun SearchContent(
 }
 
 @Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onBack: () -> Unit,
-    onFocusChanged: (Boolean) -> Unit, // Thêm callback này
-    modifier: Modifier = Modifier,
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier
-            .fillMaxWidth()
-            // Theo dõi sự thay đổi focus của TextField
-            .onFocusChanged { focusState ->
-                onFocusChanged(focusState.isFocused)
-            },
-        // ... (các thuộc tính khác không đổi)
-        singleLine = true,
-        placeholder = { Text("Search...") },
-        leadingIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-        },
-        trailingIcon = {
-            AnimatedVisibility(visible = query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = "Clear query")
-                }
-            }
-        },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
-        shape = MaterialTheme.shapes.extraLarge
-    )
-}
-
-@Composable
-private fun FilterChips(
-    selectedFilter: SearchFilter,
-    onFilterSelected: (SearchFilter) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+private fun EmptyStateMessage(message: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(32.dp)
     ) {
-        FilterChip(
-            selected = selectedFilter == SearchFilter.ALL,
-            onClick = { onFilterSelected(SearchFilter.ALL) },
-            label = { Text("All") }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.surfaceVariant
         )
-        FilterChip(
-            selected = selectedFilter == SearchFilter.COURSES,
-            onClick = { onFilterSelected(SearchFilter.COURSES) },
-            label = { Text("Courses") }
-        )
-        FilterChip(
-            selected = selectedFilter == SearchFilter.BOOKS,
-            onClick = { onFilterSelected(SearchFilter.BOOKS) },
-            label = { Text("Books") }
-        )
-    }
-}
-
-@Composable
-private fun MessageFullScreen(text: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )

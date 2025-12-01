@@ -22,7 +22,7 @@ interface CartApi {
 
     @DELETE("cart/{id}")
     suspend fun removeFromCart(
-        @Path("id") itemId: Int
+        @Path("id") cartId: Int
     ): Response<ApiRespone<Boolean>>
 
     @DELETE("cart/clear")

@@ -67,7 +67,7 @@ object MockData {
             questionType = 0,
             difficultyLevel = 0,
             defaultPoints = 0.5,
-            orderIndex = 0,
+            orderIndex = 1,
             isActive = true,
             options = listOf(
                 Option(
@@ -105,14 +105,14 @@ object MockData {
 
         // Question 3: Câu hỏi trắc nghiệm có công thức (ID 297)
         Question(
-            id = 297,
+            id = 298,
             contextType = 6,
             contextId = 19,
             questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
             questionType = 0,
             difficultyLevel = 0,
             defaultPoints = 0.5,
-            orderIndex = 0,
+            orderIndex = 2,
             isActive = true,
             options = listOf(
                 Option(
@@ -146,7 +146,94 @@ object MockData {
             ),
             createdAt = "2025-11-18T17:20:59.017382Z",
             updatedAt = "" // JSON ghi nhận là null, dùng ""
-        )
+        ),
+        Question(
+            id = 2979,
+            contextType = 6,
+            contextId = 19,
+            questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
+            questionType = 0,
+            difficultyLevel = 0,
+            defaultPoints = 0.5,
+            orderIndex = 2,
+            isActive = true,
+            options = listOf(
+                Option(
+                    id = 854,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>0</mn></math>""",
+                    orderIndex = 0,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 855,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>1</mn></math>""",
+                    orderIndex = 1,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 856,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>2</mn></math>""",
+                    orderIndex = 2,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 857,
+                    questionId = 297,
+                    optionText = "Không có điểm cực tiểu",
+                    orderIndex = 3,
+                    pointsValue = 0
+                )
+            ),
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = "" // JSON ghi nhận là null, dùng ""
+        ),
+        Question(
+            id = 2974,
+            contextType = 6,
+            contextId = 19,
+            questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
+            questionType = 0,
+            difficultyLevel = 0,
+            defaultPoints = 0.5,
+            orderIndex = 2,
+            isActive = true,
+            options = listOf(
+                Option(
+                    id = 854,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>0</mn></math>""",
+                    orderIndex = 0,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 855,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>1</mn></math>""",
+                    orderIndex = 1,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 856,
+                    questionId = 297,
+                    optionText = """<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mn>2</mn></math>""",
+                    orderIndex = 2,
+                    pointsValue = 0
+                ),
+                Option(
+                    id = 857,
+                    questionId = 297,
+                    optionText = "Không có điểm cực tiểu",
+                    orderIndex = 3,
+                    pointsValue = 0
+                )
+            ),
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = "" // JSON ghi nhận là null, dùng ""
+        ),
+
     )
 
     // Mock Users
@@ -192,7 +279,7 @@ object MockData {
         showAnswersAfter = 1,
         shuffleOptions = true,
         shuffleQuestions = false,
-        timeLimit = 3600,
+        timeLimit = 60,
         title = "Bài tập 1: Cú pháp Kotlin",
         userAttempts = listOf(mockUser1)
     )
@@ -641,7 +728,7 @@ object MockData {
     val mockMyCourseInProgress = MyCourse(
         courseId = 101,
         course = mockEnrolledCourse1,
-        progressPercentage = 45.5,
+        progressPercentage = 45.5f,
         enrolledAt = "2025-10-15T09:30:00Z",
         lastAccessed = "2025-11-26T14:00:00Z",
         isCompleted = false,
@@ -652,7 +739,7 @@ object MockData {
     val mockMyCourseCompleted = MyCourse(
         courseId = 102,
         course = mockEnrolledCourse2,
-        progressPercentage = 100.0,
+        progressPercentage = 100f,
         enrolledAt = "2025-09-01T18:00:00Z",
         lastAccessed = "2025-11-20T11:25:00Z",
         isCompleted = true,
@@ -816,19 +903,6 @@ object MockData {
     val mockOrders = listOf(mockOrder1, mockOrder2)
 
     // Mock Notifications
-    val mockNotification1 = Notification(
-        id = 1,
-        userId = 1,
-        title = "Khóa học mới được thêm vào",
-        content = "Khóa học Kotlin Android Development đã được thêm vào thư viện",
-        type = 2,
-        priority = 1,
-        isRead = false,
-        actionUrl = "/courses/1",
-        relatedId = "1",
-        relatedType = "course",
-        createdAt = "2024-11-24T10:00:00Z"
-    )
 
     val mockNotification2 = Notification(
         id = 2,
@@ -858,7 +932,7 @@ object MockData {
         createdAt = "2024-11-23T08:00:00Z"
     )
 
-    val mockNotifications = listOf(mockNotification1, mockNotification2, mockNotification3)
+    val mockNotifications = listOf( mockNotification2, mockNotification3)
 
     // Mock Forum data
     val mockForumAttachment1 = ForumAttachment(
@@ -1089,9 +1163,13 @@ object MockData {
 
     var mockCartItems : MutableList<CartItem> = emptyList<CartItem>().toMutableList()
     // Mock Cart
-    val mockCart = Carts(
-        cartItems = mockCartItems,
-        totalItems = mockCartItems.size,
-        totalPrice = 0.0
-    )
+    val mockCart = MyCart(mockCartItems)
+
+
+    fun MyCart(mockCartItems: MutableList<CartItem>): Carts {
+        return Carts(
+            cartItems = mockCartItems,
+            totalItems = 1,
+            totalPrice = 150000.0)
+    }
 }

@@ -85,3 +85,9 @@ private fun generateMathmlHtml(content: String): String {
         </html>
     """.trimIndent()
 }
+
+@Composable
+fun OptimizedHtmlContent(html: String) {
+    val rememberedHtml = remember(html) { html }
+    HtmlContent(rememberedHtml)
+}

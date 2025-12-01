@@ -5,7 +5,7 @@ import com.example.khoitriso.domain.models.MyCourse
 data class MyCourseDto(
     val CourseId: Int,
     val Course: CourseDto,
-    val ProgressPercentage: Double,
+    val ProgressPercentage: Float,
     val EnrolledAt: String,
     val LastAccessed: String?,
     val IsCompleted: Boolean,

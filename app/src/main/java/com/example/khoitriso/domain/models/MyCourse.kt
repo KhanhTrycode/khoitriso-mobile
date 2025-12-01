@@ -5,7 +5,7 @@ import com.example.khoitriso.data.dto.CourseDto
 data class MyCourse(
     val courseId: Int,
     val course: Course,
-    val progressPercentage: Double,
+    val progressPercentage: Float,
     val enrolledAt: String,
     val lastAccessed: String,
     val isCompleted: Boolean,

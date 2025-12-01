@@ -20,129 +20,142 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.data.dto.CartItemDto
+import com.example.khoitriso.domain.models.CartItem
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiState
 import java.text.NumberFormat
 import java.util.*
 import kotlin.math.max
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
     navController: NavHostController,
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    // Collect 2 states riêng biệt
+    val cartState by viewModel.cart.collectAsState()
+    val checkoutState by viewModel.checkoutState.collectAsState()
+
     var showVNPayWebView by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiState.paymentUrl) {
-        if (uiState.paymentUrl != null) {
+    // Xử lý Payment URL
+    LaunchedEffect(checkoutState.paymentUrl) {
+        if (checkoutState.paymentUrl != null) {
             showVNPayWebView = true
         }
     }
 
-    LaunchedEffect(uiState.orderCode) {
-        if (uiState.orderCode != null && uiState.paymentUrl == null) {
-            // Free order - navigate to success
+    // Xử lý thành công (Free order hoặc Payment done logic)
+    LaunchedEffect(checkoutState.orderCode) {
+        if (checkoutState.orderCode != null && checkoutState.paymentUrl == null) {
             navController.navigate(
-                NavRoute.NavPaymentResult(success = true, orderCode = uiState.orderCode)
+                NavRoute.NavPaymentResult(success = true, orderCode = checkoutState.orderCode)
             )
         }
     }
 
     Scaffold(
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = { Text(stringResource(R.string.checkout_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         },
         bottomBar = {
-            if (uiState.cart != null && uiState.cart!!.CartItems.isNotEmpty()) {
-                val subtotal = uiState.cart!!.TotalAmount
-                val discount = uiState.discountAmount ?: 0.0
-                val total = max(0.0, subtotal - discount)
-                CheckoutBottomBar(
-                    totalAmount = total,
-                    isProcessing = uiState.isProcessing,
-                    onCheckout = {
-                        viewModel.checkout { paymentUrl ->
-                            // Payment URL ready, will be handled by LaunchedEffect
+            // Chỉ hiện thanh thanh toán khi Cart load thành công
+            if (cartState is UiState.Success) {
+                val cartData = (cartState as UiState.Success).data
+                if (cartData.cartItems.isNotEmpty()) {
+                    val subtotal = cartData.totalPrice
+                    val discount = checkoutState.discountAmount
+                    val total = max(0.0, subtotal - discount)
+
+                    CheckoutBottomBar(
+                        totalAmount = total,
+                        isProcessing = checkoutState.isProcessing,
+                        onCheckout = {
+                            viewModel.checkout { /* URL handled by LaunchedEffect */ }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
+
+        when (val state = cartState) {
+            is UiState.Loading -> {
+                Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
-            uiState.error != null -> {
+            is UiState.Error -> {
                 ErrorCard(
-                    message = uiState.error!!,
+                    message = state.message,
                     onRetry = { viewModel.loadCart() },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
-            uiState.cart == null || uiState.cart!!.CartItems.isEmpty() -> {
-                EmptyCartState(
-                    onBackToCart = { navController.navigate(NavRoute.CART) },
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.order_summary),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+            is UiState.Success -> {
+                val cart = state.data
+                if (cart.cartItems.isEmpty()) {
+                    EmptyCartState(
+                        onBackToCart = { navController.navigate(NavRoute.CART) },
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.order_summary),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
-                    // Cart items
-                    items(uiState.cart!!.CartItems) { item ->
-                        CheckoutItemCard(item = item)
-                    }
+                        // Cart items
+                        items(cart.cartItems) { item ->
+                            CheckoutItemCard(item = item)
+                        }
 
-                    // Coupon section
-                    item {
-                        CouponSection(
-                            couponCode = uiState.couponCode,
-                            onCouponCodeChange = { viewModel.setCouponCode(it) }
-                        )
-                    }
+                        // Coupon section
+                        item {
+                            CouponSection(
+                                couponCode = checkoutState.couponCode,
+                                onCouponCodeChange = { viewModel.setCouponCode(it) }
+                            )
+                        }
 
-                    // Order summary
-                    item {
-                        val subtotal = uiState.cart!!.TotalAmount
-                        val discount = uiState.discountAmount ?: 0.0
-                        val total = max(0.0, subtotal - discount)
-                        OrderSummaryCard(
-                            subtotal = subtotal,
-                            discount = discount,
-                            total = total
-                        )
+                        // Order summary
+                        item {
+                            val subtotal = cart.totalPrice
+                            val discount = checkoutState.discountAmount
+                            val total = max(0.0, subtotal - discount)
+                            OrderSummaryCard(
+                                subtotal = subtotal,
+                                discount = discount,
+                                total = total
+                            )
+                        }
+
+                        // Hiển thị lỗi nếu có
+                        if (checkoutState.error != null) {
+                            item {
+                                Text(
+                                    text = checkoutState.error!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -150,9 +163,9 @@ fun CheckoutScreen(
     }
 
     // VNPay WebView Modal
-    if (showVNPayWebView && uiState.paymentUrl != null) {
+    if (showVNPayWebView && checkoutState.paymentUrl != null) {
         VNPayWebView(
-            url = uiState.paymentUrl!!,
+            url = checkoutState.paymentUrl!!,
             onPaymentSuccess = { orderCode ->
                 showVNPayWebView = false
                 navController.navigate(
@@ -173,7 +186,7 @@ fun CheckoutScreen(
 }
 
 @Composable
-private fun CheckoutItemCard(item: CartItemDto) {
+private fun CheckoutItemCard(item: CartItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -183,8 +196,8 @@ private fun CheckoutItemCard(item: CartItemDto) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AsyncImage(
-                model = item.CoverImage ?: "",
-                contentDescription = item.Title,
+                model = item.coverImage,
+                contentDescription = item.title,
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(8.dp)),
@@ -192,14 +205,14 @@ private fun CheckoutItemCard(item: CartItemDto) {
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = item.Title ?: "Unknown",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = item.title,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = formatPrice(item.Price),
-                    style = MaterialTheme.typography.titleLarge,
+                    text = formatPrice(item.price),
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -307,12 +320,12 @@ private fun CheckoutBottomBar(
             ) {
                 Text(
                     text = stringResource(R.string.total),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = formatPrice(totalAmount),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -331,7 +344,7 @@ private fun CheckoutBottomBar(
                 } else {
                     Text(
                         text = stringResource(R.string.payment_vnpay),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 }
             }

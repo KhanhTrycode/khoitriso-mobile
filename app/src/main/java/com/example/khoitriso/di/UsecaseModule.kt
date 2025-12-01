@@ -20,10 +20,10 @@ import com.example.khoitriso.domain.usecase.book.GetBook
 import com.example.khoitriso.domain.usecase.book.GetBookById
 import com.example.khoitriso.domain.usecase.book.GetChapterOfBook
 import com.example.khoitriso.domain.usecase.book.GetMyBook
-import com.example.khoitriso.domain.usecase.book.SearchBook
 import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.category.GetCategory
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
+import com.example.khoitriso.domain.usecase.course.GetAssignmentById
 import com.example.khoitriso.domain.usecase.course.GetCourse
 import com.example.khoitriso.domain.usecase.course.GetCourseById
 import com.example.khoitriso.domain.usecase.course.GetMyCourse
@@ -55,7 +55,6 @@ object UsecaseModule {
         return BookUsecase(
             getBook = GetBook(bookRepository),
             getBookById = GetBookById(bookRepository),
-            searckBook = SearchBook(bookRepository),
             getMyBook = GetMyBook(bookRepository),
             getChapterOfBook = GetChapterOfBook(bookRepository)
         )
@@ -78,7 +77,8 @@ object UsecaseModule {
         return CourseUsecase(
             getCourse = GetCourse(courseRepository),
             getCourseById = GetCourseById(courseRepository),
-            getMyCourse = GetMyCourse(courseRepository)
+            getMyCourse = GetMyCourse(courseRepository),
+            getAssignmentById = GetAssignmentById(courseRepository)
         )
     }
 

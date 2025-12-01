@@ -8,16 +8,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -37,6 +40,7 @@ import java.util.*
 @Composable
 fun MyPurchaseScreen(
     navController: NavHostController,
+    paddingValues: PaddingValues,
     viewModel: MyPurchaseViewModel = hiltViewModel(),
 ) {
     val courseState by viewModel.courses.collectAsState()
@@ -47,20 +51,7 @@ fun MyPurchaseScreen(
 
 
     Scaffold(
-        topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
-                title = { Text(stringResource(R.string.my_purchases_title)) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
+        modifier = Modifier.padding(paddingValues)
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -245,56 +236,129 @@ private fun MyBookCard(
     onClick: () -> Unit,
     onExportWord: () -> Unit,
 ) {
-    Card(
+    // Tính toán tiến độ đọc
+    val progress = if (book.totalChapters > 0)
+        book.completedChapters.toFloat() / book.totalChapters.toFloat()
+    else 0f
+
+    ElevatedCard( // Dùng ElevatedCard để nổi bật hơn trên nền
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .padding(12.dp) // Giảm padding tổng thể một chút để gọn hơn
+                .height(IntrinsicSize.Min), // Để chiều cao ảnh và nội dung khớp nhau
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Cover
+            // 1. Ảnh bìa sách (Tỉ lệ chuẩn 2:3)
             SafeImage(
                 url = book.book.coverImage,
                 contentDescription = book.book.title,
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .width(80.dp) // Chiều rộng cố định
+                    .aspectRatio(0.67f) // Tỉ lệ 2:3 (Book standard)
+                    .clip(RoundedCornerShape(8.dp))
+                    .shadow(4.dp, RoundedCornerShape(8.dp)), // Thêm bóng đổ nhẹ cho ảnh
                 contentScale = ContentScale.Crop
             )
 
-            // Content
+            // 2. Nội dung bên phải
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween // Căn đều trên dưới
             ) {
-                Text(
-                    text =  book.book.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${book.completedChapters}/${book.totalChapters} ${stringResource(R.string
-                        .chapters)}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(onClick = onClick) {
-                        Text(stringResource(R.string.read_book))
+                // Tiêu đề và thông tin
+                Column {
+                    Text(
+                        text = book.book.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Thanh tiến trình đọc
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    OutlinedButton(
+
+                    Text(
+                        text = "${book.completedChapters}/${book.totalChapters} chương",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Khu vực nút bấm (Action Buttons)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Nút Đọc Tiếp (Nổi bật nhất)
+                    Button(
+                        onClick = onClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp), // Chiều cao gọn hơn
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.read_book),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    // Nút Export (Icon Button) - SỬA LỖI ICON Ở ĐÂY
+                    // Sử dụng FilledTonalIconButton hoặc OutlinedIconButton để icon hiển thị chuẩn
+                    FilledTonalIconButton(
                         onClick = onExportWord,
-                        enabled = !isExporting
+                        enabled = !isExporting,
+                        modifier = Modifier.size(36.dp) // Kích thước vuông vức khớp với nút Đọc
                     ) {
                         if (isExporting) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         } else {
-                            Text(stringResource(R.string.export_word))
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Export Word",
+                                modifier = Modifier.size(20.dp) // Kích thước icon chuẩn
+                            )
                         }
                     }
                 }

@@ -2,12 +2,14 @@ package com.example.khoitriso.data.dto.request
 
 data class PagingRequest(
     val page: Int = 1,
-    val pageSize: Int = 20,
+    val pageSize: Int = 100,
     val search: String? = null,
     val approvalStatus: Int? = null,
     val authorId: Int? = null,
     val sortBy: String? = null,
-    val sortOrder: String? = null
+    val sortOrder: String? = null,
+    val level: Int? = null,
+    val isFree: Boolean? = null
 )
 
 fun PagingRequest.toMap(): Map<String, String> {

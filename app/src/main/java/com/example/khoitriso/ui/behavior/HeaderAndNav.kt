@@ -1,11 +1,10 @@
 package com.example.khoitriso.ui.behavior
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,11 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingCart
@@ -30,22 +27,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.example.khoitriso.R
+import androidx.navigation.toRoute
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
 import com.example.khoitriso.ui.explore.ExploreBookScreen
@@ -58,6 +56,8 @@ import com.example.khoitriso.ui.profilescreen.ProfileScreen
 import com.example.khoitriso.ui.searchscreen.SearchScreen
 import com.example.khoitriso.ui.cart.CartScreen
 import com.example.khoitriso.ui.checkout.CheckoutScreen
+import com.example.khoitriso.ui.explore.ExploreCourseScreen
+import com.example.khoitriso.ui.learning.AssignmentScreen
 import com.example.khoitriso.ui.learning.LearningBookScreen
 import com.example.khoitriso.ui.learning.LearningCourseScreen
 import com.example.khoitriso.ui.mypurchase.MyPurchaseScreen
@@ -82,29 +82,38 @@ fun NavHostContainer(navController: NavHostController) {
             LoginScreen(navController) // navigate("home") sẽ tìm được
         }
         composable(NavRoute.HOME) {
+            val lazyListState = rememberLazyListState() // Tạo state ở đây để truyền vào cả 2
 
-            HeaderNavScaffold(lazyListState, navController) {
-                HomeScreen(lazyListState, navController = navController)
+            HeaderNavScaffold(
+                lazyListState = lazyListState,
+                navController = navController
+            ) { paddingValues ->
+                // Nội dung bên trong Scaffold
+                HomeScreen(
+                    lazyListState = lazyListState,
+                    navController = navController,
+                    paddingValues = paddingValues // Truyền padding xuống
+                )
             }
         }
         composable(NavRoute.SEARCH) {
             HeaderNavScaffold(lazyListState, navController) {
-                SearchScreen(navController)
+                SearchScreen(navController,it)
             }
         }
         composable(NavRoute.PROFILE) {
 
-            HeaderNavScaffold(lazyListState, navController) {
+            HeaderNavScaffold(lazyListState, navController) { paddingValue->
                 ProfileScreen(
-                    lazyListState,
-                    navController
-                )
+                    lazyListState = lazyListState,
+                    paddingValues = paddingValue,
+                    navController = navController)
             }
         }
-        composable(NavRoute.LEARNING_PATH) {
+        composable(NavRoute.MY_PURCHASES) {
 
             HeaderNavScaffold(lazyListState, navController) {
-                MyPurchaseScreen(navController)
+                MyPurchaseScreen(navController,it)
             }
         }
         composable(
@@ -138,7 +147,13 @@ fun NavHostContainer(navController: NavHostController) {
             )
         }
         composable(NavRoute.FORUM) {
-            ForumListScreen(navController)
+            HeaderNavScaffold(
+                lazyListState,
+                navController
+            ) {
+                ForumListScreen(navController,it)
+            }
+
         }
         composable(
             NavRoute.ForumDetailWithArgs,
@@ -159,6 +174,9 @@ fun NavHostContainer(navController: NavHostController) {
         composable(NavRoute.EXPLORE_BOOK) {
             ExploreBookScreen(navController)
         }
+        composable(NavRoute.EXPLORE_COURSE) {
+            ExploreCourseScreen(navController)
+        }
 
         // Cart
         composable(NavRoute.CART) {
@@ -170,15 +188,13 @@ fun NavHostContainer(navController: NavHostController) {
             CheckoutScreen(navController)
         }
 
-
-        // My Purchases
         composable(
-            route = NavRoute.MyPurchasesWithTab,
-            arguments = listOf(navArgument("tab") { type = NavType.StringType; defaultValue = "courses" })
+            NavRoute.AssignmentWithArgs,
+            arguments = listOf(navArgument("assignmentId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val tab = backStackEntry.arguments?.getString("tab") ?: "courses"
-            MyPurchaseScreen(navController = navController)
+            AssignmentScreen(navController)
         }
+
 
         // Payment Result
         composable(
@@ -196,71 +212,79 @@ fun NavHostContainer(navController: NavHostController) {
 }
 
 
-@SuppressLint("FrequentlyChangingValue")
 @Composable
 fun HeaderNavScaffold(
     lazyListState: LazyListState,
     navController: NavHostController,
-    content: @Composable () -> Unit,
+    content: @Composable (PaddingValues) -> Unit= {}, // Sửa: Truyền PaddingValues xuống
 ) {
-    var previousScroll by remember { mutableStateOf(0) }
+
+
+    var previousScroll by remember { mutableIntStateOf(0) } // Dùng mutableIntStateOf cho primitive
     var headerVisible by remember { mutableStateOf(true) }
 
     val headerHeight = Constants.HEADER_HEIGHT.dp
     val navHeight = Constants.NAV_HEIGHT.dp
     val scrollThreshold = Constants.THRESHOLD_SCROLL
 
-    // detect scroll
-    LaunchedEffect(
-        lazyListState.firstVisibleItemIndex,
-        lazyListState.firstVisibleItemScrollOffset
-    ) {
-        val currentScroll =
-            lazyListState.firstVisibleItemIndex * 10000 +
-                    lazyListState.firstVisibleItemScrollOffset
-        val diff = currentScroll - previousScroll
-        headerVisible = when {
-            diff > scrollThreshold -> false
-            diff < -scrollThreshold -> true
-            else -> headerVisible
-        }
-        previousScroll = currentScroll
+    // Logic detect scroll giữ nguyên
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex to lazyListState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                val currentScroll = index * 10000 + offset
+                val diff = currentScroll - previousScroll
+
+                // Chỉ đổi trạng thái nếu scroll đủ nhiều để tránh nháy
+                if (Math.abs(diff) > scrollThreshold) {
+                    headerVisible = diff < 0 // Lướt lên (diff âm) -> Hiện, Lướt xuống -> Ẩn
+                }
+                previousScroll = currentScroll
+            }
     }
 
+    // Animation cho Header Y offset
     val headerOffset by animateDpAsState(
         targetValue = if (headerVisible) 0.dp else -headerHeight,
-        animationSpec = tween(300)
+        animationSpec = tween(300), label = "headerOffset"
+    )
+
+    val topPadding by animateDpAsState(
+        targetValue = if (headerVisible) headerHeight else 0.dp,
+        animationSpec = tween(300), label = "topPadding"
     )
 
     Box(Modifier.fillMaxSize()) {
-        // Content
+        // 1. Content
+        // Truyền padding vào để screen con tự xử lý (quan trọng cho LazyColumn)
         Box(
-            Modifier
-                .fillMaxSize()
-                .padding(
-                    top = if (headerVisible) headerHeight else 0.dp,
-                    bottom = navHeight
-                )
+            modifier = Modifier.fillMaxSize()
         ) {
-            content()
+            content(
+                PaddingValues(
+                    top = topPadding, // Padding top động
+                    bottom = navHeight // Padding bottom cố định cho Nav
+                )
+            )
         }
 
-        // Header
+        // 2. Header (Global) - Luôn nằm trên cùng
         HeaderScreen(
-            avatarUrl = R.drawable.ic_launcher_background,
-            displayName = "KhoiTriSo",
+            displayName = "KhoiTriSo", // Tên App ngắn gọn
             navController = navController,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(headerHeight)
                 .offset(y = headerOffset)
+                .background(MaterialTheme.colorScheme.surface) // Cần background để che content khi lướt qua
+                .zIndex(1f) // Đảm bảo luôn nổi lên trên
         )
 
-        // Nav bar ở bottom
+        // 3. Nav bar (Bottom)
         Box(
             Modifier
                 .align(Alignment.BottomCenter)
                 .height(navHeight)
+                .zIndex(1f)
         ) {
             MyNavigationBar(navController)
         }
@@ -270,7 +294,6 @@ fun HeaderNavScaffold(
 
 @Composable
 fun HeaderScreen(
-    avatarUrl: Int,
     displayName: String,
     navController: NavHostController,
     modifier: Modifier = Modifier,
@@ -284,14 +307,7 @@ fun HeaderScreen(
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar
-        Image(
-            painter = painterResource(id = avatarUrl),
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
+
 
         Spacer(modifier = Modifier.width(12.dp))
 

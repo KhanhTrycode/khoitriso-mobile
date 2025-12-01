@@ -21,6 +21,7 @@ class LearningCourseViewModel @Inject constructor(
     private val courseUsecase: CourseUsecase,
     private val userManager: UserManager,
     private val savedStateHandle: SavedStateHandle,
+
 ) : BaseViewModel() {
 
     private val _courseDetail = MutableStateFlow<UiState<CourseDetail>>(UiState.Loading)
@@ -31,6 +32,7 @@ class LearningCourseViewModel @Inject constructor(
 
     private val _currentLesson = MutableStateFlow<UiState<Lesson>>(UiState.Loading)
     val currentLesson: StateFlow<UiState<Lesson>> = _currentLesson
+
 
     init {
         getCourseDetail()
@@ -73,6 +75,10 @@ class LearningCourseViewModel @Inject constructor(
 
     fun releasePlayer(){
         releasePlayerInParent(_playerState)
+
+    }
+
+    fun ListAssignment(){
 
     }
 

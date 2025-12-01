@@ -12,7 +12,6 @@ import kotlin.getOrElse
 data class BookUsecase (
     val getBook: GetBook,
     val getBookById: GetBookById,
-    val searckBook: SearchBook,
     val getMyBook: GetMyBook,
     val getChapterOfBook: GetChapterOfBook,
 )
@@ -32,7 +31,7 @@ class GetMyBook(private val repo: BookRepository) {
 
 
 class GetBook(private val repo: BookRepository) {
-    suspend operator fun invoke(getPagingRequest: PagingRequest? = null): Result<MyResponese<Book>> {
+    suspend operator fun invoke(getPagingRequest: PagingRequest = PagingRequest()): Result<MyResponese<Book>> {
         return repo.getBooks(getPagingRequest)
     }
 
@@ -41,16 +40,6 @@ class GetBook(private val repo: BookRepository) {
 class GetBookById(private val repo: BookRepository) {
     suspend operator fun invoke(id: Int): Result<BookDetail> {
         return repo.getBookById(id)
-    }
-}
-
-
-class SearchBook(private val repo: BookRepository) {
-    suspend operator fun invoke(query: String): List<Book> {
-        val result = repo.searchBook(query)
-        return result.getOrElse{
-            return emptyList()
-        }
     }
 }
 

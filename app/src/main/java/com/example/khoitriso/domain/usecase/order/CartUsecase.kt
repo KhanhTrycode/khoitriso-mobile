@@ -24,7 +24,7 @@ class AddToCart(private val cartRepository: CartRepository) {
 }
 
 class RemoveFromCart(private val cartRepository: CartRepository) {
-    suspend operator fun invoke(cartId:Int): Result<Boolean>{
+    suspend operator fun invoke(cartId: Int): Result<Boolean>{
         return cartRepository.removeFromCart(cartId)
     }
 }

@@ -2,6 +2,7 @@ package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
+import com.example.khoitriso.data.dto.AssignmentDto
 import com.example.khoitriso.data.dto.CourseDetailDto
 import com.example.khoitriso.data.dto.CourseDto
 import com.example.khoitriso.data.dto.LessonDto
@@ -36,5 +37,8 @@ interface CourseApi {
         @Query("pageSize") pageSize: Int = 100
     ): Response<ApiResponeData<MyCourseDto>>
 
-
+    @GET("assignments/{id}")
+    suspend fun getAssignmentById(
+        @Path("id") id: Int
+    ): Response<ApiRespone<AssignmentDto>>
 }

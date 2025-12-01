@@ -20,23 +20,45 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = Color.Black
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = Color.Black,
-    onBackground = Color.White
+private val LightColorScheme = lightColorScheme (
+    primary = Color(0xFF3B82F6),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFE0F2FE),
+    onPrimaryContainer = Color(0xFF082F49),
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = Color(0xFF8B5CF6),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFEDE9FE),
+    onSecondaryContainer = Color(0xFF2E1065),
+
+    tertiary = Color(0xFF10B981),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFD1FAE5),
+    onTertiaryContainer = Color(0xFF064E3B),
+
+    background = Color(0xFFF8FAFC),
+    onBackground = Color(0xFF1F2937),
+
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1F2937),
+    surfaceVariant = Color(0xFFF3F4F6),
+    onSurfaceVariant = Color(0xFF6B7280),
+
+    outline = Color(0xFFE5E7EB),
+    outlineVariant = Color(0xFFD1D5DB),
+
+    error = Color(0xFFEF4444),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFEE2E2),
+    onErrorContainer = Color(0xFF7F1D1D),
+
+    inverseSurface = Color(0xFF1F2937),
+    inverseOnSurface = Color(0xFFF9FAFB),
+    inversePrimary = Color(0xFF93C5FD),
+
+    scrim = Color(0x66000000)
 )
+
 
 @Composable
 fun KhoiTriSoTheme(
@@ -56,7 +78,7 @@ fun KhoiTriSoTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = LightColorScheme,
         typography = MyTypography,
         content = content
     )

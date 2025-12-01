@@ -44,27 +44,31 @@ import com.example.khoitriso.utils.UiState
 @Composable
 fun ForumListScreen(
     navController: NavController,
+    paddingValues: PaddingValues,
     viewModel: ForumListViewModel = hiltViewModel(),
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Diễn đàn học tập") }, navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-            }
-        }, actions = {
-            IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
-                Icon(Icons.Default.Bookmarks, "Bookmarks")
-            }
-        })
-    }, floatingActionButton = {
-        FloatingActionButton(
-            onClick = { navController.navigate("forum/ask") },
-            containerColor = MaterialTheme.colorScheme.primary
-        ) {
-            Icon(Icons.Default.Add, "Đặt câu hỏi")
-        }
-    }) { paddingValues ->
+    Scaffold(
+        modifier = Modifier.padding(paddingValues)
+//        topBar = {
+//        TopAppBar(title = { Text("Diễn đàn học tập") }, navigationIcon = {
+//            IconButton(onClick = { navController.popBackStack() }) {
+//                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+//            }
+//        }, actions = {
+//            IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
+//                Icon(Icons.Default.Bookmarks, "Bookmarks")
+//            }
+//        })
+//    }, floatingActionButton = {
+//        FloatingActionButton(
+//            onClick = { navController.navigate("forum/ask") },
+//            containerColor = MaterialTheme.colorScheme.primary
+//        ) {
+//            Icon(Icons.Default.Add, "Đặt câu hỏi")
+//        }
+//    }
+    ) { paddingValues ->
         when (currentUser) {
             is UiState.Error -> {
 

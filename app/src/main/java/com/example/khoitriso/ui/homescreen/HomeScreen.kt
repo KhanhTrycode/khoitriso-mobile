@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,11 +24,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -42,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,8 +57,10 @@ import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.Instructor
+import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.ui.behavior.RowBookCard
 import com.example.khoitriso.ui.behavior.RowCourseCard
+import com.example.khoitriso.ui.behavior.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 
@@ -64,55 +71,251 @@ fun HomeScreen(
     lazyListState: LazyListState,
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
+    paddingValues: PaddingValues,
 ) {
     val recommendedBooks by viewModel.recommendedBooks.collectAsState()
     val trendingCourses by viewModel.trendingCourses.collectAsState()
     val categoriesState by viewModel.categories.collectAsState()
     val tryCourse by viewModel.tryCourses.collectAsState()
-
+    val myCourse by viewModel.myCourses.collectAsState()
+    val user by viewModel.user.collectAsState()
     LazyColumn(
         state = lazyListState,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(paddingValues),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         item {
-            FreeCourse(tryCourse, navController)
+            HomeHeaderSection(
+                username = user?.fullName ?: "Unknown",
+            )
         }
 
-        item {
-            SectionTitle("Recommended Book", "See all", onClickAction = {
-                navController.navigate(NavRoute.EXPLORE_BOOK)
-            })
+        if (tryCourse is UiState.Success) {
+            item {
+                PromoBanner(
+                    course = (tryCourse as UiState.Success).data,
+                    onClick = { }
+                )
+            }
         }
+
+        // 3. Continue Learning (NEW)
         item {
+            ContinueLearningSection((myCourse as UiState.Success).data, onCardClick = {})
+        }
+
+        // 4. Categories (Chip style hiện đại hơn)
+        item {
+            SectionTitle("Danh mục", "", modifier = Modifier.padding(horizontal = 4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            CategoryList(categoriesState)
+        }
+
+        // 5. Recommended Books
+        item {
+            SectionTitle("Sách gợi ý cho bạn", "Xem thêm", onClickAction = {
+                navController.navigate(NavRoute.EXPLORE_BOOK)
+            }, modifier = Modifier.padding(horizontal = 4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             RecommendedBook(recommendedBooks, navController)
         }
 
+        // 6. Trending Courses
         item {
-            SectionTitle("Trending Courses", "View all", onClickAction = {
-                navController.navigate(NavRoute.FORUM)
-            })
-        }
-        item {
+            SectionTitle("Khóa học nổi bật", "Tất cả", onClickAction = {
+                navController.navigate(NavRoute.EXPLORE_COURSE)
+            }, modifier = Modifier.padding(horizontal = 4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             TrendingCourse(trendingCourses, navController)
-        }
-
-        item {
-            SectionTitle("Categories", "")
-        }
-        item {
-            CategoryList(categoriesState)
         }
     }
 }
 
 @Composable
-fun SectionTitle(title: String, actionText: String, onClickAction: () -> Unit = {}, modifier:
-Modifier
-= Modifier) {
+fun PromoBanner(course: Course, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp) // Gọn hơn
+            .padding(horizontal = 20.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(R.drawable.course_test),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            // Lớp phủ tối màu gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(Color.Black.copy(alpha = 0.8f), Color.Transparent)
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(24.dp)
+                    .fillMaxWidth(0.7f) // Chỉ chiếm 70% chiều ngang
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        "HOT DEAL",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Giảm 50% cho Combo Sách IT & Khóa học Android",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ContinueLearningSection(
+    courses: List<MyCourse>,
+    onCardClick: (String) -> Unit,
+) {
+    if (courses.isNotEmpty()) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            PaddingValues(horizontal = 20.dp).let {
+                Text(
+                    text = "Tiếp tục học",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(courses) { course ->
+                    ContinueLearningCard(course = course)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ContinueLearningCard(course: MyCourse) {
+    val progress = course.progressPercentage
+
+    Card(
+        modifier = Modifier
+            .width(260.dp)
+            .shadow(2.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            SafeImage(
+                url = course.course.thumbnail,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = course.course.title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    LinearProgressIndicator(
+                        progress = (progress / 100f).coerceIn(0f, 1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Text(
+                        text = "${progress.toInt()}%",
+                        modifier = Modifier.padding(start = 12.dp),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun HomeHeaderSection(
+    username: String,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        // Greeting Text
+        Text(
+            text = "Chào buổi sáng, $username! ☀️",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        )
+        Text(
+            text = "Bạn muốn nâng cấp kỹ năng gì hôm nay?",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+        )
+
+    }
+}
+
+@Composable
+fun SectionTitle(
+    title: String, actionText: String, onClickAction: () -> Unit = {},
+    modifier:
+    Modifier
+    = Modifier,
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -120,9 +323,9 @@ Modifier
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
         )
 
@@ -131,11 +334,16 @@ Modifier
                 text = actionText,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                ),
-                modifier = Modifier.align(Alignment.CenterEnd).clickable{
-                    onClickAction()
-                }
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    textDecoration = TextDecoration.Underline,
+
+                    ),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clickable {
+                        onClickAction()
+                    }
             )
         }
     }
@@ -412,8 +620,7 @@ fun CategoryCard(name: String) {
             .shadow(
                 elevation = 2.dp,
                 shape = RoundedCornerShape(20.dp),
-            )
-        ,
+            ),
         border = BorderStroke(
             width = 1.dp,
             color = MaterialTheme.colorScheme.onBackground
@@ -425,7 +632,7 @@ fun CategoryCard(name: String) {
     ) {
         Text(
             text = name,
-            style = MaterialTheme.typography.bodyLarge.copy(
+            style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onBackground
             ),

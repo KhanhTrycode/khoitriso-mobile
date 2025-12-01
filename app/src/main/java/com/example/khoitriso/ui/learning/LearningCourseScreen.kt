@@ -5,9 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,13 +22,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.khoitriso.domain.models.Assignment
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.ui.behavior.ErrorDisplay
 import com.example.khoitriso.ui.behavior.Media3AndroidView
 import com.example.khoitriso.ui.behavior.MyLoadingProcessing
+import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 
 // --- MÀN HÌNH CHÍNH (SCAFFOLD) ---
@@ -52,6 +57,7 @@ fun LearningCourseScreen(
                 title = {
                     Text(
                         "Nội dung khóa học",
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -65,6 +71,7 @@ fun LearningCourseScreen(
         }
     ) { paddingValues ->
         ContentScreen(
+            navController = navController,
             viewModel = viewModel,
             modifier = Modifier.padding(paddingValues)
         )
@@ -75,6 +82,7 @@ fun LearningCourseScreen(
 
 @Composable
 fun ContentScreen(
+    navController: NavController,
     viewModel: LearningCourseViewModel,
     modifier: Modifier = Modifier,
 ) {
@@ -120,6 +128,9 @@ fun ContentScreen(
                             currentLesson = lesson.data,
                             onLessonClick = { lesson ->
                                 viewModel.onLessonClicked(lesson, context)
+                            },
+                            onAssignmentClick = { assignment->
+                                navController.navigate(NavRoute.NavAssignment(assignment.id))
                             }
                         )
                     }
@@ -161,9 +172,10 @@ fun CourseContentTabs(
     course: CourseDetail,
     currentLesson: Lesson?,
     onLessonClick: (Lesson) -> Unit,
+    onAssignmentClick: (Assignment) -> Unit
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Bài học", "Ghi chú", "Bài tập", "Tài liệu")
+    val tabs = listOf("Tổng quan", "Bài tập", "Tài liệu", "Hỏi đáp")
 
     Column {
         TabRow(selectedTabIndex = selectedTabIndex) {
@@ -171,7 +183,7 @@ fun CourseContentTabs(
                 Tab(
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
-                    text = { Text(text = title) }
+                    text = { Text(text = title, fontSize = 10.sp) }
                 )
             }
         }
@@ -184,10 +196,118 @@ fun CourseContentTabs(
                 onLessonClick = onLessonClick
             )
 
-            1 -> PlaceholderContent(text = "Tính năng Ghi chú sắp ra mắt")
+            1 -> AssignmentList(
+                assignments = currentLesson?.assignments?: emptyList(),
+                currentLesson = currentLesson,
+                onAssignmentClick = onAssignmentClick
+            )
             2 -> PlaceholderContent(text = "Tính năng Bài tập sắp ra mắt")
             3 -> PlaceholderContent(text = "Tính năng Tài liệu sắp ra mắt")
         }
+    }
+}
+
+@Composable
+fun AssignmentList(
+    assignments: List<Assignment>,
+    currentLesson: Lesson?,
+    onAssignmentClick: (Assignment) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        itemsIndexed(assignments) { index, assignment ->
+            AssignmentItem(
+                assignment = assignment,
+                index = index + 1,
+                isPlaying = assignment.id == currentLesson?.id,
+                onClick = { onAssignmentClick(assignment) }
+            )
+            Divider()
+        }
+    }
+}
+@Composable
+fun AssignmentItem(assignment: Assignment, index: Int, isPlaying: Boolean, onClick: () -> Unit) {
+    // Sử dụng Card để có shadow và bo góc
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Phần 1: Title và Description
+            Column {
+                Text(
+                    text = assignment.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (assignment.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = assignment.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Divider()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Điểm số
+                InfoTag(label = "Điểm tối đa", value = "${assignment.maxScore}")
+                InfoTag(label = "Điểm đạt", value = "${assignment.passingScore}")
+
+                // Thời gian
+                InfoTag(label = "Thời gian", value = "${assignment.timeLimit} phút")
+            }
+            InfoTag(label = "Số lần làm bài", value = "${assignment.maxAttempts} lần")
+
+
+            // Phần 3: Nút Làm bài
+            Button(
+                onClick = onClick,
+                modifier = Modifier.align(Alignment.End),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Làm bài ngay")
+            }
+        }
+    }
+}
+
+/**
+ * Composable con để hiển thị một tag thông tin (như điểm, thời gian).
+ */
+@Composable
+private fun InfoTag(label: String, value: String) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.khoitriso.domain.models
 
+
 data class Assignment(
     val description: String,
     val dueDate: String,

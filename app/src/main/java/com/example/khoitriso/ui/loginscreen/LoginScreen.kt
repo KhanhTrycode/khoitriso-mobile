@@ -42,7 +42,7 @@ data class IntroSlide(
 )
 
 val slides = listOf(
-    IntroSlide(R.string.slider_1, R.string.slider_1_desc, R.drawable.ic_launcher_background),
+    IntroSlide(R.string.slider_1, R.string.slider_1_desc, R.drawable.course_test),
     IntroSlide(R.string.slider_2, R.string.slider_2_desc, R.drawable.ic_launcher_background),
     IntroSlide(R.string.slider_3, R.string.slider_3_desc, R.drawable.ic_launcher_background),
     IntroSlide(R.string.slider_4, R.string.slider_4_desc, R.drawable.ic_launcher_background)
@@ -182,8 +182,8 @@ fun LoginArea(
             }
         )
         SignInButton(
-            txtButton = " google",
-            iconVector = R.drawable.icon_google,
+            txtButton = "Facebook",
+            iconVector = R.drawable.icon_fb,
             onClick = {
                 navController.navigate(NavRoute.HOME) {
                     // Đảm bảo người dùng không thể quay lại màn hình đăng nhập

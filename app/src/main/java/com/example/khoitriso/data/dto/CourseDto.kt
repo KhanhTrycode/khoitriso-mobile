@@ -55,9 +55,6 @@ data class CourseDetailDto(
     val UpdatedAt: String?
 )
 
-/**
- * Chuyển đổi từ CourseDto (item danh sách) sang Course (model domain).
- */
 fun CourseDto.toDomain() = Course(
     category = Category.toDomain(),
     createdAt = CreatedAt?: "",
