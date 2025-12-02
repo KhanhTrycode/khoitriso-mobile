@@ -46,21 +46,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.khoitriso.R
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.Instructor
 import com.example.khoitriso.domain.models.MyCourse
-import com.example.khoitriso.ui.behavior.RowBookCard
-import com.example.khoitriso.ui.behavior.RowCourseCard
-import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.ui.common.RowBookCard
+import com.example.khoitriso.ui.common.RowCourseCard
+import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
@@ -91,34 +91,41 @@ fun HomeScreen(
     ) {
         item {
             HomeHeaderSection(
-                username = user?.fullName ?: "Unknown",
+                username = user?.fullName ?: "",
             )
         }
 
-        if (tryCourse is UiState.Success) {
-            item {
-                PromoBanner(
-                    course = (tryCourse as UiState.Success).data,
-                    onClick = { }
-                )
+        when (val state = tryCourse) {
+            is UiState.Success -> {
+                item {
+                    PromoBanner(
+                        course = state.data,
+                        onClick = { }
+                    )
+                }
             }
+            else -> {}
         }
 
-        // 3. Continue Learning (NEW)
         item {
-            ContinueLearningSection((myCourse as UiState.Success).data, onCardClick = {})
+            when (val state = myCourse) {
+                is UiState.Success -> {
+                    ContinueLearningSection(state.data, onCardClick = {})
+                }
+                else -> {}
+            }
         }
 
         // 4. Categories (Chip style hiện đại hơn)
         item {
-            SectionTitle("Danh mục", "", modifier = Modifier.padding(horizontal = 4.dp))
+            SectionTitle(stringResource(R.string.categories), "", modifier = Modifier.padding(horizontal = 4.dp))
             Spacer(modifier = Modifier.height(8.dp))
             CategoryList(categoriesState)
         }
 
         // 5. Recommended Books
         item {
-            SectionTitle("Sách gợi ý cho bạn", "Xem thêm", onClickAction = {
+            SectionTitle(stringResource(R.string.recommended_books), stringResource(R.string.see_more), onClickAction = {
                 navController.navigate(NavRoute.NavSearchTab(SearchType.BOOK))
             }, modifier = Modifier.padding(horizontal = 4.dp))
             Spacer(modifier = Modifier.height(8.dp))
@@ -127,7 +134,7 @@ fun HomeScreen(
 
         // 6. Trending Courses
         item {
-            SectionTitle("Khóa học nổi bật", "Xem thêm", onClickAction = {
+            SectionTitle(stringResource(R.string.trending_courses), stringResource(R.string.see_more), onClickAction = {
                 navController.navigate(NavRoute.NavSearchTab(SearchType.COURSE))
             }, modifier = Modifier.padding(horizontal = 4.dp))
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,14 +184,14 @@ fun PromoBanner(course: Course, onClick: () -> Unit) {
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        "HOT DEAL",
+                        stringResource(R.string.hot_deal),
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Giảm 50% cho Combo Sách IT & Khóa học Android",
+                    text = stringResource(R.string.promo_banner_text),
                     style = MaterialTheme.typography.titleLarge.copy(
                         color = Color.White,
                         fontWeight = FontWeight.Bold
@@ -205,7 +212,7 @@ fun ContinueLearningSection(
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
             PaddingValues(horizontal = 20.dp).let {
                 Text(
-                    text = "Tiếp tục học",
+                    text = stringResource(R.string.continue_learning),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
@@ -293,14 +300,14 @@ fun HomeHeaderSection(
     ) {
         // Greeting Text
         Text(
-            text = "Chào buổi sáng, $username! ☀️",
+            text = stringResource(R.string.good_morning, username),
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
         )
         Text(
-            text = "Bạn muốn nâng cấp kỹ năng gì hôm nay?",
+            text = stringResource(R.string.what_skill_today),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             ),
@@ -479,7 +486,7 @@ fun ContentThumbnail(
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(
-                text = "MIỄN PHÍ",
+                text = stringResource(R.string.free_badge),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -519,7 +526,7 @@ fun FreeCourseInstructor(instructor: Instructor, title: String, modifier: Modifi
             )
         )
         Text(
-            text = "By ${instructor.name}",
+            text = stringResource(R.string.by_instructor, instructor.name),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -604,7 +611,7 @@ fun FreeCourse(coursesState: UiState<Course>, navController: NavController) {
         is UiState.Success -> {
             FreeCourseCard(
                 thumbnailUrl = R.drawable.course_test,
-                destination = "Deal hot - Khám phá ngay hôm nay!",
+                destination = stringResource(R.string.try_course_string),
                 course = coursesState.data,
                 navController = navController
             )

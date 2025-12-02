@@ -1,9 +1,15 @@
 package com.example.khoitriso.ui.profilescreen
 
 import androidx.lifecycle.viewModelScope
+import com.example.khoitriso.data.local.AppLanguage
+import com.example.khoitriso.data.local.AppTheme
+import com.example.khoitriso.data.local.LanguageManager
+import com.example.khoitriso.data.local.ThemeManager
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.User
-import com.example.khoitriso.domain.repository.UserRepository
+import com.example.khoitriso.domain.models.WishlistItem
+import com.example.khoitriso.domain.usecase.user.UserUsecase
+import com.example.khoitriso.domain.usecase.wishlist.WishlistUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
@@ -18,7 +24,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userUsecase: UserUsecase,
+    private val wishlistUsecase: WishlistUsecase,
+    private val languageManager: LanguageManager,
+    private val themeManager: ThemeManager
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -32,6 +41,10 @@ class ProfileViewModel @Inject constructor(
     private val _orders = MutableStateFlow<UiState<List<Order>>>(UiState.Loading)
     val orders: StateFlow<UiState<List<Order>>> = _orders
 
+    // State cho wishlist
+    private val _wishlist = MutableStateFlow<UiState<List<WishlistItem>>>(UiState.Loading)
+    val wishlist: StateFlow<UiState<List<WishlistItem>>> = _wishlist
+
     init {
         loadUserInfo()
     }
@@ -39,7 +52,7 @@ class ProfileViewModel @Inject constructor(
     fun loadUserInfo() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            userRepository.getCurrentUser().fold(
+            userUsecase.getCurrentUser().fold(
                 onSuccess = { user ->
                     _uiState.value = _uiState.value.copy(
                         user = user,
@@ -51,7 +64,7 @@ class ProfileViewModel @Inject constructor(
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = "Không thể tải thông tin. Vui lòng thử lại sau."
+                        error = "Không thể tải thông tin. Vui lòng thử lại sau." // TODO: Use stringResource
                     )
                 }
             )
@@ -61,7 +74,7 @@ class ProfileViewModel @Inject constructor(
     fun updateProfile(fullName: String, email: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, error = null)
-            userRepository.updateProfile(fullName, email).fold(
+            userUsecase.updateProfile(fullName, email).fold(
                 onSuccess = { user ->
                     _uiState.value = _uiState.value.copy(
                         user = user,
@@ -84,7 +97,7 @@ class ProfileViewModel @Inject constructor(
     fun uploadAvatar(file: MultipartBody.Part) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true, error = null)
-            userRepository.uploadAvatar(file).fold(
+            userUsecase.uploadAvatar(file).fold(
                 onSuccess = { user ->
                     _uiState.value = _uiState.value.copy(
                         user = user,
@@ -149,6 +162,67 @@ class ProfileViewModel @Inject constructor(
             delay(1000)
             // Lấy từ MockData
             _orders.value = UiState.Success(MockData.mockOrders.sortedByDescending { it.createdAt })
+        }
+    }
+
+    // Language functions
+    fun getCurrentLanguage(): AppLanguage {
+        return languageManager.getCurrentLanguage()
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        languageManager.setLanguage(language)
+    }
+
+    // Theme functions
+    fun getCurrentTheme(): AppTheme {
+        return themeManager.getCurrentTheme()
+    }
+
+    fun setTheme(theme: AppTheme) {
+        themeManager.setTheme(theme)
+    }
+
+    // Wishlist functions
+    fun loadWishlist() {
+        viewModelScope.launch {
+            _wishlist.value = UiState.Loading
+            delay(500) // Simulate API call
+
+            if (_isTestMode) {
+                _wishlist.value = UiState.Success(MockData.mockWishlistItems)
+            } else {
+                wishlistUsecase.getWishlist().fold(
+                    onSuccess = { response ->
+                        _wishlist.value = UiState.Success(response.items)
+                    },
+                    onFailure = { exception ->
+                        _wishlist.value = UiState.Error(exception.message ?: "Không thể tải wishlist")
+                    }
+                )
+            }
+        }
+    }
+
+    fun removeFromWishlist(wishlistId: Int) {
+        viewModelScope.launch {
+            if (_isTestMode) {
+                // Mock: Remove from list
+                val currentItems = (_wishlist.value as? UiState.Success)?.data ?: emptyList()
+                val updatedItems = currentItems.filter { it.id != wishlistId }
+                _wishlist.value = UiState.Success(updatedItems)
+            } else {
+                wishlistUsecase.removeFromWishlist(wishlistId).fold(
+                    onSuccess = {
+                        // Reload wishlist
+                        loadWishlist()
+                    },
+                    onFailure = { exception ->
+                        // Show error
+                        _wishlist.value = UiState.Error(exception.message ?: "Không thể xóa khỏi wishlist")
+                    }
+                )
+            }
         }
     }
 }

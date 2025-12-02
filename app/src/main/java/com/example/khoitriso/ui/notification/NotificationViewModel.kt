@@ -18,7 +18,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class NotificationViewModel @Inject constructor() : ViewModel() {
+class NotificationViewModel @Inject constructor(
+
+) : ViewModel() {
 
     // --- STATE ---
     // Giả lập Database local bằng một MutableStateFlow

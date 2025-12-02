@@ -2,11 +2,13 @@ package com.example.khoitriso.di
 
 import android.content.Context
 import com.example.khoitriso.data.api.*
+import com.example.khoitriso.data.local.NetworkMonitor
 import com.example.khoitriso.data.local.TokenAuthenticator
 import com.example.khoitriso.data.local.TokenManager
 import com.example.khoitriso.data.signalr.SignalRService
 import com.google.gson.Gson
 import com.example.khoitriso.utils.Constants
+import com.example.khoitriso.utils.debug
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +16,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Named
 import jakarta.inject.Singleton
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -23,6 +24,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    // ----- NETWORK MONITOR -----
+    @Provides
+    @Singleton
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor =
+        NetworkMonitor(context)
 
     // ----- TOKEN MANAGER -----
     @Provides
@@ -55,8 +62,9 @@ object NetworkModule {
             })
             // Gắn token vào header
             .addInterceptor { chain ->
-                val token = runBlocking { tokenManager.getAccessToken() }
+                val token = tokenManager.getAccessToken()
                 val newReq = token?.let {
+                    debug(it,"Call API")
                     chain.request().newBuilder()
                         .header("Authorization", "Bearer $it")
                         .build()

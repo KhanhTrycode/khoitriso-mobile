@@ -13,6 +13,7 @@ import com.example.khoitriso.domain.usecase.order.OrderUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.ItemBuyNow
+import com.example.khoitriso.utils.OrderStatus
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -63,21 +64,39 @@ class CheckoutViewModel @Inject constructor(
     fun loadSingleItemForCheckout(item: ItemBuyNow) {
         viewModelScope.launch {
             _cart.value = UiState.Loading
-            val result = CartItem(
-                id = item.itemId,
-                itemId = item.itemId,
-                itemType = item.itemType,
-                price = item.price,
-                coverImage = item.coverImage,
-                title = item.title
-            )
-            _cart.value = UiState.Success(
-                Carts(
-                    listOf(result),
-                    totalItems = 1,
-                    totalPrice = result.price
+            
+            // Với BuyNow, cần thêm item vào cart trước để lấy cartItemId thực sự
+            if (_isTestMode) {
+                // Test mode: Tạo mock cartItem với id giả
+                val mockCartItemId = (1000..9999).random()
+                val result = CartItem(
+                    id = mockCartItemId,
+                    itemId = item.itemId,
+                    itemType = item.itemType,
+                    price = item.price,
+                    coverImage = item.coverImage,
+                    title = item.title
                 )
-            )
+                _cart.value = UiState.Success(
+                    Carts(
+                        listOf(result),
+                        totalItems = 1,
+                        totalPrice = result.price
+                    )
+                )
+            } else {
+                // Real mode: Thêm vào cart trước, sau đó load cart để lấy cartItemId thực sự
+                val addResult = cartUsecase.addToCart(item.itemId, item.itemType)
+                addResult.fold(
+                    onSuccess = {
+                        // Load lại cart để lấy cartItemId thực sự
+                        loadCart()
+                    },
+                    onFailure = { exception ->
+                        _cart.value = UiState.Error(exception.message ?: "Không thể thêm vào giỏ hàng")
+                    }
+                )
+            }
         }
     }
 
@@ -85,7 +104,7 @@ class CheckoutViewModel @Inject constructor(
         _checkoutState.update { it.copy(couponCode = code) }
     }
 
-    fun checkout(onPaymentUrlReady: (String) -> Unit) {
+    fun checkout() {
         val currentCartState = _cart.value
         if (currentCartState !is UiState.Success) return
 
@@ -122,8 +141,8 @@ class CheckoutViewModel @Inject constructor(
                 val newOrder = Order(
                     id = (MockData.mockOrders.maxOfOrNull { it.id } ?: 0) + 1, // Tự tăng ID
                     orderCode = mockOrderCode,
-                    status = 2, // Giả sử 2 là Completed
-                    statusName = "Completed", // YÊU CẦU: Trạng thái hoàn thành
+                    status = OrderStatus.Paid.value,
+                    statusName = OrderStatus.Paid.displayName,
                     totalAmount = cartData.totalPrice,
                     finalAmount = finalTotal,
                     discountAmount = discount,
@@ -163,7 +182,6 @@ class CheckoutViewModel @Inject constructor(
                             orderCode = mockOrderCode
                         )
                     }
-                    onPaymentUrlReady(mockUrl)
                 }
                 return@launch
             }
@@ -179,13 +197,20 @@ class CheckoutViewModel @Inject constructor(
             // Step 2: Create Order (REAL API)
             orderUsecase.createOrder(orderRequest).fold(
                 onSuccess = { order ->
+                    // Lưu orderCode ngay sau khi tạo order thành công
+                    _checkoutState.update { it.copy(orderCode = order.orderCode) }
+                    
                     val orderTotal =
                         if (order.totalAmount > 0) order.finalAmount else order.totalAmount
 
                     if (finalTotal <= 0 || orderTotal <= 0) {
-                        processFreeOrder(cartItemIds)
+                        // Đơn hàng miễn phí - đã được tạo với status FREE, chỉ cần navigate
+                        _checkoutState.update {
+                            it.copy(isProcessing = false)
+                        }
                     } else {
-                        createVNPayUrl(order.id, order.orderCode, onPaymentUrlReady)
+                        // Đơn hàng có phí - tạo VNPay URL
+                        createVNPayUrl(order.id, order.orderCode)
                     }
                 },
                 onFailure = { exception ->
@@ -200,25 +225,10 @@ class CheckoutViewModel @Inject constructor(
         }
     }
 
-    private suspend fun processFreeOrder(cartItemIds: List<Int>) {
-        orderUsecase.paymentFreeOrder(cartItemIds).fold(
-            onSuccess = {
-                _checkoutState.update {
-                    it.copy(isProcessing = false, orderCode = it.orderCode)
-                }
-            },
-            onFailure = { exception ->
-                _checkoutState.update {
-                    it.copy(isProcessing = false, error = exception.message)
-                }
-            }
-        )
-    }
 
     private suspend fun createVNPayUrl(
         orderId: Int,
         orderCode: String,
-        onPaymentUrlReady: (String) -> Unit,
     ) {
         val vnpayRequest = VNPayPaymentRequest(
             OrderId = orderId,
@@ -233,11 +243,13 @@ class CheckoutViewModel @Inject constructor(
                         orderCode = orderCode
                     )
                 }
-                onPaymentUrlReady(response.PaymentUrl)
             },
             onFailure = { exception ->
                 _checkoutState.update {
-                    it.copy(isProcessing = false, error = exception.message)
+                    it.copy(
+                        isProcessing = false, 
+                        error = exception.message ?: "Không thể tạo URL thanh toán VNPay"
+                    )
                 }
             }
         )

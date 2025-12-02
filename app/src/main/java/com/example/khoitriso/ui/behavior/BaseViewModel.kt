@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 abstract class BaseViewModel : ViewModel() {
 
     // Nên đặt là isTestMode cho rõ ràng hơn
-    protected val _isTestMode = true // Dùng protected để lớp con có thể truy cập
+    protected val _isTestMode = false // Dùng protected để lớp con có thể truy cập
 
     protected fun loadUser(user: MutableStateFlow<User?>, userManager: UserManager) {
         viewModelScope.launch {

@@ -7,6 +7,7 @@ import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.convertMathMLToLatex
 import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +45,10 @@ class AssignmentViewModel @Inject constructor(
                 courseUsecase.getAssignmentById(assignmentId)
             },
             onSuccess = {
-                _isAnswers.value = it.data.questions.associate { question ->
+                // Convert MathML sang LaTeX sau khi load data
+                val convertedQuestions = it.data.questions.convertMathMLToLatex()
+                _assignment.value = UiState.Success(it.data.copy(questions = convertedQuestions))
+                _isAnswers.value = convertedQuestions.associate { question ->
                     question.id to false
                 }
             }

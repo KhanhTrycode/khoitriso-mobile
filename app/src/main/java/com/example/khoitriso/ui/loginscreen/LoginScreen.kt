@@ -170,7 +170,7 @@ fun LoginArea(
     ) {
 
         Box(Modifier.padding(horizontal = 5.dp)) {
-            Text("Học viên đăng nhập với", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.student_login_with), style = MaterialTheme.typography.titleMedium)
         }
 
         // Button Google Sign-In thực sự

@@ -52,6 +52,13 @@
     <string name="help_center">Trung tâm trợ giúp</string>
     <string name="contact_us">Liên hệ chúng tôi</string>
     <string name="sign_out">Đăng xuất</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="theme">Giao diện</string>
+    <string name="light_theme">Sáng</string>
+    <string name="dark_theme">Tối</string>
+    <string name="system_theme">Theo hệ thống</string>
+    <string name="vietnamese">Tiếng Việt</string>
+    <string name="english">Tiếng Anh</string>
 
     <!-- Cart -->
     <string name="cart_title">Giỏ hàng</string>
@@ -102,7 +109,123 @@
     <string name="learning_path">Lộ trình</string>
 
 
+    <!-- Profile Settings -->
+    <string name="management_utilities">Quản lý &amp; Tiện ích</string>
+    <string name="activate_book">Kích hoạt sách</string>
+    <string name="order_history">Lịch sử đơn hàng</string>
+    <string name="activate_book_title">Kích hoạt sách</string>
+    <string name="activate_book_message">Nhập mã kích hoạt được gửi trong hóa đơn mua hàng để thêm sách vào thư viện:</string>
+    <string name="activation_code">Mã code</string>
+    <string name="activation_code_hint">VD: BOOK-XXXX-XXXX</string>
+    <string name="activate">Kích hoạt</string>
+    <string name="email_cannot_change">Email không thể thay đổi</string>
+    <string name="cannot_load_info">Không thể tải thông tin. Vui lòng thử lại sau.</string>
+    <string name="cannot_update_info">Không thể cập nhật thông tin. Vui lòng thử lại sau.</string>
+    <string name="cannot_upload_avatar">Không thể tải ảnh đại diện. Vui lòng thử lại sau.</string>
+    <string name="please_enter_code">Vui lòng nhập mã kích hoạt</string>
+    <string name="activation_success">Kích hoạt sách thành công! Sách đã được thêm vào thư viện.</string>
+    <string name="invalid_code">Mã kích hoạt không hợp lệ hoặc đã sử dụng.</string>
+
 <!--    Forum List Screen-->
     <string name="solved"> Đã giải
     </string>
+
+    <!-- Common Error & Network -->
+    <string name="error_occurred">Đã xảy ra lỗi!</string>
+    <string name="no_internet_connection">Không có kết nối Internet</string>
+
+    <!-- Learning & Assignment -->
+    <string name="submit_assignment">Nộp bài</string>
+    <string name="previous">Trước</string>
+    <string name="next">Sau</string>
+    <string name="question_number">Câu %1$d</string>
+    <string name="question_type_not_supported">Loại câu hỏi chưa hỗ trợ</string>
+    <string name="enter_answer">Nhập câu trả lời...</string>
+    <string name="no_questions_in_chapter">Chương này chưa có câu hỏi.</string>
+    <string name="start_assignment">Làm bài ngay</string>
+    <string name="time_limit">%1$d phút</string>
+    <string name="question_count">%1$d Câu hỏi</string>
+    <string name="no_table_of_contents">Chưa có thông tin mục lục</string>
+
+    <!-- Forum -->
+    <string name="my_bookmarks">Bookmarks của tôi</string>
+    <string name="votes">votes</string>
+    <string name="answers">answers</string>
+    <string name="views">views</string>
+    <string name="pinned">Ghim</string>
+    <string name="solved_badge">Đã giải quyết</string>
+    <string name="view_question_list">Xem danh sách câu hỏi</string>
+    <string name="no_answers">Chưa có câu trả lời</string>
+    <string name="bullet">•</string>
+
+    <!-- Explore -->
+    <string name="explore">Khám phá</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">Tìm kiếm sách, khóa học...</string>
+
+    <!-- Learning Course -->
+    <string name="download_material_title">Tải xuống tài liệu?</string>
+    <string name="download_file_question">Bạn có muốn tải xuống file \"%1$s\" không?</string>
+    <string name="download_now">Tải ngay</string>
+    
+    <!-- Forum List -->
+    <string name="forum_title">Diễn đàn học tập</string>
+    <string name="search_questions_placeholder">Tìm kiếm câu hỏi...</string>
+    <string name="filter">Lọc</string>
+    <string name="all">Tất cả</string>
+    <string name="resolved">Đã giải quyết</string>
+    <string name="unresolved">Chưa giải quyết</string>
+    <string name="no_questions_found">Không tìm thấy câu hỏi nào</string>
+    <string name="error_prefix">Lỗi: %1$s</string>
+    
+    <!-- Order Screen -->
+    <string name="continue_payment">Tiếp tục thanh toán</string>
+    <string name="close">Đóng</string>
+    
+    <!-- Login -->
+    <string name="student_login_with">Học viên đăng nhập với</string>
+    
+    <!-- Notification -->
+    <string name="notifications_title">Thông báo</string>
+    <string name="error_occurred_short">Có lỗi xảy ra</string>
+    <string name="all_notifications">Tất cả</string>
+    <string name="unread_notifications">Chưa đọc</string>
+    
+    <!-- Learning Course Discussion -->
+    <string name="course_content">Nội dung khóa học</string>
+    <string name="ask_question">Đặt câu hỏi</string>
+    <string name="no_discussions">Chưa có câu hỏi nào</string>
+    <string name="be_first_to_ask">Hãy là người đầu tiên đặt câu hỏi về bài học này</string>
+    <string name="question_content">Nội dung câu hỏi</string>
+    <string name="post">Đăng</string>
+    <string name="replies_count">%1$d trả lời</string>
+    <string name="please_select_lesson">Vui lòng chọn bài học để xem hỏi đáp</string>
+    
+    <!-- Card Composables -->
+    <string name="free">Miễn phí</string>
+    <string name="can_learn_now">Có thể học ngay</string>
+    <string name="learn_now">Học ngay</string>
+    <string name="buy_now_action">Mua ngay</string>
+    <string name="level_recognition">Nhận biết</string>
+    <string name="level_understanding">Thông hiểu</string>
+    <string name="level_low_application">Vận dụng thấp</string>
+    <string name="level_high_application">Vận dụng cao</string>
+    
+    <!-- Home Screen -->
+    <string name="good_morning">Chào buổi sáng, %1$s! ☀️</string>
+    <string name="what_skill_today">Bạn muốn nâng cấp kỹ năng gì hôm nay?</string>
+    <string name="categories">Danh mục</string>
+    <string name="see_more">Xem thêm</string>
+    <string name="recommended_books">Sách gợi ý cho bạn</string>
+    <string name="trending_courses">Khóa học nổi bật</string>
+    <string name="hot_deal">HOT DEAL</string>
+    <string name="promo_banner_text">Giảm 50% cho Combo Sách IT &amp; Khóa học Android</string>
+    <string name="free_badge">MIỄN PHÍ</string>
+    <string name="by_instructor">By %1$s</string>
+    
+    <!-- Wishlist -->
+    <string name="wishlist">Yêu thích</string>
+    <string name="wishlist_empty">Danh sách yêu thích trống</string>
+    <string name="remove_from_wishlist">Xóa khỏi yêu thích</string>
 </resources>

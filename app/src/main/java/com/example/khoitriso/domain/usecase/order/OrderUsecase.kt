@@ -10,6 +10,7 @@ import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.repository.OrderRepository
 import com.example.khoitriso.domain.repository.VNPayRepository
 import com.example.khoitriso.domain.request.GetOrderRequest
+import com.example.khoitriso.utils.OrderStatus
 
 data class OrderUsecase(
     val createOrder: CreateOrder,
@@ -42,7 +43,7 @@ class CreateOrder(private val orderRepository: OrderRepository){
 class GetOrder(private val orderRepository: OrderRepository) {
     suspend operator fun invoke(getOrdersRequest: GetOrderRequest? = null):
             Result<MyResponese<Order>> {
-        if(getOrdersRequest == null) return orderRepository.getMyOrder(GetOrderRequest(status = 0))
+        if(getOrdersRequest == null) return orderRepository.getMyOrder(GetOrderRequest(status = OrderStatus.Pending.value))
         return orderRepository.getMyOrder(getOrdersRequest)
     }
 }

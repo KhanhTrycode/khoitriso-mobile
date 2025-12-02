@@ -67,6 +67,10 @@ data class CreateCommentRequest(
     val userAvatar: String? = null
 )
 
+data class UpdateCommentRequest(
+    val content: String? = null
+)
+
 data class ForumVoteRequest(
     val targetId: String,
     val targetType: Int, // 1 = Question, 2 = Answer, 3 = Comment

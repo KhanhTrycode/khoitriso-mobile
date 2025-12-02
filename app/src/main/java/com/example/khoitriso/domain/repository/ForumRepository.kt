@@ -8,6 +8,7 @@ import com.example.khoitriso.domain.request.ForumBookmarksResult
 import com.example.khoitriso.domain.request.ForumQuestions
 import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.request.UpdateAnswerRequest
+import com.example.khoitriso.domain.request.UpdateCommentRequest
 import com.example.khoitriso.domain.request.UpdateQuestionRequest
 
 interface ForumRepository {
@@ -35,16 +36,17 @@ interface ForumRepository {
     suspend fun updateAnswer(id: String, request: UpdateAnswerRequest): Result<ForumAnswer>
     suspend fun deleteAnswer(id: String): Result<Unit>
     suspend fun acceptAnswer(id: String): Result<Unit>
-    suspend fun unacceptAnswer(id: String): Result<Unit>
 
     // Comments
     suspend fun getComments(parentType: Int, parentId: String): Result<List<ForumComment>>
     suspend fun createComment(request: CreateCommentRequest): Result<ForumComment>
+    suspend fun updateComment(id: String, request: UpdateCommentRequest): Result<ForumComment>
+    suspend fun deleteComment(id: String): Result<Unit>
 
     // Votes
     suspend fun vote(request: ForumVoteRequest): Result<Int> // Returns total vote count
     suspend fun getVotes(targetType: Int, targetId: String): Result<Int>
-    suspend fun getUserVote(targetType: Int, targetId: String, userId: Int): Result<Int> // -1, 0, 1
+     suspend fun getUserVote(targetType: Int, targetId: String, userId: Int): Result<Int> // -1, 0, 1
 
     // Bookmarks
     suspend fun addBookmark(questionId: String, userId: Int): Result<Unit>

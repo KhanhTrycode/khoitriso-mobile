@@ -16,7 +16,11 @@ import com.example.khoitriso.domain.repository.CategoryRepository
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
+import com.example.khoitriso.domain.repository.LessonDiscussionRepository
 import com.example.khoitriso.domain.repository.UserRepository
+import com.example.khoitriso.domain.repository.WishlistRepository
+import com.example.khoitriso.data.repository.LessonDiscussionRepositoryImpl
+import com.example.khoitriso.data.repository.WishlistRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -67,5 +71,17 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun provideUserRepository(userRepositoryImpl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideLessonDiscussionRepository(
+        lessonDiscussionRepositoryImpl: LessonDiscussionRepositoryImpl
+    ): LessonDiscussionRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideWishlistRepository(
+        wishlistRepositoryImpl: WishlistRepositoryImpl
+    ): WishlistRepository
 }
 

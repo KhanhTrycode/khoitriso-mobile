@@ -32,12 +32,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
-import com.example.khoitriso.ui.behavior.FormatTimeAgo
-import com.example.khoitriso.ui.behavior.PaginationControls
-import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.ui.common.FormatTimeAgo
+import com.example.khoitriso.ui.common.PaginationControls
+import com.example.khoitriso.ui.common.SafeImage
+import com.example.khoitriso.ui.common.LoadingIndicator
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.R
-import com.example.khoitriso.ui.behavior.MyLoadingProcessing
 import com.example.khoitriso.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +75,7 @@ fun ForumListScreen(
             }
 
             is UiState.Loading -> {
-                MyLoadingProcessing()
+                LoadingIndicator()
             }
 
             is UiState.Success<*> -> {
@@ -140,7 +140,7 @@ private fun ContentScreen(
         when (val state = questionsState) {
             is UiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    MyLoadingProcessing()
+                    LoadingIndicator()
                 }
             }
 
@@ -187,7 +187,7 @@ private fun ContentScreen(
             }
 
             is UiState.Error -> {
-                Text("Lỗi: ${state.message}")
+                Text(stringResource(R.string.error_prefix, state.message))
             }
         }
     }
@@ -226,7 +226,7 @@ private fun FilterSection(
                 value = searchText,
                 onValueChange = onSearchTextChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Tìm kiếm câu hỏi...") },
+                placeholder = { Text(stringResource(R.string.search_questions_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
@@ -252,7 +252,7 @@ private fun FilterSection(
                 FilterChip(
                     selected = isPinnedFilter == true,
                     onClick = { onPinnedFilterChanged(if (isPinnedFilter == true) null else true) },
-                    label = { Text("Ghim") })
+                        label = { Text(stringResource(R.string.pinned)) })
             }
 
             // Hàng các bộ lọc khác
@@ -261,7 +261,7 @@ private fun FilterSection(
                     FilterChip(
                         selected = selectedCategory == null,
                         onClick = { onCategorySelected(null) },
-                        label = { Text("Tất cả") })
+                        label = { Text(stringResource(R.string.all)) })
                 }
                 if (categoriesState is UiState.Success) {
                     items(categoriesState.data) { category ->
@@ -276,19 +276,19 @@ private fun FilterSection(
                     FilterChip(
                         selected = isSolvedFilter == null,
                         onClick = { onSolvedFilterChanged(null) },
-                        label = { Text("Tất cả") })
+                        label = { Text(stringResource(R.string.all)) })
                 }
                 item {
                     FilterChip(
                         selected = isSolvedFilter == true,
                         onClick = { onSolvedFilterChanged(true) },
-                        label = { Text("Đã giải quyết") })
+                        label = { Text(stringResource(R.string.resolved)) })
                 }
                 item {
                     FilterChip(
                         selected = isSolvedFilter == false,
                         onClick = { onSolvedFilterChanged(false) },
-                        label = { Text("Chưa giải quyết") })
+                        label = { Text(stringResource(R.string.unresolved)) })
                 }
                 if (tagsState is UiState.Success) {
                     items(tagsState.data.take(10)) { tag ->
@@ -307,7 +307,7 @@ private fun FilterSection(
             ) {
                 Icon(Icons.Default.Warning, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Lọc")
+                Text(stringResource(R.string.filter))
             }
         }
     }
@@ -628,7 +628,7 @@ private fun EmptyQuestionsView() {
                 Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
-            Text("Không tìm thấy câu hỏi nào", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.no_questions_found), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Text(
                 "Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.",
                 fontSize = 14.sp,

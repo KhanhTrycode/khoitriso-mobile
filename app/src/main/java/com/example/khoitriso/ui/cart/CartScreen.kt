@@ -37,7 +37,8 @@ import coil.request.ImageRequest
 import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.CartItem
 import com.example.khoitriso.domain.models.Carts
-import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.ui.common.SafeImage
+import com.example.khoitriso.ui.common.ErrorCard
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.toVND
@@ -81,15 +82,17 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            if (cartState is UiState.Success) {
-                val cart = (cartState as UiState.Success<Carts>).data
-                if (cart.cartItems.isNotEmpty()) {
-                    CartBottomBar(
-                        totalAmount = cart.totalPrice,
-                        itemCount = cart.totalItems,
-                        onCheckout = { navController.navigate(NavRoute.CHECKOUT) }
-                    )
+            when (val state = cartState) {
+                is UiState.Success -> {
+                    if (state.data.cartItems.isNotEmpty()) {
+                        CartBottomBar(
+                            totalAmount = state.data.totalPrice,
+                            itemCount = state.data.totalItems,
+                            onCheckout = { navController.navigate(NavRoute.CHECKOUT) }
+                        )
+                    }
                 }
+                else -> {}
             }
         }
     ) { paddingValues ->
@@ -421,50 +424,6 @@ private fun EmptyCartScreen(
             modifier = Modifier.height(48.dp)
         ) {
             Text(stringResource(R.string.continue_shopping))
-        }
-    }
-}
-
-@Composable
-private fun ErrorCard(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Đã xảy ra lỗi",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onErrorContainer,
-                    contentColor = MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Text(stringResource(R.string.try_again))
-            }
         }
     }
 }

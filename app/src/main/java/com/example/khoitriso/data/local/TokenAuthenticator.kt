@@ -2,7 +2,6 @@ package com.example.khoitriso.data.local
 
 import com.example.khoitriso.data.api.AuthApi
 import com.example.khoitriso.utils.debug
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -13,67 +12,89 @@ import okhttp3.Response
 import okhttp3.Route
 import javax.inject.Inject
 
-
 class TokenAuthenticator @Inject constructor(
     private val tokenManager: TokenManager,
     private val authApi: AuthApi
 ) : Authenticator {
 
-    private val lock = Mutex()
-    private var refreshDeferred: CompletableDeferred<String?>? = null
+    // Mutex để đảm bảo chỉ 1 luồng được refresh tại 1 thời điểm
+    private val mutex = Mutex()
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        debug("Authenticate", "TokenAuthenticator")
+        debug("Authenticate", "TokenAuthenticator: 401 Detected")
+
+        // Authenticator chạy trên background thread của OkHttp, nhưng là hàm đồng bộ.
+        // Ta dùng runBlocking để chờ code coroutine chạy xong.
         return runBlocking(Dispatchers.IO) {
-            val newToken = getUpdatedToken()
-            newToken?.let {
-                response.request.newBuilder()
-                    .header("Authorization", "Bearer $it")
+            val currentToken = tokenManager.getAccessToken() // Lấy cực nhanh từ RAM
+
+            // 1. KIỂM TRA SƠ BỘ:
+            // Lấy token đang nằm trong request bị lỗi (header cũ)
+            val requestToken = response.request.header("Authorization")?.replace("Bearer ", "")
+
+            // Nếu token trong RAM khác với token trong request lỗi,
+            // chứng tỏ luồng khác đã refresh xong rồi. Ta chỉ cần lấy token mới xài luôn.
+            if (currentToken != null && currentToken != requestToken) {
+                return@runBlocking response.request.newBuilder()
+                    .header("Authorization", "Bearer $currentToken")
                     .build()
             }
-        }
-    }
 
-    private suspend fun getUpdatedToken(): String? {
-        // Không chạy refresh trong lock, chỉ tạo deferred trong lock
-        val deferred = lock.withLock {
-            if (refreshDeferred?.isCompleted != false) {
-                refreshDeferred = CompletableDeferred()
-                refreshDeferred
-            } else {
-                refreshDeferred
+            // 2. VÀO KHÓA (CRITICAL SECTION):
+            // Nếu token vẫn cũ, ta cần refresh. Dùng mutex để chặn các luồng khác đợi.
+            mutex.withLock {
+                // 3. KIỂM TRA KỸ (DOUBLE-CHECK):
+                // Sau khi chờ khóa mở, có thể luồng trước đó đã refresh xong rồi.
+                // Kiểm tra lại lần nữa cho chắc.
+                val updatedToken = tokenManager.getAccessToken()
+                if (updatedToken != null && updatedToken != requestToken) {
+                    return@withLock response.request.newBuilder()
+                        .header("Authorization", "Bearer $updatedToken")
+                        .build()
+                }
+
+                // 4. THỰC SỰ REFRESH:
+                // Bây giờ chắc chắn là cần refresh mới.
+                val newAccessToken = getNewToken()
+
+                if (newAccessToken != null) {
+                    // Thành công -> Retry request với token mới
+                    return@withLock response.request.newBuilder()
+                        .header("Authorization", "Bearer $newAccessToken")
+                        .build()
+                } else {
+                    // Thất bại -> Return null để Retrofit ngừng retry (tránh lặp vô tận)
+                    return@withLock null
+                }
             }
         }
-
-        // Chỉ 1 coroutine sẽ refresh
-        if (deferred?.isActive == true && deferred.getCompletedOrNull() == null) {
-            val token = refreshToken()
-            deferred.complete(token)
-        }
-
-        return deferred?.await()
     }
 
-    private suspend fun refreshToken(): String? {
+    private suspend fun getNewToken(): String? {
         val refreshToken = tokenManager.getRefreshToken() ?: return null
+
         return try {
             val response = authApi.refreshToken(refreshToken, "Bearer $refreshToken")
-            if (response.isSuccessful) {
-                val newAccessToken = response.body()?.Result?.Token ?: return null
-                val newRefreshToken = response.body()?.Result?.RefreshToken ?: return null
-                tokenManager.saveTokens(newAccessToken, newRefreshToken)
-                newAccessToken
-            } else {
-                tokenManager.handleExpiredRefreshToken()
-                null
+
+            if (response.isSuccessful && response.body()?.Result != null) {
+                val result = response.body()!!.Result
+                val newAccess = result?.Token
+                val newRefresh = result?.RefreshToken
+
+                if (newAccess != null && newRefresh != null) {
+                    // Lưu vào TokenManager (nó sẽ tự update RAM và Disk)
+                    tokenManager.saveTokens(newAccess, newRefresh)
+                    return newAccess
+                }
             }
+
+            // Nếu refresh thất bại (Refresh token hết hạn hoặc lỗi server 400/403)
+            // Xóa token đi để user bị logout
+            tokenManager.clearTokens()
+            null
         } catch (e: Exception) {
-            return ""
-
+            e.printStackTrace()
+            null // Quan trọng: Return null để không retry
         }
-    }
-
-    private fun CompletableDeferred<String?>.getCompletedOrNull(): String? {
-        return if (isCompleted) getCompleted() else null
     }
 }

@@ -58,9 +58,6 @@ interface ForumApi {
     @POST("forum/answers/{id}/accept")
     suspend fun acceptAnswer(@Path("id") id: String): Response<ApiRespone<Unit>>
 
-    @POST("forum/answers/{id}/unaccept")
-    suspend fun unacceptAnswer(@Path("id") id: String): Response<ApiRespone<Unit>>
-
     // Comments
     @GET("forum/{parentType}/{parentId}/comments")
     suspend fun getComments(
@@ -70,6 +67,15 @@ interface ForumApi {
 
     @POST("forum/comments")
     suspend fun createComment(@Body request: CreateCommentRequestDto): Response<ApiRespone<ForumCommentDto>>
+
+    @PUT("forum/comments/{id}")
+    suspend fun updateComment(
+        @Path("id") id: String,
+        @Body request: UpdateCommentRequestDto
+    ): Response<ApiRespone<ForumCommentDto>>
+
+    @DELETE("forum/comments/{id}")
+    suspend fun deleteComment(@Path("id") id: String): Response<ApiRespone<Unit>>
 
     // Votes
     @POST("forum/votes")
@@ -81,12 +87,12 @@ interface ForumApi {
         @Path("targetId") targetId: String
     ): Response<ApiRespone<ForumVoteResponse>>
 
-    @GET("forum/{targetType}/{targetId}/user-vote")
-    suspend fun getUserVote(
-        @Path("targetType") targetType: Int,
-        @Path("targetId") targetId: String,
-        @Query("userId") userId: Int
-    ): Response<ApiRespone<ForumUserVoteResponse>>
+     @GET("forum/{targetType}/{targetId}/user-vote")
+     suspend fun getUserVote(
+         @Path("targetType") targetType: Int,
+         @Path("targetId") targetId: String,
+         @Query("userId") userId: Int
+     ): Response<ApiRespone<ForumUserVoteResponse>>
 
     // Bookmarks
     @POST("forum/bookmarks")

@@ -9,6 +9,7 @@ import com.example.khoitriso.domain.request.ForumBookmarksResult
 import com.example.khoitriso.domain.request.ForumQuestions
 import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.request.UpdateAnswerRequest
+import com.example.khoitriso.domain.request.UpdateCommentRequest
 import com.example.khoitriso.domain.request.UpdateQuestionRequest
 
 data class ForumUsecase(
@@ -22,9 +23,10 @@ data class ForumUsecase(
     val updateAnswer: UpdateAnswer,
     val deleteAnswer: DeleteAnswer,
     val acceptAnswer: AcceptAnswer,
-    val unacceptAnswer: UnacceptAnswer,
     val getComments: GetComments,
     val createComment: CreateComment,
+    val updateComment: UpdateComment,
+    val deleteComment: DeleteComment,
     val vote: Vote,
     val getVotes: GetVotes,
     val getUserVote: GetUserVote,
@@ -107,12 +109,6 @@ class AcceptAnswer(private val repo: ForumRepository) {
     }
 }
 
-class UnacceptAnswer(private val repo: ForumRepository) {
-    suspend operator fun invoke(id: String): Result<Unit> {
-        return repo.unacceptAnswer(id)
-    }
-}
-
 class GetComments(private val repo: ForumRepository) {
     suspend operator fun invoke(parentType: Int, parentId: String): Result<List<ForumComment>> {
         return repo.getComments(parentType, parentId)
@@ -122,6 +118,18 @@ class GetComments(private val repo: ForumRepository) {
 class CreateComment(private val repo: ForumRepository) {
     suspend operator fun invoke(request: CreateCommentRequest): Result<ForumComment> {
         return repo.createComment(request)
+    }
+}
+
+class UpdateComment(private val repo: ForumRepository) {
+    suspend operator fun invoke(id: String, request: UpdateCommentRequest): Result<ForumComment> {
+        return repo.updateComment(id, request)
+    }
+}
+
+class DeleteComment(private val repo: ForumRepository) {
+    suspend operator fun invoke(id: String): Result<Unit> {
+        return repo.deleteComment(id)
     }
 }
 

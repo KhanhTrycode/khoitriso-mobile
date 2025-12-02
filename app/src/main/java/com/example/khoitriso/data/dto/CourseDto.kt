@@ -53,6 +53,8 @@ data class CourseDetailDto(
     val WhatYouWillLearn: List<String>?,
     val CreatedAt: String?,
     val UpdatedAt: String?
+
+
 )
 
 fun CourseDto.toDomain() = Course(

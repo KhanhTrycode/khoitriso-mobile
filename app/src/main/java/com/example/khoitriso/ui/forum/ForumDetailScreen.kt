@@ -40,7 +40,7 @@ import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.request.CreateAnswerRequest
 import com.example.khoitriso.domain.request.CreateCommentRequest
-import com.example.khoitriso.ui.behavior.*
+import com.example.khoitriso.ui.common.*
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
 
@@ -132,7 +132,7 @@ fun ForumDetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
-            ) { MyLoadingProcessing() }
+            ) { LoadingIndicator() }
 
             is UiState.Success -> {
                 ContentScreen(
@@ -461,7 +461,7 @@ private fun AnswerCard(
                     TextButton(onClick = onCommentClick) {
                         Icon(Icons.Default.Comment, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("${comments.size}")
+                        Text("${comments.size}") // Số lượng không cần stringResource
                     }
                     if (canAccept) {
                         IconButton(onClick = if (answer.isAccepted) onUnaccept else onAccept) {
@@ -524,7 +524,7 @@ private fun CommentItem(comment: ForumComment) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(comment.userName, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Text("•", fontSize = 11.sp)
+            Text(stringResource(R.string.bullet), fontSize = 11.sp)
             Text(FormatTimeAgo(comment.createdAt), fontSize = 11.sp)
         }
     }
@@ -566,8 +566,8 @@ private fun QuestionHeader(
                 fontWeight = FontWeight.SemiBold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (isPinned) Badge { Text("Ghim") }
-                if (isSolved) Badge(containerColor = Color(0xFF10B981)) { Text("Đã giải quyết") }
+                if (isPinned) Badge { Text(stringResource(R.string.pinned)) }
+                if (isSolved) Badge(containerColor = Color(0xFF10B981)) { Text(stringResource(R.string.solved_badge)) }
             }
         }
         IconButton(onClick = onBookmarkClick, modifier = Modifier.align(Alignment.TopEnd)) {
@@ -744,31 +744,12 @@ private fun EmptyAnswersView() {
                 Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
-            Text("Chưa có câu trả lời", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.no_answers), style = MaterialTheme.typography.titleMedium)
             Text(
                 "Hãy là người đầu tiên giúp đỡ bằng cách đưa ra câu trả lời của bạn.",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-private fun ErrorDisplay(message: String, onRetry: () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                Icons.Default.Warning,
-                null,
-                Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
-            Text(message, color = MaterialTheme.colorScheme.error)
-            Button(onClick = onRetry) { Text("Thử lại") }
         }
     }
 }

@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.MyResponese
-import com.example.khoitriso.domain.repository.BookRepository
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
@@ -16,7 +15,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExploreBookViewModel @Inject constructor(
-    private val bookRepository: BookRepository,
     private val savedStateHandle: SavedStateHandle,
     private val bookUsecase: BookUsecase,
 ) : BaseViewModel() {

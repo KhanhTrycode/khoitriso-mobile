@@ -3,7 +3,7 @@ package com.example.khoitriso.data.api
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.LessonDto
 import com.example.khoitriso.data.dto.VideoProgressDto
-import com.example.khoitriso.data.dto.request.LessonDiscussionDto
+import com.example.khoitriso.data.dto.LessonDiscussionDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

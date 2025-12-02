@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import com.example.khoitriso.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,8 +34,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Course
-import com.example.khoitriso.ui.behavior.BookCard
-import com.example.khoitriso.ui.behavior.CourseCard
+import com.example.khoitriso.ui.common.BookCard
+import com.example.khoitriso.ui.common.CourseCard
 import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
 
@@ -160,7 +162,7 @@ private fun SearchBarField(
         modifier = modifier
             .fillMaxWidth()
             .onFocusChanged { onFocusChanged(it.isFocused) },
-        placeholder = { Text("Tìm kiếm sách, khóa học...", fontSize = 10.sp) },
+        placeholder = { Text(stringResource(R.string.search_placeholder), fontSize = 10.sp) },
         leadingIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

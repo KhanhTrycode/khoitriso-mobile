@@ -83,56 +83,60 @@ class SearchViewModel @Inject constructor(
         val query = _searchQuery.value.trim()
         if (query.isBlank()) {
             if (!isSkip) {
-                _rawResults.value = UiState.Success(emptyList()) // Xóa kết quả nếu query rỗng
+                _rawResults.value = UiState.Success(emptyList())
                 return
             }
         }
-        _rawResults.value = UiState.Loading
-        if (_isTestMode) {
-            val foundBooks = MockData.mockBooks.filter {
-                it.title.contains(
-                    _searchQuery.value,
-                    ignoreCase = true
-                )
+
+        viewModelScope.launch {
+            _rawResults.value = UiState.Loading
+
+            val mockResults = if (_isTestMode) {
+                val foundBooks = MockData.mockBooks.filter {
+                    it.title.contains(query, ignoreCase = true)
+                }
+                val foundCourses = MockData.mockCourses.filter {
+                    it.title.contains(query, ignoreCase = true)
+                }
+                foundBooks + foundCourses
+            } else {
+                emptyList()
             }
-            val foundCourses = MockData.mockCourses.filter {
-                it.title.contains(
-                    _searchQuery.value,
-                    ignoreCase = true
-                )
+
+            val booksResult = if (_isTestMode) {
+                Result.success(MockData.mockBookResponse.copy(items = mockResults.filterIsInstance<Book>()))
+            } else {
+                bookUsecase.getBook(PagingRequest(search = query))
             }
+
+            val coursesResult = if (_isTestMode) {
+                Result.success(MockData.mockCourseResponse.copy(items = mockResults.filterIsInstance<Course>()))
+            } else {
+                courseUsecase.getCourse(PagingRequest(search = query))
+            }
+
+            val foundBooks: List<Book> = booksResult.fold(
+                onSuccess = { response -> response.items },
+                onFailure = { emptyList() }
+            )
+
+            val foundCourses: List<Course> = coursesResult.fold(
+                onSuccess = { response -> response.items },
+                onFailure = { emptyList() }
+            )
+
+            if (booksResult.isFailure && coursesResult.isFailure) {
+                val error = booksResult.exceptionOrNull() ?: coursesResult.exceptionOrNull()
+                _rawResults.value = UiState.Error(error?.message ?: "Đã xảy ra lỗi không xác định")
+                return@launch
+            }
+
             val combinedResults = foundBooks + foundCourses
-            _rawResults.value = UiState.Success(combinedResults)
-        } else {
-            viewModelScope.launch {
-                // Gọi use case và nhận về Result
-                val booksResult = bookUsecase.getBook(PagingRequest(search = query))
-                val coursesResult = courseUsecase.getCourse(PagingRequest(search = query))
 
-                val foundBooks: List<Book> = booksResult.fold(
-                    onSuccess = { response -> response.items },
-                    onFailure = { emptyList() }
-                )
-
-                val foundCourses: List<Course> = coursesResult.fold(
-                    onSuccess = { response -> response.items },
-                    onFailure = { emptyList() }
-                )
-
-                if (booksResult.isFailure && coursesResult.isFailure) {
-                    val error = booksResult.exceptionOrNull() ?: coursesResult.exceptionOrNull()
-                    _rawResults.value =
-                        UiState.Error(error?.message ?: "Đã xảy ra lỗi không xác định")
-                    return@launch
-                }
-
-                val combinedResults = foundBooks + foundCourses
-
-                _rawResults.value = if (combinedResults.isEmpty()) {
-                    UiState.Error("Không tìm thấy kết quả phù hợp.")
-                } else {
-                    UiState.Success(combinedResults)
-                }
+            _rawResults.value = if (combinedResults.isEmpty()) {
+                UiState.Error("Không tìm thấy kết quả phù hợp.")
+            } else {
+                UiState.Success(combinedResults)
             }
         }
     }

@@ -3,7 +3,6 @@ package com.example.khoitriso.ui.cart
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.data.dto.CartDto
 import com.example.khoitriso.domain.models.Carts
-import com.example.khoitriso.domain.repository.CartRepository
 import com.example.khoitriso.domain.usecase.order.CartUsecase
 import com.example.khoitriso.test.MockData.mockCart
 import com.example.khoitriso.ui.behavior.BaseViewModel

@@ -33,8 +33,15 @@ import com.example.khoitriso.domain.models.Option
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.Question
 import com.example.khoitriso.domain.models.User
+import com.example.khoitriso.domain.models.WishlistItem
+import com.example.khoitriso.domain.models.LessonDiscussion
+import com.example.khoitriso.domain.models.LessonDiscussionReply
+import com.example.khoitriso.utils.ContextType
 import com.example.khoitriso.utils.ItemType
+import com.example.khoitriso.utils.NotificationType
+import com.example.khoitriso.utils.OrderStatus
 import com.example.khoitriso.utils.QuestionType
+import com.example.khoitriso.utils.ShowAnswersAfter
 import java.time.LocalDateTime
 import kotlin.text.format
 
@@ -48,7 +55,7 @@ object MockData {
             contextType = 6,
             contextId = 19,
             questionContent = "Phần 1: Thí sinh trả lời từ câu 1 đến câu 12. Mỗi câu hỏi thí sinh chỉ chọn một phương án.",
-            questionType = 3,
+            questionType = QuestionType.GroupType.value,
             difficultyLevel = 0,
             defaultPoints = 0.25,
             orderIndex = 0,
@@ -64,7 +71,7 @@ object MockData {
             contextType = 6,
             contextId = 19,
             questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mfrac><mrow><mstyle><msup><mrow><mstyle><mi>x</mi></mstyle></mrow><mrow><mstyle><mn>2</mn></mstyle></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>4</mn></mstyle></mrow><mrow><mstyle><mi>x</mi><mo>−</mo><mn>2</mn></mstyle></mrow></mfrac></math>. Hàm số đã cho đồng biến trên khoảng nào sau đây?""",
-            questionType = 0,
+            questionType = QuestionType.MultipleChoice.value,
             difficultyLevel = 0,
             defaultPoints = 0.5,
             orderIndex = 1,
@@ -109,7 +116,7 @@ object MockData {
             contextType = 6,
             contextId = 19,
             questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
-            questionType = 0,
+            questionType = QuestionType.MultipleChoice.value,
             difficultyLevel = 0,
             defaultPoints = 0.5,
             orderIndex = 2,
@@ -152,7 +159,7 @@ object MockData {
             contextType = 6,
             contextId = 19,
             questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
-            questionType = 0,
+            questionType = QuestionType.MultipleChoice.value,
             difficultyLevel = 0,
             defaultPoints = 0.5,
             orderIndex = 2,
@@ -195,7 +202,7 @@ object MockData {
             contextType = 6,
             contextId = 19,
             questionContent = """Cho hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> có đạo hàm <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mi>f</mi></mrow><mrow><mo>′</mo></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>,</mo><mo>∀</mo><mi>x</mi><mo>∈</mo><mi>R</mi></math>. Hàm số <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> đạt cực tiểu tại điểm nào?""",
-            questionType = 0,
+            questionType = QuestionType.MultipleChoice.value,
             difficultyLevel = 0,
             defaultPoints = 0.5,
             orderIndex = 2,
@@ -232,6 +239,38 @@ object MockData {
             ),
             createdAt = "2025-11-18T17:20:59.017382Z",
             updatedAt = "" // JSON ghi nhận là null, dùng ""
+        ),
+
+        // Question ShortAnswer
+        Question(
+            id = 300,
+            contextType = 6,
+            contextId = 19,
+            questionContent = "Hãy giải thích định lý Rolle và nêu điều kiện để áp dụng định lý này.",
+            questionType = QuestionType.ShortAnswer.value,
+            difficultyLevel = 1,
+            defaultPoints = 1.0,
+            orderIndex = 5,
+            isActive = true,
+            options = emptyList(), // ShortAnswer không có options
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = ""
+        ),
+
+        // Question ShortAnswer thứ 2
+        Question(
+            id = 301,
+            contextType = 6,
+            contextId = 19,
+            questionContent = "Tính đạo hàm của hàm số <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></msup><mo>+</mo><mn>2</mn><msup><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>5</mn><mi>x</mi><mo>+</mo><mn>1</mn></math> và giải thích từng bước.",
+            questionType = QuestionType.ShortAnswer.value,
+            difficultyLevel = 0,
+            defaultPoints = 0.75,
+            orderIndex = 6,
+            isActive = true,
+            options = emptyList(),
+            createdAt = "2025-11-18T17:20:59.017382Z",
+            updatedAt = ""
         ),
 
     )
@@ -276,7 +315,7 @@ object MockData {
         maxScore = 100,
         passingScore = 70,
         questions =mockQuestionList ,
-        showAnswersAfter = 1,
+        showAnswersAfter = ShowAnswersAfter.AfterDue.value,
         shuffleOptions = true,
         shuffleQuestions = false,
         timeLimit = 60,
@@ -294,7 +333,7 @@ object MockData {
         maxScore = 100,
         passingScore = 75,
         questions = mockQuestionList,
-        showAnswersAfter = 2,
+        showAnswersAfter = ShowAnswersAfter.Never.value,
         shuffleOptions = true,
         shuffleQuestions = true,
         timeLimit = 2700,
@@ -329,41 +368,23 @@ object MockData {
     val mockCategory1 = Category(
         id = 1,
         name = "Lập trình",
-        description = "Các khóa học và sách về lập trình",
-        icon = "code",
-        isActive = true,
-        orderIndex = 1,
-        parent = null
     )
 
     val mockCategory2 = Category(
         id = 2,
-        name = "Văn học",
-        description = "Sách văn học Việt Nam và thế giới",
-        icon = "book",
-        isActive = true,
-        orderIndex = 2,
-        parent = null
+        name = "Văn học"
     )
 
     val mockCategory3 = Category(
         id = 3,
         name = "Web Development",
-        description = "Phát triển web frontend và backend",
-        icon = "web",
-        isActive = true,
-        orderIndex = 3,
-        parent = mockCategory1
+
     )
 
     val mockCategory4 = Category(
         id = 4,
         name = "Mobile Development",
-        description = "Phát triển ứng dụng di động",
-        icon = "mobile",
-        isActive = true,
-        orderIndex = 4,
-        parent = mockCategory1
+
     )
 
     val mockCategories = listOf(mockCategory1, mockCategory2, mockCategory3, mockCategory4)
@@ -435,7 +456,6 @@ object MockData {
         lessonOrder = 1,
         materials = listOf(mockMaterial1, mockMaterial2),
         title = "Bài 1: Giới thiệu Kotlin",
-        userProgress = null,
         videoDuration = 1800,
         videoUrl = "https://example.com/videos/kotlin_intro.mp4",
         assignments = mockAssignments
@@ -451,7 +471,6 @@ object MockData {
         lessonOrder = 2,
         materials = emptyList(),
         title = "Bài 2: Kiểu dữ liệu",
-        userProgress = null,
         videoDuration = 2400,
         videoUrl = "https://example.com/videos/kotlin_datatypes.mp4",
         assignments = mockAssignments
@@ -467,7 +486,6 @@ object MockData {
         lessonOrder = 3,
         materials = emptyList(),
         title = "Bài 3: Functions",
-        userProgress = null,
         videoDuration = 3000,
         videoUrl = "https://example.com/videos/kotlin_functions.mp4",
         assignments = mockAssignments
@@ -867,8 +885,8 @@ object MockData {
         paidAt = "2024-11-20T14:30:00Z",
         paymentGateway = "VNPay",
         paymentMethod = "ATM",
-        status = 2,
-        statusName = "Completed",
+        status = OrderStatus.Paid.value,
+        statusName = OrderStatus.Paid.displayName,
         taxAmount = 0.0,
         totalAmount = 449000.0,
         transactionId = "VNP20241120143000",
@@ -889,8 +907,8 @@ object MockData {
         paidAt = "2024-11-21T09:15:00Z",
         paymentGateway = "MoMo",
         paymentMethod = "E-Wallet",
-        status = 1,
-        statusName = "Processing",
+        status = OrderStatus.Pending.value,
+        statusName = OrderStatus.Pending.displayName,
         taxAmount = 0.0,
         totalAmount = 399000.0,
         transactionId = "MOMO20241121091500",
@@ -909,7 +927,7 @@ object MockData {
         userId = 1,
         title = "Đơn hàng đã được xác nhận",
         content = "Đơn hàng #ORD20241120001 của bạn đã được xác nhận và đang xử lý",
-        type = 5,
+        type = NotificationType.Payment.value,
         priority = 2,
         isRead = true,
         actionUrl = "/orders/1",
@@ -923,7 +941,7 @@ object MockData {
         userId = 2,
         title = "Bài tập sắp đến hạn",
         content = "Bài tập 'Cú pháp Kotlin' sẽ đến hạn trong 2 ngày",
-        type = 4,
+        type = NotificationType.Assignment.value,
         priority = 1,
         isRead = false,
         actionUrl = "/assignments/1",
@@ -1172,4 +1190,81 @@ object MockData {
             totalItems = 1,
             totalPrice = 150000.0)
     }
+
+    // Mock Wishlist Items
+    val mockWishlistItem1 = WishlistItem(
+        id = 1,
+        itemId = 1,
+        itemType = ItemType.Course,
+        addedAt = "2024-11-20T10:00:00Z",
+        item = mockCourse1
+    )
+
+    val mockWishlistItem2 = WishlistItem(
+        id = 2,
+        itemId = 1,
+        itemType = ItemType.Book,
+        addedAt = "2024-11-19T15:30:00Z",
+        item = mockBook1
+    )
+
+    val mockWishlistItem3 = WishlistItem(
+        id = 3,
+        itemId = 2,
+        itemType = ItemType.Course,
+        addedAt = "2024-11-18T09:20:00Z",
+        item = mockCourse2
+    )
+
+    val mockWishlistItems = mutableListOf(mockWishlistItem1, mockWishlistItem2, mockWishlistItem3)
+
+    // Mock Lesson Discussions
+    val mockLessonDiscussionReply1 = LessonDiscussionReply(
+        id = "ldr1",
+        discussionId = "ld1",
+        content = "Bạn có thể giải thích rõ hơn về phần này không?",
+        userId = 2,
+        userName = "Trần Thị B",
+        userAvatar = "https://i.pravatar.cc/150?img=2",
+        voteCount = 3,
+        isAccepted = false,
+        createdAt = "2024-11-25T10:30:00Z",
+        updatedAt = "2024-11-25T10:30:00Z"
+    )
+
+    val mockLessonDiscussion1 = LessonDiscussion(
+        id = "ld1",
+        lessonId = 1,
+        content = "Tôi không hiểu phần này, ai có thể giải thích giúp không?",
+        videoTimestamp = 120,
+        userId = 1,
+        userName = "Nguyễn Văn A",
+        userAvatar = "https://i.pravatar.cc/150?img=1",
+        replyCount = 2,
+        voteCount = 5,
+        isPinned = false,
+        isResolved = false,
+        createdAt = "2024-11-25T09:00:00Z",
+        updatedAt = "2024-11-25T09:00:00Z",
+        replies = listOf(mockLessonDiscussionReply1)
+    )
+
+    val mockLessonDiscussion2 = LessonDiscussion(
+        id = "ld2",
+        lessonId = 1,
+        content = "Có ai biết cách fix lỗi này không?",
+        videoTimestamp = 300,
+        userId = 2,
+        userName = "Trần Thị B",
+        userAvatar = "https://i.pravatar.cc/150?img=2",
+        replyCount = 1,
+        voteCount = 2,
+        isPinned = true,
+        isResolved = true,
+        createdAt = "2024-11-24T14:20:00Z",
+        updatedAt = "2024-11-24T16:45:00Z",
+        replies = emptyList()
+    )
+
+    val mockLessonDiscussions = listOf(mockLessonDiscussion1, mockLessonDiscussion2)
 }

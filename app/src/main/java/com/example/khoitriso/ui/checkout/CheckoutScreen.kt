@@ -21,11 +21,11 @@ import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.data.dto.CartItemDto
 import com.example.khoitriso.domain.models.CartItem
+import com.example.khoitriso.ui.common.ErrorCard
 import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
-import java.text.NumberFormat
-import java.util.*
+import com.example.khoitriso.utils.toVND
 import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,22 +76,23 @@ fun CheckoutScreen(
             )
         },
         bottomBar = {
-            // Chỉ hiện thanh thanh toán khi Cart load thành công
-            if (cartState is UiState.Success) {
-                val cartData = (cartState as UiState.Success).data
-                if (cartData.cartItems.isNotEmpty()) {
-                    val subtotal = cartData.totalPrice
-                    val discount = checkoutState.discountAmount
-                    val total = max(0.0, subtotal - discount)
+            when (val state = cartState) {
+                is UiState.Success -> {
+                    if (state.data.cartItems.isNotEmpty()) {
+                        val subtotal = state.data.totalPrice
+                        val discount = checkoutState.discountAmount
+                        val total = max(0.0, subtotal - discount)
 
-                    CheckoutBottomBar(
-                        totalAmount = total,
-                        isProcessing = checkoutState.isProcessing,
-                        onCheckout = {
-                            viewModel.checkout { /* URL handled by LaunchedEffect */ }
-                        }
-                    )
+                        CheckoutBottomBar(
+                            totalAmount = total,
+                            isProcessing = checkoutState.isProcessing,
+                            onCheckout = {
+                                viewModel.checkout()
+                            }
+                        )
+                    }
                 }
+                else -> {}
             }
         }
     ) { paddingValues ->
@@ -219,7 +220,7 @@ private fun CheckoutItemCard(item: CartItem) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = formatPrice(item.price),
+                    text = item.price.toVND(),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -277,7 +278,7 @@ private fun OrderSummaryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(stringResource(R.string.subtotal))
-                Text(formatPrice(subtotal))
+                Text(subtotal.toVND())
             }
             if (discount > 0) {
                 Row(
@@ -285,7 +286,7 @@ private fun OrderSummaryCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.discount))
-                    Text("-${formatPrice(discount)}", color = MaterialTheme.colorScheme.error)
+                    Text("-${discount.toVND()}", color = MaterialTheme.colorScheme.error)
                 }
             }
             Divider()
@@ -299,7 +300,7 @@ private fun OrderSummaryCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = formatPrice(total),
+                    text = total.toVND(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -332,7 +333,7 @@ private fun CheckoutBottomBar(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = formatPrice(totalAmount),
+                    text = totalAmount.toVND(),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -383,39 +384,3 @@ private fun EmptyCartState(
         }
     }
 }
-
-@Composable
-private fun ErrorCard(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text(stringResource(R.string.try_again))
-            }
-        }
-    }
-}
-
-private fun formatPrice(price: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
-    return formatter.format(price)
-}
-

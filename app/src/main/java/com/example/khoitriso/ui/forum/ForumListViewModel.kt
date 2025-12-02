@@ -145,15 +145,18 @@ class ForumListViewModel @Inject constructor(
             viewModelScope.launch {
                 _questions.collectLatest { questionsState ->
                     if (questionsState is UiState.Success<MyResponese<ForumQuestion>>) {
-                        if (_currentUser.value is UiState.Success<User>) {
-                            loadUserVotesForQuestions(
-                                questionsState.data.items,
-                                (_currentUser.value as UiState.Success<User>).data.id
-                            )
-                            loadBookmarksForQuestions(
-                                questionsState.data.items,
-                                (_currentUser.value as UiState.Success<User>).data.id
-                            )
+                        when (val userState = _currentUser.value) {
+                            is UiState.Success -> {
+                                loadUserVotesForQuestions(
+                                    questionsState.data.items,
+                                    userState.data.id
+                                )
+                                loadBookmarksForQuestions(
+                                    questionsState.data.items,
+                                    userState.data.id
+                                )
+                            }
+                            else -> {}
                         }
                     }
                 }
@@ -162,33 +165,36 @@ class ForumListViewModel @Inject constructor(
     }
 
     private suspend fun loadUserVotesForQuestions(questions: List<ForumQuestion>, userId: Int) {
-        questions.forEach { question ->
-//            forumUsecase.getUserVote(1, question.id, userId).onSuccess { voteType ->
-//                val key = "1-${question.id}"
-//                _userVotes.value = _userVotes.value.toMutableMap().apply {
-//                    if (voteType != null && voteType != 0) {
-//                        put(key, voteType)
-//                    }
-//                }
-//            }
-            val key = "1-${question.id}"
-            _userVotes.value = _userVotes.value.toMutableMap().apply {
-                put(key, 1)
+        if (_isTestMode) {
+            // Mock: Set some votes for testing
+            questions.take(2).forEachIndexed { index, question ->
+                val key = "1-${question.id}"
+                _userVotes.value = _userVotes.value.toMutableMap().apply {
+                    put(key, if (index == 0) 1 else -1) // First upvoted, second downvoted
+                }
+            }
+        } else {
+            questions.forEach { question ->
+                forumUsecase.getUserVote(1, question.id, userId).onSuccess { voteType ->
+                    val key = "1-${question.id}"
+                    _userVotes.value = _userVotes.value.toMutableMap().apply {
+                        if (voteType != 0) {
+                            put(key, voteType)
+                        }
+                    }
+                }
             }
         }
     }
 
     private suspend fun loadBookmarksForQuestions(questions: List<ForumQuestion>, userId: Int) {
         questions.forEach { question ->
-//            forumUsecase.isBookmarked(question.id, userId).onSuccess { isBookmarked ->
-//                _bookmarks.value = _bookmarks.value.toMutableSet().apply {
-//                    if (isBookmarked) {
-//                        add(question.id)
-//                    }
-//                }
-//            }
-            _bookmarks.value = _bookmarks.value.toMutableSet().apply {
-                add(question.id)
+            forumUsecase.isBookmarked(question.id, userId).onSuccess { isBookmarked ->
+                _bookmarks.value = _bookmarks.value.toMutableSet().apply {
+                    if (isBookmarked) {
+                        add(question.id)
+                    }
+                }
             }
         }
     }

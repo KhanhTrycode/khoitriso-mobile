@@ -46,6 +46,10 @@ data class CreateCommentRequestDto(
     val UserAvatar: String? = null
 )
 
+data class UpdateCommentRequestDto(
+    val Content: String? = null
+)
+
 data class ForumVoteRequestDto(
     val TargetId: String,
     val TargetType: Int, // 1 = Question, 2 = Answer, 3 = Comment

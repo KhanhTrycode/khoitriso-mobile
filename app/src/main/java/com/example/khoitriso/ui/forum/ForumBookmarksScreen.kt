@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.khoitriso.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,12 +23,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
 import com.example.khoitriso.domain.request.ForumBookmarksResult
-import com.example.khoitriso.ui.behavior.PaginationControls
+import com.example.khoitriso.ui.common.PaginationControls
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.NavRoute
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForumBookmarksScreen(
@@ -44,7 +47,7 @@ fun ForumBookmarksScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Bookmarks của tôi") },
+                title = { Text(stringResource(R.string.my_bookmarks)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, "Back")
@@ -53,7 +56,7 @@ fun ForumBookmarksScreen(
             )
         }
     ) { paddingValues ->
-        when (bookmarksState) {
+        when (val state = bookmarksState) {
             is UiState.Loading -> {
                 Box(
                     modifier = Modifier
@@ -65,7 +68,8 @@ fun ForumBookmarksScreen(
                 }
             }
             is UiState.Success -> {
-                val bookmarks = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.items
+                val bookmarksData = state.data
+                val bookmarks = bookmarksData
                 if (bookmarks.isEmpty()) {
                     EmptyBookmarksView(navController)
                 } else {
@@ -78,7 +82,7 @@ fun ForumBookmarksScreen(
                     ) {
                         item {
                             Text(
-                                "${(bookmarksState as UiState.Success<ForumBookmarksResult>).data.total} câu hỏi đã bookmark",
+                                "${bookmarksData.size} câu hỏi đã bookmark",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp)
@@ -96,7 +100,6 @@ fun ForumBookmarksScreen(
                                                 question.id,
                                                 userId,
                                                 onSuccess = {
-                                                    // Refresh list
                                                     val newPage = if (bookmarks.size == 1 && currentPage > 1) {
                                                         currentPage - 1
                                                     } else {
@@ -111,17 +114,6 @@ fun ForumBookmarksScreen(
                                     onClick = {
                                         navController.navigate(NavRoute.NavForumDetail(question.id))
                                     }
-                                )
-                            }
-                        }
-
-                        // Pagination
-                        if ((bookmarksState as UiState.Success<ForumBookmarksResult>).data.totalPages > 1) {
-                            item {
-                                PaginationControls(
-                                    currentPage = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.page,
-                                    totalPages = (bookmarksState as UiState.Success<ForumBookmarksResult>).data.totalPages,
-                                    onPageChange = {},
                                 )
                             }
                         }
@@ -183,7 +175,7 @@ fun BookmarkCard(
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )
-                Text("votes", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.votes), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 Spacer(Modifier.height(4.dp))
 
@@ -193,7 +185,7 @@ fun BookmarkCard(
                     fontWeight = FontWeight.Bold,
                     color = if (question.answerCount > 0) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text("answers", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.answers), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 Spacer(Modifier.height(4.dp))
 
@@ -202,7 +194,7 @@ fun BookmarkCard(
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text("views", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.views), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             // Content Column
@@ -223,7 +215,7 @@ fun BookmarkCard(
                     ) {
                         if (question.isPinned) {
                             Badge(containerColor = MaterialTheme.colorScheme.primary) {
-                                Text("Ghim", fontSize = 10.sp)
+                                Text(stringResource(R.string.pinned), fontSize = 10.sp)
                             }
                         }
                         if (question.isSolved) {
@@ -231,7 +223,7 @@ fun BookmarkCard(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, null, Modifier.size(12.dp))
                                     Spacer(Modifier.width(4.dp))
-                                    Text("Đã giải quyết", fontSize = 10.sp)
+                                    Text(stringResource(R.string.solved_badge), fontSize = 10.sp)
                                 }
                             }
                         }
@@ -378,7 +370,7 @@ fun EmptyBookmarksView(navController: NavController) {
             Button(
                 onClick = { navController.navigate(NavRoute.FORUM) }
             ) {
-                Text("Xem danh sách câu hỏi")
+                Text(stringResource(R.string.view_question_list))
             }
         }
     }
@@ -406,7 +398,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
                 color = MaterialTheme.colorScheme.error
             )
             Button(onClick = onRetry) {
-                Text("Thử lại")
+                Text(stringResource(R.string.try_again))
             }
         }
     }

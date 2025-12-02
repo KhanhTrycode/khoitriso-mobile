@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -87,7 +88,8 @@ private fun generateMathmlHtml(content: String): String {
 }
 
 @Composable
-fun OptimizedHtmlContent(html: String) {
-    val rememberedHtml = remember(html) { html }
-    HtmlContent(rememberedHtml)
+fun OptimizedHtmlContent(html: String, modifier: Modifier = Modifier) {
+    key(html) {
+        HtmlContent(html, modifier)
+    }
 }

@@ -2,6 +2,7 @@ package com.example.khoitriso.ui.detail
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,7 +29,8 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
-import com.example.khoitriso.ui.behavior.*
+import com.example.khoitriso.ui.common.*
+import com.example.khoitriso.ui.forum.KatexHtmlContent
 import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.ItemType
 import com.example.khoitriso.utils.NavRoute
@@ -44,14 +46,9 @@ fun CourseDetailScreen(
     val context = LocalContext.current
     val courseState by viewModel.course.collectAsState()
     val player by viewModel.playerState.collectAsState()
+    val selectedLesson by viewModel.selectedLesson.collectAsState()
     val snackBarState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
-        viewModel.initializePlayer(
-            context,
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        )
-    }
     DisposableEffect(Unit) {
         onDispose { viewModel.releasePlayer() }
     }
@@ -70,26 +67,33 @@ fun CourseDetailScreen(
             DetailHeader(onBack = { navController.popBackStack() })
         },
         bottomBar = {
-            if (courseState is UiState.Success) {
-                ActionButtons(
-                    price = (courseState as UiState.Success<CourseDetail>).data.price,
-                    onBuy = {
-                        val course =(courseState as UiState.Success<CourseDetail>).data
-                        navController.navigate(ItemBuyNow(
-                            itemId = course.id,
-                            itemType = ItemType.Book,
-                            coverImage = course.thumbnail,
-                            price = course.price,
-                            title = course.title,
-                        ))
-                    },
-                    onCart = { viewModel.addToCart((courseState as UiState.Success<CourseDetail>).data.id) }
-                )
+            when (val state = courseState) {
+                is UiState.Success -> {
+                    val course = state.data
+                    ActionButtons(
+                        price = course.price,
+                        onBuy = {
+                            navController.navigate(ItemBuyNow(
+                                itemId = course.id,
+                                itemType = ItemType.Book,
+                                coverImage = course.thumbnail,
+                                price = course.price,
+                                title = course.title,
+                            ))
+                        },
+                        onCart = { viewModel.addToCart(course.id) }
+                    )
+                }
+                else -> {}
             }
         }
     ) { innerPadding ->
-        when (courseState) {
-            is UiState.Error -> { /* Handle Error UI */
+        when (val state = courseState) {
+            is UiState.Error -> { 
+                ErrorCard(
+                    state.message,
+                    onRetry = {},
+                )
             }
 
             is UiState.Loading -> {
@@ -99,10 +103,13 @@ fun CourseDetailScreen(
             }
 
             is UiState.Success<CourseDetail> -> {
-                val course = (courseState as UiState.Success<CourseDetail>).data
                 DetailContent(
-                    course,
-                    player,
+                    course = state.data,
+                    player = player,
+                    selectedLesson = selectedLesson,
+                    onLessonClick = { lesson ->
+                        viewModel.selectLesson(lesson, context)
+                    },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -114,21 +121,48 @@ fun CourseDetailScreen(
 private fun DetailContent(
     course: CourseDetail,
     player: ExoPlayer?,
+    selectedLesson: Lesson?,
+    onLessonClick: (Lesson) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 20.dp) // Chỉ padding bottom cho list
+        contentPadding = PaddingValues(bottom = 20.dp)
     ) {
-        // 1. Video Player (Full Width - Không padding ngang)
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .background(color = Color.Black)
-            ) {
-                Media3AndroidView(player)
+        if (selectedLesson != null && player != null) {
+            item {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                            .background(color = Color.Black)
+                    ) {
+                        Media3AndroidView(player)
+                    }
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceContainer
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = selectedLesson.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (selectedLesson.description.isNotBlank()) {
+                                KatexHtmlContent(
+                                    html = selectedLesson.description,
+                                    textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textSizeSp = 14f
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -196,6 +230,8 @@ private fun DetailContent(
         items(course.lessons) { lesson ->
             LessonRow(
                 lesson = lesson,
+                isSelected = selectedLesson?.id == lesson.id,
+                onClick = { onLessonClick(lesson) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
         }
@@ -211,10 +247,10 @@ fun CourseInfo(course: CourseDetail) {
     )
     Spacer(modifier = Modifier.height(8.dp))
 
-    Text(
-        text = course.description,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+    KatexHtmlContent(
+        html = course.description,
+        textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        textSizeSp = 14f
     )
     Spacer(modifier = Modifier.height(12.dp))
 
@@ -283,50 +319,112 @@ private fun InfoRow(text: String, icon: ImageVector) {
 @Composable
 private fun LessonRow(
     lesson: Lesson,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = lesson.isFree, onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            }
+        ),
+        tonalElevation = if (isSelected) 4.dp else 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon trạng thái (Play hoặc Lock)
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        if (lesson.isFree) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        if (lesson.isFree) {
+                            if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (lesson.isFree) Icons.Default.PlayCircle else Icons.Default.Lock,
                     contentDescription = null,
-                    tint = if (lesson.isFree) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    tint = if (lesson.isFree) {
+                        if (isSelected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lesson.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = lesson.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 2,
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
+                    if (lesson.isFree) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                text = "MIỄN PHÍ",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${lesson.videoDuration / 60} phút",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+
+            if (!lesson.isFree) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Khóa",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

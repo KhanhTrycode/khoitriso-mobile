@@ -12,14 +12,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.BookDetail
-import com.example.khoitriso.ui.behavior.*
+import com.example.khoitriso.ui.common.*
+import com.example.khoitriso.ui.forum.KatexHtmlContent
 import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.ItemType
@@ -39,21 +42,24 @@ fun BookDetailScreen(
             DetailHeader(onBack = { navController.popBackStack() })
         },
         bottomBar = {
-            if (bookState is UiState.Success) {
-                ActionButtons(
-                    price = (bookState as UiState.Success<BookDetail>).data.price,
-                    onBuy = {
-                        val book =(bookState as UiState.Success<BookDetail>).data
-                        navController.navigate(ItemBuyNow(
-                            itemId = book.id,
-                            itemType = ItemType.Book,
-                            coverImage = book.coverImage,
-                            price = book.price,
-                            title = book.title,
-                        ))
-                    },
-                    onCart = { viewModel.addToCart((bookState as UiState.Success<BookDetail>).data.id) }
-                )
+            when (val state = bookState) {
+                is UiState.Success -> {
+                    val book = state.data
+                    ActionButtons(
+                        price = book.price,
+                        onBuy = {
+                            navController.navigate(ItemBuyNow(
+                                itemId = book.id,
+                                itemType = ItemType.Book,
+                                coverImage = book.coverImage,
+                                price = book.price,
+                                title = book.title,
+                            ))
+                        },
+                        onCart = { viewModel.addToCart(book.id) }
+                    )
+                }
+                else -> {}
             }
         }
     ) { paddingValues ->
@@ -122,11 +128,10 @@ private fun BookDetailContent(book: BookDetail, modifier: Modifier = Modifier) {
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = book.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4
+                    KatexHtmlContent(
+                        html = book.description,
+                        textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                        textSizeSp = 14f
                     )
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -143,7 +148,7 @@ private fun BookDetailContent(book: BookDetail, modifier: Modifier = Modifier) {
             if (book.chapters.isEmpty()) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text("Chưa có thông tin mục lục", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.no_table_of_contents), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             } else {

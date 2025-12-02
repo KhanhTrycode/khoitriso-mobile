@@ -158,5 +158,6 @@ dependencies {
     // Hỗ trợ Inline parser (để xử lý text tốt hơn)
     implementation(libs.kotlinx.serialization.json) // Use the latest version
     implementation ("io.noties.markwon:inline-parser:4.6.2")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
 

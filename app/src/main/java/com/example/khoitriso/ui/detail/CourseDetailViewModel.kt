@@ -20,6 +20,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.PlaybackException
 import com.example.khoitriso.domain.models.CartItem
 import com.example.khoitriso.domain.models.CourseDetail
+import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.domain.usecase.order.CartUsecase
 import com.example.khoitriso.domain.usecase.order.OrderUsecase
@@ -43,6 +44,8 @@ class CourseDetailViewModel @Inject constructor(
     val courseId = savedStateHandle.get<Int>("courseId")!!
     private val _playerState = MutableStateFlow<ExoPlayer?>(null)
     val playerState: StateFlow<ExoPlayer?> = _playerState
+    private val _selectedLesson = MutableStateFlow<Lesson?>(null)
+    val selectedLesson: StateFlow<Lesson?> = _selectedLesson
     private val _events = Channel<UiEvent>()
     val events = _events.receiveAsFlow()
 
@@ -68,6 +71,21 @@ class CourseDetailViewModel @Inject constructor(
 
     fun releasePlayer() {
         releasePlayerInParent(_playerState)
+    }
+
+    fun selectLesson(lesson: Lesson, context: Context) {
+        if (lesson.isFree) {
+            _selectedLesson.value = lesson
+            if (_playerState.value == null) {
+                initializePlayer(context, lesson.videoUrl)
+            } else {
+                changeVideoSource(_playerState, lesson.videoUrl)
+            }
+        } else {
+            viewModelScope.launch {
+                _events.send(UiEvent.ShowSnackbar("Bài học này cần mua khóa học để xem"))
+            }
+        }
     }
 
     fun addToCart(itemId: Int) {

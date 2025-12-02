@@ -26,13 +26,6 @@ object ItemType {
     val Course = 1
 }
 
-object QuestionType {
-    val MultipleChoice = 0
-    val TrueFalse = 1
-    val ShortAnswer = 2
-    val GroupType = 3
-}
-
 object LevelType {
     val NhanBiet = 0
     val ThongHieu = 1

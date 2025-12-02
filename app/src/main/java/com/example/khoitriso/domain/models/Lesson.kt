@@ -10,7 +10,6 @@ data class Lesson(
     val lessonOrder: Int,
     val materials: List<Material>,
     val title: String,
-    val userProgress: Any?,
     val videoDuration: Int,
     val videoUrl: String,
     val assignments: List<Assignment>

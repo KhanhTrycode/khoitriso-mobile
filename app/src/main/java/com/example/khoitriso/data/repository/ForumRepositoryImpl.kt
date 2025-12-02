@@ -14,6 +14,7 @@ import com.example.khoitriso.domain.request.ForumBookmarksResult
 import com.example.khoitriso.domain.request.ForumQuestions
 import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.request.UpdateAnswerRequest
+import com.example.khoitriso.domain.request.UpdateCommentRequest
 import com.example.khoitriso.domain.request.UpdateQuestionRequest
 import javax.inject.Inject
 
@@ -243,18 +244,6 @@ class ForumRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun unacceptAnswer(id: String): Result<Unit> {
-        return try {
-            val response = forumApi.unacceptAnswer(id)
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("API error: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     override suspend fun getComments(parentType: Int, parentId: String): Result<List<ForumComment>> {
         return try {
@@ -303,6 +292,39 @@ class ForumRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateComment(id: String, request: UpdateCommentRequest): Result<ForumComment> {
+        return try {
+            val dto = UpdateCommentRequestDto(Content = request.content)
+            val response = forumApi.updateComment(id, dto)
+            if (response.isSuccessful) {
+                val body = response.body()
+                val result = body?.Result
+                if (result != null) {
+                    Result.success(result.toDomain())
+                } else {
+                    Result.failure(Exception("Failed to update comment"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteComment(id: String): Result<Unit> {
+        return try {
+            val response = forumApi.deleteComment(id)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun vote(request: ForumVoteRequest): Result<Int> {
         return try {
             val dto = ForumVoteRequestDto(
@@ -335,9 +357,9 @@ class ForumRepositoryImpl @Inject constructor(
                 val body = response.body()
                 val result = body?.Result
                 if (result != null) {
-                    Result.success(result.Total ?: 0)
+                    Result.success(result.Total)
                 } else {
-                    Result.success(0)
+                    Result.failure(Exception("Response data is null"))
                 }
             } else {
                 Result.failure(Exception("API error: ${response.code()}"))
@@ -353,12 +375,17 @@ class ForumRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val body = response.body()
                 val result = body?.Result
-                Result.success(result?.VoteType?: throw Exception("VoteType is null"))
+                if (result != null) {
+                    // VoteType: -1 = downvote, 0 = no vote, 1 = upvote
+                    Result.success(result.VoteType ?: 0)
+                } else {
+                    Result.success(0) // No vote if response is null
+                }
             } else {
-                Result.failure(Exception("API error: ${response.code()}"))
+                Result.success(0) // No vote if API error (user hasn't voted)
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.success(0) // No vote on exception
         }
     }
 

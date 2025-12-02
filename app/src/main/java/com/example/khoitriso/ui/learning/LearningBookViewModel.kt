@@ -10,6 +10,7 @@ import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.convertMathMLToLatex
 import com.example.khoitriso.utils.debug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +73,8 @@ class LearningBookViewModel @Inject constructor(
     }
 
     private fun loadQuestion(){
-        _questions.value = UiState.Success(MockData.mockQuestionList)
+        // Convert MathML sang LaTeX sau khi load data
+        val convertedQuestions = MockData.mockQuestionList.convertMathMLToLatex()
+        _questions.value = UiState.Success(convertedQuestions)
     }
 }

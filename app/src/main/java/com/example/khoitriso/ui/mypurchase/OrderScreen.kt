@@ -3,6 +3,7 @@ package com.example.khoitriso.ui.mypurchase
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.khoitriso.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +36,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.OrderItem
+import com.example.khoitriso.ui.checkout.VNPayWebView
+import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.OrderStatus
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.toVND
 import java.text.NumberFormat
@@ -45,11 +50,21 @@ import java.util.Locale
 @Composable
 fun OrderScreen(
     navController: NavController,
-    viewModel: OrderViewModel = hiltViewModel()
+    viewModel: OrderViewModel = hiltViewModel(),
 ) {
     val ordersState by viewModel.orders.collectAsState()
+    val paymentUrl by viewModel.paymentUrl.collectAsState()
+    val paymentError by viewModel.paymentError.collectAsState()
 
     var selectedOrder by remember { mutableStateOf<Order?>(null) }
+    var showVNPayWebView by remember { mutableStateOf(false) }
+    
+    // Xử lý Payment URL
+    LaunchedEffect(paymentUrl) {
+        if (paymentUrl != null) {
+            showVNPayWebView = true
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -57,7 +72,7 @@ fun OrderScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Lịch sử đơn hàng",
+                        text = stringResource(R.string.order_history),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
@@ -83,6 +98,7 @@ fun OrderScreen(
                         CircularProgressIndicator()
                     }
                 }
+
                 is UiState.Error -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -91,10 +107,11 @@ fun OrderScreen(
                     ) {
                         Text(text = state.message, color = MaterialTheme.colorScheme.error)
                         Button(onClick = { viewModel.loadOrders() }) {
-                            Text("Thử lại")
+                            Text(stringResource(R.string.try_again))
                         }
                     }
                 }
+
                 is UiState.Success -> {
                     val orders = state.data.items
 
@@ -122,10 +139,42 @@ fun OrderScreen(
             OrderDetailDialog(
                 order = selectedOrder!!,
                 onDismiss = { selectedOrder = null },
-                onRepay = {
-
+                onRepay = { order ->
+                    viewModel.continuePayment(order)
                 }
             )
+        }
+        
+        // 4. Hiển thị VNPay WebView nếu có paymentUrl
+        if (showVNPayWebView && paymentUrl != null) {
+            VNPayWebView(
+                url = paymentUrl!!,
+                onPaymentSuccess = { orderCode ->
+                    showVNPayWebView = false
+                    viewModel.clearPaymentUrl()
+                    navController.navigate(
+                        NavRoute.NavPaymentResult(success = true, orderCode = orderCode)
+                    )
+                },
+                onPaymentError = { error ->
+                    showVNPayWebView = false
+                    viewModel.clearPaymentUrl()
+                    navController.navigate(
+                        NavRoute.NavPaymentResult(success = false, orderCode = null)
+                    )
+                },
+                onDismiss = {
+                    showVNPayWebView = false
+                    viewModel.clearPaymentUrl()
+                }
+            )
+        }
+        
+        // 5. Hiển thị lỗi nếu có
+        paymentError?.let { error ->
+            LaunchedEffect(error) {
+                // Có thể hiển thị Snackbar hoặc AlertDialog
+            }
         }
     }
 }
@@ -133,7 +182,7 @@ fun OrderScreen(
 @Composable
 fun OrderCard(
     order: Order,
-    onClick: () -> Unit // Callback click
+    onClick: () -> Unit, // Callback click
 ) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -207,7 +256,7 @@ fun OrderCard(
 fun OrderDetailDialog(
     order: Order,
     onDismiss: () -> Unit,
-    onRepay: (Order) -> Unit
+    onRepay: (Order) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -269,7 +318,7 @@ fun OrderDetailDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OrderStatusChip(statusName = order.statusName)
+                        OrderStatusChip(status = order.status, statusName = order.statusName)
                         Text(
                             text = formatDate(order.createdAt),
                             style = MaterialTheme.typography.bodyMedium,
@@ -314,14 +363,19 @@ fun OrderDetailDialog(
 
                     // 4. Tổng kết tiền
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PriceRow("Tạm tính", order.totalAmount) // Giả sử Subtotal = Total nếu ko có discount
+                        PriceRow(
+                            "Tạm tính",
+                            order.totalAmount
+                        ) // Giả sử Subtotal = Total nếu ko có discount
                         if (order.discountAmount > 0) {
                             PriceRow("Giảm giá", -order.discountAmount, isDiscount = true)
                         }
 
                         // Tổng cộng to
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
@@ -343,7 +397,9 @@ fun OrderDetailDialog(
                 Column(modifier = Modifier.padding(16.dp)) {
                     // Logic kiểm tra: Nếu đơn hàng chưa hoàn thành và chưa hủy
                     val isPending = order.statusName.lowercase().let {
-                        it.contains("pending") || it.contains("waiting") || it.contains("chờ") || it.contains("process")
+                        it.contains("pending") || it.contains("waiting") || it.contains("chờ") || it.contains(
+                            "process"
+                        )
                     }
 
                     if (isPending) {
@@ -354,7 +410,7 @@ fun OrderDetailDialog(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Text("Tiếp tục thanh toán")
+                            Text(stringResource(R.string.continue_payment))
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -363,7 +419,7 @@ fun OrderDetailDialog(
                         onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Đóng")
+                        Text(stringResource(R.string.close))
                     }
                 }
             }
@@ -419,7 +475,9 @@ fun PriceRow(label: String, amount: Double, isDiscount: Boolean = false) {
 @Composable
 fun OrderItemRow(item: OrderItem) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -463,27 +521,73 @@ fun OrderItemRow(item: OrderItem) {
 }
 
 @Composable
-fun OrderStatusChip(statusName: String) {
-    val (bgColor, contentColor) = when (statusName.lowercase()) {
-        "completed", "hoàn thành", "success" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "processing", "đang xử lý", "pending" -> Color(0xFFFFF3E0) to Color(0xFFEF6C00)
-        "cancelled", "đã hủy", "failed" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurface
+fun OrderStatusChip(status: Int, statusName: String) {
+    // Logic xác định màu sắc và text hiển thị
+    val (bgColor, contentColor, displayText) = when (status) {
+        // Ưu tiên kiểm tra bằng status code (Int) trước
+        0, 1 -> Triple(
+            Color(0xFFFFF3E0),
+            Color(0xFFEF6C00),
+            statusName.ifEmpty { "Chờ xử lý" }) // Pending/Processing
+        2 -> Triple(
+            Color(0xFFE8F5E9),
+            Color(0xFF2E7D32),
+            statusName.ifEmpty { "Hoàn thành" }) // Paid/Completed/Success
+        3 -> Triple(
+            Color(0xFFFFEBEE),
+            Color(0xFFC62828),
+            statusName.ifEmpty { "Đã hủy" }) // Cancelled/Failed
+        4 -> Triple(
+            Color(0xFFE3F2FD),
+            Color(0xFF1976D2),
+            statusName.ifEmpty { "Đã hoàn tiền" }) // Refunded
+        else -> {
+            // Nếu status code không xác định, fallback về kiểm tra statusName (String)
+            when (statusName.lowercase()) {
+                "completed", "hoàn thành", "success" -> Triple(
+                    Color(0xFFE8F5E9),
+                    Color(0xFF2E7D32),
+                    statusName
+                )
+
+                "processing", "đang xử lý", "pending", "chờ thanh toán" -> Triple(
+                    Color(0xFFFFF3E0),
+                    Color(0xFFEF6C00),
+                    statusName
+                )
+
+                "cancelled", "đã hủy", "failed" -> Triple(
+                    Color(0xFFFFEBEE),
+                    Color(0xFFC62828),
+                    statusName
+                )
+
+                else -> Triple(
+                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                    MaterialTheme.colorScheme.onSurface,
+                    statusName.ifEmpty { "Không xác định" }
+                )
+            }
+        }
     }
+
+    // Nếu không có gì để hiển thị, thì không vẽ gì cả
+    if (displayText.isBlank()) return
+
     Surface(
         color = bgColor,
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(4.dp)
+        shape = RoundedCornerShape(16.dp), // Bo tròn hơn cho đẹp
     ) {
         Text(
-            text = statusName.ifEmpty { "Không xác định" }, // Fallback text nếu rỗng
+            text = displayText,
             color = contentColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium, // Dùng labelMedium cho dễ đọc hơn
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
         )
     }
 }
+
 
 @Composable
 fun EmptyOrderState() {

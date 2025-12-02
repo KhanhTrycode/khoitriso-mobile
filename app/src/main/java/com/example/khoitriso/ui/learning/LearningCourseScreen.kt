@@ -4,18 +4,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.ArrowBack
+import com.example.khoitriso.R
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -25,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,13 +42,20 @@ import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Assignment
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
+import com.example.khoitriso.domain.models.LessonDiscussion
 import com.example.khoitriso.domain.models.Material
-import com.example.khoitriso.ui.behavior.ErrorDisplay
-import com.example.khoitriso.ui.behavior.Media3AndroidView
-import com.example.khoitriso.ui.behavior.MyLoadingProcessing
+import com.example.khoitriso.ui.common.ErrorDisplay
+import com.example.khoitriso.ui.common.Media3AndroidView
+import com.example.khoitriso.ui.common.LoadingIndicator
+import com.example.khoitriso.ui.common.SafeImage
+import com.example.khoitriso.ui.common.FormatTimeAgo
+import com.example.khoitriso.ui.forum.KatexHtmlContent
+import com.example.khoitriso.ui.common.SafeImage
+import com.example.khoitriso.ui.common.FormatTimeAgo
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.toFileSize
+
 
 // --- MÀN HÌNH CHÍNH (SCAFFOLD) ---
 
@@ -64,7 +79,7 @@ fun LearningCourseScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Nội dung khóa học",
+                        stringResource(R.string.course_content),
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -103,7 +118,7 @@ fun ContentScreen(
         is UiState.Loading -> Box(
             modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
-        ) { MyLoadingProcessing() }
+        ) { LoadingIndicator() }
 
         is UiState.Error -> ErrorDisplay(message = state.message) { viewModel.getCourseDetail() }
         is UiState.Success -> {
@@ -116,7 +131,7 @@ fun ContentScreen(
                     is UiState.Loading -> Box(
                         modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ) { MyLoadingProcessing() }
+                    ) { LoadingIndicator() }
 
                     is UiState.Error -> ErrorDisplay(
                         message = lesson.message,
@@ -143,7 +158,8 @@ fun ContentScreen(
                             onMaterialClick = {material ->
                                 viewModel.downloadMaterial(context = context, url = material.fileUrl,
                                     fileName = material.title, fileType = material.fileType)
-                            }
+                            },
+                            viewModel = viewModel
                         )
                     }
                 }
@@ -185,10 +201,18 @@ fun CourseContentTabs(
     currentLesson: Lesson?,
     onLessonClick: (Lesson) -> Unit,
     onAssignmentClick: (Assignment) -> Unit,
-    onMaterialClick: (Material) -> Unit
+    onMaterialClick: (Material) -> Unit,
+    viewModel: LearningCourseViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Tổng quan", "Bài tập", "Tài liệu", "Hỏi đáp")
+    
+    // Load discussions when tab changes to "Hỏi đáp" and lesson is available
+    LaunchedEffect(selectedTabIndex, currentLesson?.id) {
+        if (selectedTabIndex == 3 && currentLesson != null) {
+            viewModel.loadDiscussions(currentLesson.id)
+        }
+    }
 
     Column {
         TabRow(selectedTabIndex = selectedTabIndex) {
@@ -220,7 +244,16 @@ fun CourseContentTabs(
                 onMaterialClick = onMaterialClick
             )
 
-            3 -> PlaceholderContent(text = "Tính năng Tài liệu sắp ra mắt")
+            3 -> {
+                if (currentLesson != null) {
+                    DiscussionList(
+                        lessonId = currentLesson.id,
+                        viewModel = viewModel
+                    )
+                } else {
+                    PlaceholderContent(text = stringResource(R.string.please_select_lesson))
+                }
+            }
         }
     }
 }
@@ -344,9 +377,9 @@ fun MaterialItem(
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
             icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) },
-            title = { Text(text = "Tải xuống tài liệu?") },
+            title = { Text(stringResource(R.string.download_material_title)) },
             text = {
-                Text("Bạn có muốn tải xuống file \"${selectedMaterial!!.fileName}\" không?")
+                Text(stringResource(R.string.download_file_question, selectedMaterial!!.fileName))
             },
             confirmButton = {
                 TextButton(
@@ -355,12 +388,12 @@ fun MaterialItem(
                         showConfirmDialog = false
                     }
                 ) {
-                    Text("Tải ngay")
+                    Text(stringResource(R.string.download_now))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -413,12 +446,10 @@ fun AssignmentItem(assignment: Assignment, index: Int, isPlaying: Boolean, onCli
                 )
                 if (assignment.description.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = assignment.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
+                    KatexHtmlContent(
+                        html = assignment.description,
+                        textColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textSizeSp = 14f
                     )
                 }
             }
@@ -447,7 +478,7 @@ fun AssignmentItem(assignment: Assignment, index: Int, isPlaying: Boolean, onCli
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Làm bài ngay")
+                Text(stringResource(R.string.start_assignment))
             }
         }
     }
@@ -546,4 +577,253 @@ fun PlaceholderContent(text: String) {
     ) {
         Text(text, style = MaterialTheme.typography.titleMedium, color = Color.Gray)
     }
+}
+
+@Composable
+fun DiscussionList(
+    lessonId: Int,
+    viewModel: LearningCourseViewModel
+) {
+    val discussionsState by viewModel.discussions.collectAsState()
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var newDiscussionText by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Header với nút tạo câu hỏi
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Hỏi đáp",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Button(
+                onClick = { showCreateDialog = true },
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.ask_question))
+            }
+        }
+
+        when (val state = discussionsState) {
+            is UiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator()
+                }
+            }
+            is UiState.Error -> {
+                ErrorDisplay(
+                    message = state.message,
+                    onRetry = { viewModel.loadDiscussions(lessonId) }
+                )
+            }
+            is UiState.Success -> {
+                val discussions = state.data.items
+                if (discussions.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_discussions),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = stringResource(R.string.be_first_to_ask),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(discussions) { discussion ->
+                            DiscussionItem(
+                                discussion = discussion,
+                                onReplyClick = { }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Dialog tạo câu hỏi mới
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            title = { Text(stringResource(R.string.ask_question)) },
+            text = {
+                OutlinedTextField(
+                    value = newDiscussionText,
+                    onValueChange = { newDiscussionText = it },
+                    label = { Text(stringResource(R.string.question_content)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    maxLines = 8
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newDiscussionText.isNotBlank()) {
+                            viewModel.createDiscussion(lessonId, newDiscussionText)
+                            newDiscussionText = ""
+                            showCreateDialog = false
+                        }
+                    },
+                    enabled = newDiscussionText.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.post))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DiscussionItem(
+    discussion: LessonDiscussion,
+    onReplyClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header với avatar và tên
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SafeImage(
+                    url = discussion.userAvatar,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = discussion.userName,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = FormatTimeAgo(discussion.createdAt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (discussion.isPinned) {
+                    Icon(
+                        Icons.Default.Bookmark,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                if (discussion.isResolved) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            // Nội dung câu hỏi
+            Text(
+                text = discussion.content,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Video timestamp nếu có
+            if (discussion.videoTimestamp > 0) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "Tại ${formatTimestamp(discussion.videoTimestamp)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
+            Divider()
+
+            // Footer với vote và reply
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            Icons.Default.ThumbUp,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Text(
+                        text = "${discussion.voteCount}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                TextButton(onClick = onReplyClick) {
+                    Icon(
+                        Icons.Default.Comment,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.replies_count, discussion.replyCount))
+                }
+            }
+        }
+    }
+}
+
+private fun formatTimestamp(seconds: Int): String {
+    val minutes = seconds / 60
+    val secs = seconds % 60
+    return String.format("%d:%02d", minutes, secs)
 }

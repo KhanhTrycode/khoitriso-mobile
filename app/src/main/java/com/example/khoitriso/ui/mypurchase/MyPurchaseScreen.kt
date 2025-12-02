@@ -30,7 +30,7 @@ import com.example.khoitriso.data.dto.MyBookDto
 import com.example.khoitriso.data.dto.MyCourseDto
 import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyCourse
-import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 import java.io.File

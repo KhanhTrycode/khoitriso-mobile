@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.khoitriso.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,9 +32,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Assignment
 import com.example.khoitriso.domain.models.Question
-import com.example.khoitriso.ui.behavior.ErrorDisplay
-import com.example.khoitriso.ui.behavior.MyLoadingProcessing
-import com.example.khoitriso.ui.behavior.QuestionItem
+import com.example.khoitriso.ui.common.ErrorDisplay
+import com.example.khoitriso.ui.common.LoadingIndicator
+import com.example.khoitriso.ui.common.QuestionItem
 import com.example.khoitriso.utils.UiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -60,33 +62,34 @@ fun AssignmentScreen(
         drawerState = drawerState,
         gesturesEnabled = isAssignmentStarted.value,
         drawerContent = {
-            if (assignmentState is UiState.Success) {
-                val assignment = (assignmentState as UiState.Success<Assignment>).data
-                AssignmentDrawerGrid(
-                    questions = assignment.questions,
-                    isAnswers = isAnswers,
-                    onQuestionSelected = { index ->
-                        scope.launch {
-                            drawerState.close() // Đóng drawer trước
-                            // Cuộn đến câu hỏi được chọn
-                            listState.animateScrollToItem(index)
+            when (val state = assignmentState) {
+                is UiState.Success -> {
+                    AssignmentDrawerGrid(
+                        questions = state.data.questions,
+                        isAnswers = isAnswers,
+                        onQuestionSelected = { index ->
+                            scope.launch {
+                                drawerState.close()
+                                listState.animateScrollToItem(index)
+                            }
                         }
-                    }
-                )
+                    )
+                }
+                else -> {}
             }
         }
     ) {
         Scaffold(
             topBar = {
-                // Lấy title an toàn
-                val title = if (assignmentState is UiState.Success) {
-                    (assignmentState as UiState.Success<Assignment>).data.title
-                } else "Bài tập"
+                val title = when (val state = assignmentState) {
+                    is UiState.Success -> state.data.title
+                    else -> "Bài tập"
+                }
 
-                // Lấy timeLimit an toàn để truyền vào Timer
-                val timeLimit = if (assignmentState is UiState.Success) {
-                    (assignmentState as UiState.Success<Assignment>).data.timeLimit
-                } else 0
+                val timeLimit = when (val state = assignmentState) {
+                    is UiState.Success -> state.data.timeLimit
+                    else -> 0
+                }
 
                 TopAppBar(
                     title = {
@@ -127,7 +130,7 @@ fun AssignmentScreen(
                 }
 
                 UiState.Loading -> {
-                    MyLoadingProcessing()
+                    LoadingIndicator()
                 }
 
                 is UiState.Success<Assignment> -> {
@@ -304,7 +307,7 @@ fun AssignmentContent(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Chương này chưa có câu hỏi.", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.no_questions_in_chapter), style = MaterialTheme.typography.bodyLarge)
                 }
             }
         } else {
@@ -327,7 +330,7 @@ fun AssignmentContent(
                         .fillMaxWidth()
                         .padding(top = 16.dp)
                 ) {
-                    Text("NỘP BÀI")
+                    Text(stringResource(R.string.submit_assignment).uppercase())
                 }
             }
         }
@@ -358,7 +361,7 @@ fun AssignmentInfoCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AssistChip(
                     onClick = {},
-                    label = { Text("${assignment.timeLimit} phút") },
+                    label = { Text(stringResource(R.string.time_limit, assignment.timeLimit)) },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Timer,
@@ -369,7 +372,7 @@ fun AssignmentInfoCard(
                 )
                 AssistChip(
                     onClick = {},
-                    label = { Text("${assignment.questions.size} Câu hỏi") }
+                    label = { Text(stringResource(R.string.question_count, assignment.questions.size)) }
                 )
             }
 

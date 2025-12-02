@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import com.example.khoitriso.R
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Notification
+import com.example.khoitriso.utils.NotificationType
 import com.example.khoitriso.utils.UiState
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -54,7 +57,7 @@ fun NotificationScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "Thông báo",
+                            stringResource(R.string.notifications_title),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     },
@@ -90,7 +93,7 @@ fun NotificationScreen(
                 }
                 is UiState.Error -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Có lỗi xảy ra", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.error_occurred_short), color = MaterialTheme.colorScheme.error)
                     }
                 }
                 is UiState.Success -> {
@@ -149,32 +152,31 @@ fun NotificationFilterBar(
                         if (isUnreadOnly) onToggleUnread()
                         onSelectType(null)
                     },
-                    label = { Text("Tất cả") }
+                    label = { Text(stringResource(R.string.all_notifications)) }
                 )
             }
             item {
                 FilterChip(
                     selected = isUnreadOnly,
                     onClick = onToggleUnread,
-                    label = { Text("Chưa đọc") },
+                    label = { Text(stringResource(R.string.unread_notifications)) },
                     leadingIcon = if (isUnreadOnly) {
                         { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) }
                     } else null
                 )
             }
-            // Mock Types: 1=System, 2=Order, 5=Payment (Ví dụ)
             item {
                 FilterChip(
-                    selected = selectedType == 2,
-                    onClick = { onSelectType(if (selectedType == 2) null else 2) },
-                    label = { Text("Đơn hàng") }
+                    selected = selectedType == NotificationType.Order.value,
+                    onClick = { onSelectType(if (selectedType == NotificationType.Order.value) null else NotificationType.Order.value) },
+                    label = { Text(NotificationType.Order.displayName) }
                 )
             }
             item {
                 FilterChip(
-                    selected = selectedType == 1,
-                    onClick = { onSelectType(if (selectedType == 1) null else 1) },
-                    label = { Text("Hệ thống") }
+                    selected = selectedType == NotificationType.System.value,
+                    onClick = { onSelectType(if (selectedType == NotificationType.System.value) null else NotificationType.System.value) },
+                    label = { Text(NotificationType.System.displayName) }
                 )
             }
         }
@@ -202,7 +204,7 @@ fun NotificationItem(
         verticalAlignment = Alignment.Top
     ) {
         // 1. Icon (Dựa trên Type)
-        val iconConfig = getNotificationIcon(0)
+        val iconConfig = getNotificationIcon(notification.type)
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -311,13 +313,29 @@ fun EmptyNotificationState() {
 
 // Helper để chọn icon và màu dựa trên type (Giả định từ MockData)
 @Composable
-fun getNotificationIcon(type: Int): Pair<ImageVector, Color> {
-    return when (type) {
-        1 -> Icons.Default.SystemUpdate to Color(0xFF2196F3) // System
-        2 -> Icons.Default.ShoppingCart to Color(0xFF4CAF50) // Order
-        4 -> Icons.Default.Assignment to Color(0xFFFF9800)   // Assignment
-        5 -> Icons.Default.Payment to Color(0xFF9C27B0)      // Payment
-        else -> Icons.Default.Notifications to MaterialTheme.colorScheme.primary // Default
+fun getNotificationIcon(type: Int?): Pair<ImageVector, Color> {
+    if (type == null) {
+        return Icons.Default.Notifications to MaterialTheme.colorScheme.primary
+    }
+    return when (NotificationType.fromInt(type)) {
+        NotificationType.System -> Icons.Default.SystemUpdate to Color(0xFF2196F3)
+        NotificationType.Course -> Icons.Default.School to Color(0xFF4CAF50)
+        NotificationType.Lesson -> Icons.Default.PlayCircle to Color(0xFF2196F3)
+        NotificationType.Assignment -> Icons.Default.Assignment to Color(0xFFFF9800)
+        NotificationType.Order -> Icons.Default.ShoppingCart to Color(0xFF4CAF50)
+        NotificationType.Payment -> Icons.Default.Payment to Color(0xFF9C27B0)
+        NotificationType.Certificate -> Icons.Default.CardMembership to Color(0xFFFFC107)
+        NotificationType.Forum -> Icons.Default.Forum to Color(0xFF00BCD4)
+        NotificationType.Review -> Icons.Default.Star to Color(0xFFFF9800)
+        NotificationType.Announcement -> Icons.Default.Campaign to Color(0xFFF44336)
+        NotificationType.LiveClass -> Icons.Default.VideoCall to Color(0xFFE91E63)
+        NotificationType.LearningPath -> Icons.Default.Timeline to Color(0xFF9C27B0)
+        NotificationType.Book -> Icons.Default.MenuBook to Color(0xFF795548)
+        NotificationType.Wishlist -> Icons.Default.Favorite to Color(0xFFE91E63)
+        NotificationType.Coupon -> Icons.Default.LocalOffer to Color(0xFF4CAF50)
+        NotificationType.LessonDiscussion -> Icons.Default.Comment to Color(0xFF2196F3)
+        NotificationType.ForumAnswer -> Icons.Default.Reply to Color(0xFF00BCD4)
+        null -> Icons.Default.Notifications to MaterialTheme.colorScheme.primary
     }
 }
 

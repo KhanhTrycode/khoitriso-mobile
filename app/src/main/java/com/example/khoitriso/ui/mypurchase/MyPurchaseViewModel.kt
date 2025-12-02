@@ -9,8 +9,6 @@ import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.domain.models.MyResponese
-import com.example.khoitriso.domain.repository.BookRepository
-import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.test.MockData

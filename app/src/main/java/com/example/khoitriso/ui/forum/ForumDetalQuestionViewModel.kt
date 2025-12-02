@@ -111,27 +111,12 @@ class ForumDetalQuestionViewModel @Inject constructor(
     }
 
     private fun loadUserVoteForQuestion(questionId: String, userId: Int) {
-        loadDataWithNoResult(
-            stateFlow = _isVoted,
-            mockData = 1,
-            apiCall = {
-                forumUsecase.getUserVote(1, questionId, userId)
-            }
-        )
-        val key = "2-${questionId}"
-
         viewModelScope.launch {
             if (_isTestMode) {
-                _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
-                    put(key, 1)
-                }
+                _isVoted.value = 1 // Mock: user has upvoted
             } else {
                 forumUsecase.getUserVote(1, questionId, userId).onSuccess { voteType ->
-                    _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
-                        if (voteType != 0) {
-                            put(key, voteType)
-                        }
-                    }
+                    _isVoted.value = voteType
                 }
             }
         }
@@ -245,11 +230,39 @@ class ForumDetalQuestionViewModel @Inject constructor(
                 forumUsecase.getAnswers(questionId)
             },
             onSuccess = {
-                it.data.forEach {
-                    loadComments(2, it.id)
+                it.data.forEach { answer ->
+                    loadComments(2, answer.id)
+                    // Load user vote for each answer
+                    (_currentUser.value as? UiState.Success<User>)?.data?.id?.let { userId ->
+                        loadUserVoteForAnswer(answer.id, userId)
+                    }
                 }
             }
         )
+    }
+
+    private fun loadUserVoteForAnswer(answerId: String, userId: Int) {
+        viewModelScope.launch {
+            val key = "2-$answerId"
+            if (_isTestMode) {
+                // Mock: Set some votes for testing
+                if (answerId == "fa1") {
+                    _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
+                        put(key, 1) // First answer is upvoted
+                    }
+                }
+            } else {
+                forumUsecase.getUserVote(2, answerId, userId).onSuccess { voteType ->
+                    _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
+                        if (voteType != 0) {
+                            put(key, voteType)
+                        } else {
+                            remove(key) // Remove if no vote
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun loadComments(parentType: Int, parentId: String) {
@@ -300,34 +313,34 @@ class ForumDetalQuestionViewModel @Inject constructor(
     }
 
     fun unacceptAnswer(answerId: String) {
-        viewModelScope.launch {
-            val result = if (_isTestMode) {
-                debug("Unaccepting answer in TestMode", "ForumDetailViewModel")
-                Result.success(Unit)
-            } else {
-                forumUsecase.unacceptAnswer(answerId)
-            }
-
-            result.fold(
-                onSuccess = {
-                    // Refresh question and answers
-                    val currentState = _question.value
-                    if (currentState is UiState.Success) {
-                        getQuestionById()
-                        loadAnswers(currentState.data.id)
-                    }
-                    debug(
-                        "Unaccept answer successful for answerId: $answerId",
-                        "ForumDetailViewModel"
-                    )
-                },
-                onFailure = { exception ->
-                    debug(
-                        "Unaccept answer failed for answerId: $answerId: ${exception.message}",
-                        "ForumDetailViewModel"
-                    )
-                }
-            )
-        }
+//        viewModelScope.launch {
+//            val result = if (_isTestMode) {
+//                debug("Unaccepting answer in TestMode", "ForumDetailViewModel")
+//                Result.success(Unit)
+//            } else {
+//                forumUsecase.unacceptAnswer(answerId)
+//            }
+//
+//            result.fold(
+//                onSuccess = {
+//                    // Refresh question and answers
+//                    val currentState = _question.value
+//                    if (currentState is UiState.Success) {
+//                        getQuestionById()
+//                        loadAnswers(currentState.data.id)
+//                    }
+//                    debug(
+//                        "Unaccept answer successful for answerId: $answerId",
+//                        "ForumDetailViewModel"
+//                    )
+//                },
+//                onFailure = { exception ->
+//                    debug(
+//                        "Unaccept answer failed for answerId: $answerId: ${exception.message}",
+//                        "ForumDetailViewModel"
+//                    )
+//                }
+//            )
+//        }
     }
 }

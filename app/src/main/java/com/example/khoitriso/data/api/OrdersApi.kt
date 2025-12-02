@@ -25,7 +25,7 @@ interface OrdersApi {
         @Body request: PaymentRequest
     ): Response<ApiRespone<PaymentResultDto>>
 
-    @GET("orders/my-order")
+    @GET("orders/my-orders")
     suspend fun getOrder(
         @Query("status") status: Int,
         @Query("search") search: String? = null,

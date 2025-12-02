@@ -43,6 +43,16 @@ import com.example.khoitriso.domain.usecase.order.PaymentProgress
 import com.example.khoitriso.domain.usecase.order.QueryTransaction
 import com.example.khoitriso.domain.usecase.order.RemoveFromCart
 import com.example.khoitriso.domain.usecase.order.VNPayCreatePaymentUrl
+import com.example.khoitriso.domain.usecase.user.GetCurrentUser
+import com.example.khoitriso.domain.usecase.user.GetProfile
+import com.example.khoitriso.domain.usecase.user.UpdateProfile
+import com.example.khoitriso.domain.usecase.user.UploadAvatar
+import com.example.khoitriso.domain.usecase.user.UserUsecase
+import com.example.khoitriso.domain.repository.UserRepository
+import com.example.khoitriso.domain.repository.LessonDiscussionRepository
+import com.example.khoitriso.domain.repository.WishlistRepository
+import com.example.khoitriso.domain.usecase.discussion.*
+import com.example.khoitriso.domain.usecase.wishlist.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -108,9 +118,10 @@ object UsecaseModule {
             updateAnswer = UpdateAnswer(forumRepository),
             deleteAnswer = DeleteAnswer(forumRepository),
             acceptAnswer = AcceptAnswer(forumRepository),
-            unacceptAnswer = UnacceptAnswer(forumRepository),
             getComments = GetComments(forumRepository),
             createComment = CreateComment(forumRepository),
+            updateComment = UpdateComment(forumRepository),
+            deleteComment = DeleteComment(forumRepository),
             vote = Vote(forumRepository),
             getVotes = GetVotes(forumRepository),
             getUserVote = GetUserVote(forumRepository),
@@ -157,6 +168,57 @@ object UsecaseModule {
             paymentFreeOrder = PaymentFreeOrder(orderRepository),
             vnpayCreatePaymentUrl = VNPayCreatePaymentUrl(vnPayRepository),
             queryTransaction = QueryTransaction(vnPayRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserUsecase(userRepository: UserRepository): UserUsecase {
+        return UserUsecase(
+            getCurrentUser = GetCurrentUser(userRepository),
+            getProfile = GetProfile(userRepository),
+            updateProfile = UpdateProfile(userRepository),
+            uploadAvatar = UploadAvatar(userRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideLessonDiscussionUsecase(
+        lessonDiscussionRepository: LessonDiscussionRepository
+    ): LessonDiscussionUsecase {
+        return LessonDiscussionUsecase(
+            getLessonDiscussions = GetLessonDiscussions(lessonDiscussionRepository),
+            getLessonDiscussionById = GetLessonDiscussionById(lessonDiscussionRepository),
+            createLessonDiscussion = CreateLessonDiscussion(lessonDiscussionRepository),
+            updateLessonDiscussion = UpdateLessonDiscussion(lessonDiscussionRepository),
+            deleteLessonDiscussion = DeleteLessonDiscussion(lessonDiscussionRepository),
+            pinLessonDiscussion = PinLessonDiscussion(lessonDiscussionRepository),
+            unpinLessonDiscussion = UnpinLessonDiscussion(lessonDiscussionRepository),
+            resolveLessonDiscussion = ResolveLessonDiscussion(lessonDiscussionRepository),
+            unresolveLessonDiscussion = UnresolveLessonDiscussion(lessonDiscussionRepository),
+            getLessonDiscussionReplies = GetLessonDiscussionReplies(lessonDiscussionRepository),
+            createLessonDiscussionReply = CreateLessonDiscussionReply(lessonDiscussionRepository),
+            updateLessonDiscussionReply = UpdateLessonDiscussionReply(lessonDiscussionRepository),
+            deleteLessonDiscussionReply = DeleteLessonDiscussionReply(lessonDiscussionRepository),
+            acceptLessonDiscussionReply = AcceptLessonDiscussionReply(lessonDiscussionRepository),
+            voteLessonDiscussion = VoteLessonDiscussion(lessonDiscussionRepository),
+            voteLessonDiscussionReply = VoteLessonDiscussionReply(lessonDiscussionRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideWishlistUsecase(
+        wishlistRepository: WishlistRepository
+    ): WishlistUsecase {
+        return WishlistUsecase(
+            getWishlist = GetWishlist(wishlistRepository),
+            addToWishlist = AddToWishlist(wishlistRepository),
+            removeFromWishlist = RemoveFromWishlist(wishlistRepository),
+            removeItemFromWishlist = RemoveItemFromWishlist(wishlistRepository),
+            isInWishlist = IsInWishlist(wishlistRepository),
+            clearWishlist = ClearWishlist(wishlistRepository)
         )
     }
 }

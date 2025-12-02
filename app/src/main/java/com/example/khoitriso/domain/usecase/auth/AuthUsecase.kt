@@ -36,7 +36,6 @@ class LoadCurrentUserInfo(private val repo: AuthRepository) {
 class AuthGoogleSDK(private val repo: AuthRepository) {
     suspend operator fun invoke(idToken: String): Result<Authorization> {
         val result = repo.authGoogleSDK(idToken)
-        debug("AuthGoogleSDK: $result", "AuthGoogleSDK")
         return result
 
     }

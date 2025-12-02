@@ -10,12 +10,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
+import com.example.khoitriso.data.local.AppLanguage
+import com.example.khoitriso.data.local.AppTheme
+import com.example.khoitriso.data.local.LanguageManager
+import com.example.khoitriso.data.local.ThemeManager
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +38,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.User
-import com.example.khoitriso.ui.behavior.SafeImage
+import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -131,24 +136,73 @@ fun ProfileScreen(
             item { ErrorCard(error) }
         }
 
-        // -- Phần 2: Quản lý & Tiện ích (MỚI) --
+        // -- Phần 2: Cài đặt --
         item {
+            var showLanguageDialog by remember { mutableStateOf(false) }
+            var showThemeDialog by remember { mutableStateOf(false) }
+            
             SettingsSection(
-                title = "Quản lý & Tiện ích",
+                title = stringResource(R.string.account_settings),
                 items = listOf(
-                    // Item 1: Mở Dialog kích hoạt
-                    SettingsItemData("Kích hoạt sách", Icons.Default.VpnKey) {
-                        showActivationDialog = true
+                    SettingsItemData(
+                        title = stringResource(R.string.language),
+                        icon = Icons.Default.Language
+                    ) {
+                        showLanguageDialog = true
                     },
-                    // Item 2: Xem lịch sử đơn hàng
-                    SettingsItemData("Lịch sử đơn hàng", Icons.Default.History) {
-                        navController.navigate(NavRoute.ORDER_HISTORY)
+                    SettingsItemData(
+                        title = stringResource(R.string.theme),
+                        icon = Icons.Default.Palette
+                    ) {
+                        showThemeDialog = true
                     }
                 )
             )
+            
+            if (showLanguageDialog) {
+                LanguageDialog(
+                    onDismiss = { showLanguageDialog = false },
+                    viewModel = viewModel
+                )
+            }
+            
+            if (showThemeDialog) {
+                ThemeDialog(
+                    onDismiss = { showThemeDialog = false },
+                    viewModel = viewModel
+                )
+            }
         }
 
-        // -- Phần 3: Thư viện của tôi --
+        // -- Phần 3: Quản lý & Tiện ích --
+        item {
+            var showWishlistDialog by remember { mutableStateOf(false) }
+            
+            SettingsSection(
+                title = stringResource(R.string.management_utilities),
+                items = listOf(
+                    SettingsItemData(stringResource(R.string.activate_book), Icons.Default.VpnKey) {
+                        showActivationDialog = true
+                    },
+                    SettingsItemData(stringResource(R.string.order_history), Icons.Default.History) {
+                        navController.navigate(NavRoute.ORDER_HISTORY)
+                    },
+                    SettingsItemData(stringResource(R.string.wishlist), Icons.Default.Favorite) {
+                        showWishlistDialog = true
+                        viewModel.loadWishlist()
+                    }
+                )
+            )
+            
+            if (showWishlistDialog) {
+                WishlistDialog(
+                    onDismiss = { showWishlistDialog = false },
+                    viewModel = viewModel
+                )
+            }
+        }
+
+        // -- Phần 4: Thư viện của tôi --
         item {
             SettingsSection(
                 title = stringResource(R.string.account_settings),
@@ -163,7 +217,7 @@ fun ProfileScreen(
             )
         }
 
-        // -- Phần 4: Trợ giúp & Hỗ trợ --
+        // -- Phần 5: Trợ giúp & Hỗ trợ --
         item {
             SettingsSection(
                 title = stringResource(R.string.help_and_support),
@@ -174,7 +228,7 @@ fun ProfileScreen(
             )
         }
 
-        // -- Phần 5: Đăng xuất --
+        // -- Phần 6: Đăng xuất --
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SignOutButton {
@@ -214,11 +268,11 @@ fun ActivationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.VpnKey, contentDescription = null) },
-        title = { Text("Kích hoạt sách") },
+        title = { Text(stringResource(R.string.activate_book_title)) },
         text = {
             Column {
                 Text(
-                    text = "Nhập mã kích hoạt được gửi trong hóa đơn mua hàng để thêm sách vào thư viện:",
+                    text = stringResource(R.string.activate_book_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -226,8 +280,8 @@ fun ActivationDialog(
                 OutlinedTextField(
                     value = code,
                     onValueChange = { code = it },
-                    label = { Text("Mã code") },
-                    placeholder = { Text("VD: BOOK-XXXX-XXXX") },
+                    label = { Text(stringResource(R.string.activation_code)) },
+                    placeholder = { Text(stringResource(R.string.activation_code_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     isError = errorMessage != null,
@@ -255,13 +309,13 @@ fun ActivationDialog(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Kích hoạt")
+                    Text(stringResource(R.string.activate))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isLoading) {
-                Text("Hủy")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -359,7 +413,7 @@ private fun ProfileInfo(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = false, // Không cho sửa email
                         singleLine = true,
-                        supportingText = { Text("Email không thể thay đổi") }
+                        supportingText = { Text(stringResource(R.string.email_cannot_change)) }
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -481,6 +535,285 @@ private fun ErrorCard(error: String) {
                 text = error,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
+        }
+    }
+}
+
+@Composable
+private fun LanguageDialog(
+    onDismiss: () -> Unit,
+    viewModel: ProfileViewModel
+) {
+    val context = LocalContext.current
+    val currentLanguage by remember { mutableStateOf(viewModel.getCurrentLanguage()) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Language, contentDescription = null) },
+        title = { Text(stringResource(R.string.language)) },
+        text = {
+            Column {
+                AppLanguage.entries.forEach { language ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.setLanguage(language)
+                                // Recreate activity để apply language ngay lập tức
+                                if (context is android.app.Activity) {
+                                    context.recreate()
+                                }
+                                onDismiss()
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentLanguage == language,
+                            onClick = {
+                                viewModel.setLanguage(language)
+                                // Recreate activity để apply language ngay lập tức
+                                if (context is android.app.Activity) {
+                                    context.recreate()
+                                }
+                                onDismiss()
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = when (language) {
+                                AppLanguage.VIETNAMESE -> stringResource(R.string.vietnamese)
+                                AppLanguage.ENGLISH -> stringResource(R.string.english)
+                            },
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ThemeDialog(
+    onDismiss: () -> Unit,
+    viewModel: ProfileViewModel
+) {
+    val currentTheme by remember { mutableStateOf(viewModel.getCurrentTheme()) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Palette, contentDescription = null) },
+        title = { Text(stringResource(R.string.theme)) },
+        text = {
+            Column {
+                AppTheme.entries.forEach { theme ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.setTheme(theme)
+                                onDismiss()
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentTheme == theme,
+                            onClick = {
+                                viewModel.setTheme(theme)
+                                onDismiss()
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = when (theme) {
+                                AppTheme.LIGHT -> stringResource(R.string.light_theme)
+                                AppTheme.DARK -> stringResource(R.string.dark_theme)
+                                AppTheme.SYSTEM -> stringResource(R.string.system_theme)
+                            },
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun WishlistDialog(
+    onDismiss: () -> Unit,
+    viewModel: ProfileViewModel
+) {
+    val wishlistState by viewModel.wishlist.collectAsState()
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+        title = { Text(stringResource(R.string.wishlist)) },
+        text = {
+            when (val state = wishlistState) {
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is UiState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                is UiState.Success -> {
+                    val items = state.data
+                    if (items.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = stringResource(R.string.wishlist_empty),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            itemsIndexed(items) {index, item ->
+                                WishlistItemRow(
+                                    item = item,
+                                    onRemove = {
+                                        viewModel.removeFromWishlist(item.id)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun WishlistItemRow(
+    item: com.example.khoitriso.domain.models.WishlistItem,
+    onRemove: () -> Unit
+) {
+    val itemTitle = when {
+        item.item is com.example.khoitriso.domain.models.Book -> {
+            (item.item as com.example.khoitriso.domain.models.Book).title
+        }
+        item.item is com.example.khoitriso.domain.models.Course -> {
+            (item.item as com.example.khoitriso.domain.models.Course).title
+        }
+        else -> "Unknown Item"
+    }
+
+    val itemImage = when {
+        item.item is com.example.khoitriso.domain.models.Book -> {
+            (item.item as com.example.khoitriso.domain.models.Book).coverImage
+        }
+        item.item is com.example.khoitriso.domain.models.Course -> {
+            (item.item as com.example.khoitriso.domain.models.Course).thumbnail
+        }
+        else -> null
+    }
+
+    val itemTypeName = when (item.itemType) {
+        com.example.khoitriso.utils.ItemType.Book -> stringResource(R.string.book)
+        com.example.khoitriso.utils.ItemType.Course -> stringResource(R.string.course)
+        else -> "Unknown"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            SafeImage(
+                url = itemImage,
+                contentDescription = itemTitle,
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = itemTitle,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                Text(
+                    text = itemTypeName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(onClick = onRemove) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.remove_from_wishlist),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }

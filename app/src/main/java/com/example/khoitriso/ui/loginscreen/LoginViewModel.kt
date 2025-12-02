@@ -29,7 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authUsecase: AuthUsecase,
-//    private val tokenManager: TokenManager,
+    private val tokenManager: TokenManager,
 ) : ViewModel() {
 
     private val _token = MutableStateFlow<UiState<Authorization>?>(null)
@@ -67,11 +67,13 @@ class LoginViewModel @Inject constructor(
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             val account = task.getResult(ApiException::class.java)
             val idToken = account?.idToken ?: return
+            debug("$idToken", "LoginViewModel")
             viewModelScope.launch {
                 val result = authUsecase.authGoogleSDK(idToken)
                 result.fold(
                     onSuccess = {
                         _token.value = UiState.Success(it)
+                        tokenManager.saveTokens(it.accessToken, it.refresh)
                     },
                     onFailure = {
                         _token.value = UiState.Error(
