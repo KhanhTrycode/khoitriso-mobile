@@ -28,6 +28,5 @@ fun QuestionDto.toDomain() = Question(
     orderIndex = OrderIndex,
     questionContent = QuestionContent,
     questionType = QuestionType,
-    updatedAt = UpdatedAt,
     id = Id
 )

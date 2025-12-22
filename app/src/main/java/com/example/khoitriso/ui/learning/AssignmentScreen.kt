@@ -16,7 +16,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,11 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Assignment
+import com.example.khoitriso.domain.models.AssignmentSubmission
 import com.example.khoitriso.domain.models.Question
 import com.example.khoitriso.ui.common.ErrorDisplay
 import com.example.khoitriso.ui.common.LoadingIndicator
 import com.example.khoitriso.ui.common.QuestionItem
+import com.example.khoitriso.ui.forum.KatexHtmlContent
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -56,116 +63,262 @@ fun AssignmentScreen(
     val isStarted by viewModel.isStarted.collectAsState()
     val isDone by viewModel.isDone.collectAsState()
     val isAnswers by viewModel.isAnswers.collectAsState()
+    val showSubmitDialog by viewModel.showSubmitDialog.collectAsState()
+    val submissionResult by viewModel.submissionResult.collectAsState()
+    val attemptCount by viewModel.attemptCount.collectAsState()
+
+    // Đảm bảo drawer luôn đóng khi vào screen hoặc khi assignment chưa started
+    LaunchedEffect(Unit) {
+        drawerState.close()
+    }
+
+    LaunchedEffect(isAssignmentStarted.value) {
+        if (!isAssignmentStarted.value) {
+            drawerState.close()
+        }
+    }
 
     // --- DRAWER CONTENT (Navigation) ---
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = isAssignmentStarted.value,
-        drawerContent = {
-            when (val state = assignmentState) {
-                is UiState.Success -> {
-                    AssignmentDrawerGrid(
-                        questions = state.data.questions,
-                        isAnswers = isAnswers,
-                        onQuestionSelected = { index ->
-                            scope.launch {
-                                drawerState.close()
-                                listState.animateScrollToItem(index)
-                            }
-                        }
-                    )
-                }
-                else -> {}
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                val title = when (val state = assignmentState) {
-                    is UiState.Success -> state.data.title
-                    else -> "Bài tập"
-                }
-
-                val timeLimit = when (val state = assignmentState) {
-                    is UiState.Success -> state.data.timeLimit
-                    else -> 0
-                }
-
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.titleSmall
+    // Chỉ hiển thị drawer khi assignment đã started
+    if (isAssignmentStarted.value) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            gesturesEnabled = true,
+            drawerContent = {
+                when (val state = assignmentState) {
+                    is UiState.Success -> {
+                        debug(
+                            "Drawer: Questions count = ${state.data.questions.size}",
+                            "AssignmentScreen"
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, "Quay lại")
-                        }
-                    },
-                    actions = {
-                        if (isAssignmentStarted.value) {
-                            // --- HIỂN THỊ TIMER ---
-                            CountDownTimer(timeLimitInMinutes = timeLimit)
+                        AssignmentDrawerGrid(
+                            questions = state.data.questions,
+                            isAnswers = isAnswers,
+                            onQuestionSelected = { index ->
+                                scope.launch {
+                                    drawerState.close()
+                                    listState.animateScrollToItem(index)
+                                }
+                            }
+                        )
+                    }
 
-                            IconButton(onClick = {
-                                scope.launch { drawerState.open() }
-                            }) {
-                                Icon(Icons.Default.Menu, "Danh sách câu hỏi")
+                    else -> {}
+                }
+            }
+        ) {
+            AssignmentScaffold(
+                navController = navController,
+                viewModel = viewModel,
+                assignmentState = assignmentState,
+                isAssignmentStarted = isAssignmentStarted,
+                isDone = isDone,
+                isAnswers = isAnswers,
+                showSubmitDialog = showSubmitDialog,
+                submissionResult = submissionResult,
+                attemptCount = attemptCount,
+                drawerState = drawerState,
+                listState = listState,
+                scope = scope
+            )
+        }
+    } else {
+        // Không có drawer khi chưa started
+        AssignmentScaffold(
+            navController = navController,
+            viewModel = viewModel,
+            assignmentState = assignmentState,
+            isAssignmentStarted = isAssignmentStarted,
+            isDone = isDone,
+            isAnswers = isAnswers,
+            showSubmitDialog = showSubmitDialog,
+            submissionResult = submissionResult,
+            attemptCount = attemptCount,
+            drawerState = drawerState,
+            listState = listState,
+            scope = scope
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AssignmentScaffold(
+    navController: NavController,
+    viewModel: AssignmentViewModel,
+    assignmentState: UiState<Assignment>,
+    isAssignmentStarted: MutableState<Boolean>,
+    isDone: Boolean,
+    isAnswers: Map<Int, Boolean>,
+    showSubmitDialog: Boolean,
+    submissionResult: UiState<AssignmentSubmission>?,
+    attemptCount: Int,
+    drawerState: DrawerState,
+    listState: LazyListState,
+    scope: CoroutineScope,
+) {
+    Scaffold(
+        topBar = {
+            val title = when (val state = assignmentState) {
+                is UiState.Success -> state.data.title
+                else -> "Bài tập"
+            }
+
+            val timeLimit = when (val state = assignmentState) {
+                is UiState.Success -> state.data.timeLimit
+                else -> 0
+            }
+
+            TopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, "Quay lại")
+                    }
+                },
+                actions = {
+                    if (isAssignmentStarted.value) {
+                        // --- HIỂN THỊ TIMER ---
+                        CountDownTimer(
+                            timeLimitInMinutes = timeLimit,
+                            isStarted = isAssignmentStarted.value
+                        )
+
+                        // --- NÚT NỘP BÀI ---
+                        if (!isDone) {
+                            IconButton(onClick = { viewModel.showSubmitDialog() }) {
+                                Icon(Icons.Default.Send, "Nộp bài")
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    )
+
+                        IconButton(onClick = {
+                            scope.launch { drawerState.open() }
+                        }) {
+                            Icon(Icons.Default.Menu, "Danh sách câu hỏi")
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    ) { contentPadding ->
+        // --- HIỂN THỊ SUBMISSION RESULT ---
+        when (submissionResult) {
+            is UiState.Success -> {
+                SubmissionSuccessScreen(
+                    submission = submissionResult.data,
+                    onBackToLesson = { navController.popBackStack() },
+                    modifier = Modifier.padding(contentPadding)
                 )
             }
-        ) { contentPadding ->
-            when (val assignment = assignmentState) {
-                is UiState.Error -> {
-                    ErrorDisplay(assignment.message) {}
-                }
+            is UiState.Loading -> {
+                LoadingIndicator()
+            }
+            is UiState.Error -> {
+                ErrorDisplay(submissionResult.message) {}
+            }
+            null -> {
+                // --- HIỂN THỊ ASSIGNMENT CONTENT ---
+                when (val assignment = assignmentState) {
+                    is UiState.Error -> {
+                        ErrorDisplay(assignment.message) {}
+                    }
 
-                UiState.Loading -> {
-                    LoadingIndicator()
-                }
+                    UiState.Loading -> {
+                        LoadingIndicator()
+                    }
 
-                is UiState.Success<Assignment> -> {
-                    AssignmentContent(
-                        assignment = assignment.data,
-                        isAssignmentStarted = isAssignmentStarted.value,
-                        isDone = isDone,
-                        listState = listState, // Truyền listState xuống
-                        onStartAssignment = {
-                            isAssignmentStarted.value = true
-                        },
-                        modifier = Modifier.padding(contentPadding),
-                        onOptionSelected = { optionIndex, questionIndex ->
-                            viewModel.onOptionSelected(
-                                questionId = questionIndex, optionId = optionIndex
+                    is UiState.Success<Assignment> -> {
+                        val currentAssignment = assignment.data
+
+                        // Debug log để kiểm tra số lượng questions
+                        LaunchedEffect(currentAssignment.questions.size) {
+                            debug(
+                                "AssignmentScreen: Questions count = ${currentAssignment.questions.size}",
+                                "AssignmentScreen"
                             )
                         }
-                    )
+
+                        // Sử dụng key để force recomposition khi questions thay đổi
+                        AssignmentContent(
+                            key = currentAssignment.id to currentAssignment.questions.size,
+                            assignment = currentAssignment,
+                            isAssignmentStarted = isAssignmentStarted.value,
+                            isDone = isDone,
+                            attemptCount = attemptCount,
+                            canStartAssignment = viewModel.canStartAssignment(),
+                            listState = listState, // Truyền listState xuống
+                            onStartAssignment = {
+                                viewModel.startAssignment()
+                                isAssignmentStarted.value = true
+                            },
+                            onSubmitAssignment = {
+                                viewModel.submitAssignment()
+                            },
+                            modifier = Modifier.padding(contentPadding),
+                            onOptionSelected = { optionIndex, questionIndex ->
+                                viewModel.onOptionSelected(
+                                    questionId = questionIndex, optionId = optionIndex
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }
     }
+    
+    // --- DIALOG XÁC NHẬN NỘP BÀI ---
+    if (showSubmitDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideSubmitDialog() },
+            title = { Text("Xác nhận nộp bài") },
+            text = { Text("Bạn có chắc chắn muốn nộp bài không? Bạn sẽ không thể chỉnh sửa câu trả lời sau khi nộp.") },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.submitAssignment() }
+                ) {
+                    Text("Nộp bài")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.hideSubmitDialog() }
+                ) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
 }
+
 
 // --- UI COMPONENT: COUNTDOWN TIMER ---
 @SuppressLint("DefaultLocale")
 @Composable
-fun CountDownTimer(timeLimitInMinutes: Int) {
+fun CountDownTimer(timeLimitInMinutes: Int, isStarted: Boolean = true) {
     // Chuyển đổi phút sang giây
     var ticks by remember { mutableLongStateOf(timeLimitInMinutes * 60L) }
 
-    LaunchedEffect(Unit) {
-        while (ticks > 0) {
-            delay(1000)
-            ticks--
+    // Chỉ bắt đầu timer khi isStarted = true
+    LaunchedEffect(isStarted) {
+        if (isStarted) {
+            // Reset timer khi bắt đầu
+            ticks = timeLimitInMinutes * 60L
+            while (ticks > 0) {
+                delay(1000)
+                ticks--
+            }
         }
     }
 
@@ -212,6 +365,7 @@ fun AssignmentDrawerGrid(
     ModalDrawerSheet(
         modifier = Modifier.width(100.dp)
     ) {
+        debug("AssignmentDrawerGrid: Questions count = ${questions.size}", "AssignmentDrawerGrid")
 
         Text(
             "Tổng số: ${questions.size} câu",
@@ -229,19 +383,20 @@ fun AssignmentDrawerGrid(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(questions) { index, question ->
+                // GroupTitle không phải là câu hỏi để trả lời, hiển thị với style khác
+                val isGroupTitle = com.example.khoitriso.utils.QuestionType.fromInt(question.questionType) == com.example.khoitriso.utils.QuestionType.GroupTitle
+                val isAnswered = isAnswers[question.id] == true
 
-                val isAnswered = isAnswers[index] == true
-
-                val backgroundColor = if (isAnswered) {
-                    MaterialTheme.colorScheme.primaryContainer // Màu xanh (hoặc màu theme)
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant // Màu xám nhạt
+                val backgroundColor = when {
+                    isGroupTitle -> MaterialTheme.colorScheme.secondaryContainer
+                    isAnswered -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceVariant
                 }
 
-                val contentColor = if (isAnswered) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                val contentColor = when {
+                    isGroupTitle -> MaterialTheme.colorScheme.onSecondaryContainer
+                    isAnswered -> MaterialTheme.colorScheme.onPrimaryContainer
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Box(
@@ -252,19 +407,30 @@ fun AssignmentDrawerGrid(
                         .background(backgroundColor)
                         .clickable { onQuestionSelected(index) }
                         .border(
-                            width = 1.dp,
-                            color = if (isAnswered) Color.Transparent else MaterialTheme.colorScheme.outline.copy(
-                                alpha = 0.3f
-                            ),
+                            width = if (isGroupTitle) 2.dp else 1.dp,
+                            color = when {
+                                isGroupTitle -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                isAnswered -> Color.Transparent
+                                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            },
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {
-                    Text(
-                        text = "${index + 1}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = contentColor
-                    )
+                    if (isGroupTitle) {
+                        Icon(
+                            imageVector = Icons.Default.Label,
+                            contentDescription = null,
+                            tint = contentColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "${index + 1}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor
+                        )
+                    }
                 }
             }
         }
@@ -277,12 +443,36 @@ fun AssignmentContent(
     assignment: Assignment,
     isAssignmentStarted: Boolean,
     isDone: Boolean,
+    attemptCount: Int,
+    canStartAssignment: Boolean,
     listState: LazyListState, // Nhận state
     onStartAssignment: () -> Unit,
+    onSubmitAssignment: () -> Unit,
     modifier: Modifier = Modifier,
     onOptionSelected: (Int, Int) -> Unit,
+    key: Pair<Int, Int>? = null, // Key để force recomposition
 ) {
     val questions = assignment.questions
+
+    // Debug log để kiểm tra
+    LaunchedEffect(questions.size) {
+        debug("AssignmentContent: Questions count = ${questions.size}", "AssignmentContent")
+    }
+
+    // Tính số thứ tự câu hỏi (bỏ GroupTitle) - tính trước khi render
+    val questionNumbers = remember(questions) {
+        var num = 0
+        questions.map { question ->
+            val isGroupTitle = com.example.khoitriso.utils.QuestionType.fromInt(question.questionType) == 
+                com.example.khoitriso.utils.QuestionType.GroupTitle
+            if (!isGroupTitle) {
+                num++
+                question.id to num
+            } else {
+                question.id to null
+            }
+        }.toMap()
+    }
 
     LazyColumn(
         state = listState, // Gán state để điều khiển cuộn
@@ -294,6 +484,8 @@ fun AssignmentContent(
             item {
                 AssignmentInfoCard(
                     assignment = assignment,
+                    attemptCount = attemptCount,
+                    canStartAssignment = canStartAssignment,
                     onStartAssignment = onStartAssignment,
                     enable = isDone,
                     modifier = Modifier.fillMaxWidth()
@@ -307,7 +499,10 @@ fun AssignmentContent(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(stringResource(R.string.no_questions_in_chapter), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        stringResource(R.string.no_questions_in_chapter),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
         } else {
@@ -316,8 +511,8 @@ fun AssignmentContent(
                 QuestionItem(
                     question = question,
                     onOptionSelected = onOptionSelected,
-
-                    )
+                    questionNumber = questionNumbers[question.id]
+                )
                 Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -325,7 +520,7 @@ fun AssignmentContent(
             // Nút Nộp bài ở cuối danh sách
             item {
                 Button(
-                    onClick = { /* Handle submit */ },
+                    onClick = onSubmitAssignment,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp)
@@ -340,6 +535,8 @@ fun AssignmentContent(
 @Composable
 fun AssignmentInfoCard(
     assignment: Assignment,
+    attemptCount: Int,
+    canStartAssignment: Boolean,
     onStartAssignment: () -> Unit,
     enable: Boolean,
     modifier: Modifier = Modifier,
@@ -370,18 +567,61 @@ fun AssignmentInfoCard(
                         )
                     }
                 )
-                AssistChip(
-                    onClick = {},
-                    label = { Text(stringResource(R.string.question_count, assignment.questions.size)) }
-                )
+                // Chỉ hiển thị số câu hỏi nếu đã có questions (khi đã started)
+                if (assignment.questions.isNotEmpty()) {
+                    AssistChip(
+                        onClick = {},
+                        label = {
+                            Text(
+                                stringResource(
+                                    R.string.question_count,
+                                    assignment.questions.size
+                                )
+                            )
+                        }
+                    )
+                }
+                
+                // Hiển thị số lần đã nộp
+                if (assignment.maxAttempts > 0) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("Lần nộp: $attemptCount / ${assignment.maxAttempts}") },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = if (!canStartAssignment) 
+                                MaterialTheme.colorScheme.errorContainer 
+                            else 
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = assignment.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-            )
+            if (assignment.description.isNotBlank()) {
+                KatexHtmlContent(
+                    html = assignment.description,
+                    textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    textSizeSp = 16f
+                )
+            }
+            
+            // Thông báo nếu vượt quá số lần nộp
+            if (!canStartAssignment && assignment.maxAttempts > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "Bạn đã hết lượt làm bài. Số lần nộp tối đa: ${assignment.maxAttempts}",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
             Button(
@@ -389,7 +629,7 @@ fun AssignmentInfoCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !enable,
+                enabled = !enable && canStartAssignment,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(

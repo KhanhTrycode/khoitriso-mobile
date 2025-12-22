@@ -1,10 +1,12 @@
 package com.example.khoitriso.data.dto
 
+import com.example.khoitriso.domain.models.Notification
+
 data class NotificationDto(
     val Id: Int,
-    val UserId: Int,
+    val UserId: Int? = null,
     val Title: String,
-    val Content: String? = null,
+    val Message: String? = null,
     val Type: Int? = null,
     val Priority: Int? = null,
     val IsRead: Boolean = false,
@@ -15,7 +17,7 @@ data class NotificationDto(
 )
 
 data class NotificationsResponse(
-    val Items: List<NotificationDto>? = null,
+    val Data: List<NotificationDto>? = null,
     val Total: Int = 0,
     val UnreadCount: Int = 0,
     val Page: Int = 1,

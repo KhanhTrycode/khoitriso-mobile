@@ -17,9 +17,9 @@ fun ForumQuestionDto.toDomain(): ForumQuestion {
         isPinned = IsPinned,
         isClosed = IsClosed,
         isDeleted = IsDeleted,
-        viewCount = ViewCount,
-        voteCount = VoteCount,
-        answerCount = AnswerCount,
+        viewCount = Views,
+        voteCount = Votes,
+        answerCount = AnswersCount,
         acceptedAnswerId = AcceptedAnswerId?: "Unknown",
         createdAt = CreatedAt,
         updatedAt = UpdatedAt?: "",
@@ -65,10 +65,6 @@ fun ForumCategoryDto.toDomain(): ForumCategory {
         id = Id,
         name = Name,
         description = Description?: "",
-        color = Color?: "",
-        icon = Icon?: "",
-        isActive = IsActive,
-        sortOrder = SortOrder
     )
 }
 

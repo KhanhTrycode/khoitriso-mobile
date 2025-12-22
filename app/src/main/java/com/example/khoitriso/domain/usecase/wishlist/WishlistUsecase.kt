@@ -17,7 +17,7 @@ data class WishlistUsecase(
 class GetWishlist(private val repo: WishlistRepository) {
     suspend operator fun invoke(
         page: Int = 1,
-        pageSize: Int = 20,
+        pageSize: Int = 200,
         itemType: Int? = null
     ) = repo.getWishlist(page, pageSize, itemType)
 }
@@ -26,7 +26,10 @@ class AddToWishlist(private val repo: WishlistRepository) {
     suspend operator fun invoke(
         itemId: Int,
         itemType: Int
-    ) = repo.addToWishlist(itemId, itemType)
+    ): Result<Unit> {
+        // Chỉ cần biết success hay không, không cần wishlist data
+        return repo.addToWishlist(itemId, itemType).map { Unit }
+    }
 }
 
 class RemoveFromWishlist(private val repo: WishlistRepository) {

@@ -207,13 +207,14 @@
     <string name="can_learn_now">Có thể học ngay</string>
     <string name="learn_now">Học ngay</string>
     <string name="buy_now_action">Mua ngay</string>
+    <string name="add_to_cart">Giỏ hàng</string>
     <string name="level_recognition">Nhận biết</string>
     <string name="level_understanding">Thông hiểu</string>
     <string name="level_low_application">Vận dụng thấp</string>
     <string name="level_high_application">Vận dụng cao</string>
     
     <!-- Home Screen -->
-    <string name="good_morning">Chào buổi sáng, %1$s! ☀️</string>
+    <string name="good_morning">Chào buổi sáng %1$s!</string>
     <string name="what_skill_today">Bạn muốn nâng cấp kỹ năng gì hôm nay?</string>
     <string name="categories">Danh mục</string>
     <string name="see_more">Xem thêm</string>
@@ -228,4 +229,460 @@
     <string name="wishlist">Yêu thích</string>
     <string name="wishlist_empty">Danh sách yêu thích trống</string>
     <string name="remove_from_wishlist">Xóa khỏi yêu thích</string>
+    
+    <!-- Error Messages -->
+    <string name="error_response_body_null">Dữ liệu phản hồi trống</string>
+    <string name="error_response_result_null">Kết quả phản hồi trống</string>
+    <string name="error_api_error">Lỗi API: %1$d</string>
+    <string name="error_unknown">Đã xảy ra lỗi không xác định</string>
+    <string name="error_network">Lỗi kết nối mạng</string>
+    <string name="error_item_already_in_cart">Sản phẩm đã có trong giỏ hàng</string>
+    <string name="error_question_not_found">Không tìm thấy câu hỏi</string>
+    <string name="error_failed_to_create_question">Không thể tạo câu hỏi</string>
+    <string name="error_failed_to_update_question">Không thể cập nhật câu hỏi</string>
+    <string name="error_failed_to_create_answer">Không thể tạo câu trả lời</string>
+    <string name="error_failed_to_update_answer">Không thể cập nhật câu trả lời</string>
+    <string name="error_failed_to_create_comment">Không thể tạo bình luận</string>
+    <string name="error_failed_to_update_comment">Không thể cập nhật bình luận</string>
+    <string name="error_failed_to_vote">Không thể bình chọn</string>
+    <string name="error_failed_to_get_stats">Không thể lấy thống kê</string>
+    <string name="error_response_data_null">Dữ liệu phản hồi trống</string>
+    <string name="error_no_user_data">Không có dữ liệu người dùng</string>
+    <string name="error_course_not_found">Khóa học không tìm thấy</string>
+    <string name="error_book_not_found">Sách không tìm thấy</string>
+    
+    <!-- Forum Ask Screen -->
+    <string name="ask_question_title">Đặt câu hỏi</string>
+    <string name="ask_question_subtitle">Chia sẻ thắc mắc của bạn với cộng đồng</string>
+    <string name="question_title_label">Tiêu đề câu hỏi *</string>
+    <string name="question_title_hint">Ví dụ: Cách tính đạo hàm...</string>
+    <string name="question_title_helper">Tiêu đề ngắn gọn, rõ ràng và mô tả chính xác vấn đề</string>
+    <string name="category_label">Danh mục *</string>
+    <string name="content_label">Mô tả chi tiết *</string>
+    <string name="content_hint">Mô tả chi tiết câu hỏi của bạn...</string>
+    <string name="content_helper">Mô tả càng chi tiết, bạn càng có khả năng nhận được câu trả lời chính xác</string>
+    <string name="tags_label">Tags * (Tối đa 5)</string>
+    <string name="tag_input_hint">Nhập tag và nhấn Thêm</string>
+    <string name="add_tag">Thêm tag</string>
+    <string name="popular_tags">Tags phổ biến:</string>
+    <string name="tips_title">Mẹo để có câu trả lời tốt</string>
+    <string name="tip_search_first">Tìm kiếm trước khi đặt câu hỏi để tránh trùng lặp</string>
+    <string name="tip_clear_title">Viết tiêu đề rõ ràng, cụ thể về vấn đề</string>
+    <string name="tip_detailed_description">Mô tả chi tiết những gì bạn đã thử</string>
+    <string name="tip_use_tags">Sử dụng tags phù hợp để dễ tìm kiếm</string>
+    <string name="tip_attach_images">Đính kèm hình ảnh nếu cần thiết</string>
+    <string name="post_question">Đăng câu hỏi</string>
+    <string name="validation_title_too_short">Tiêu đề phải có ít nhất 10 ký tự</string>
+    <string name="validation_content_too_short">Mô tả phải có ít nhất 20 ký tự</string>
+    <string name="validation_category_required">Vui lòng chọn danh mục</string>
+    <string name="validation_tags_required">Vui lòng thêm ít nhất 1 tag</string>
+    <string name="error_loading_categories">Lỗi tải danh mục: %1$s</string>
+    <string name="bookmarked_time_ago">Đã bookmark %1$s</string>
+    <string name="no_bookmarks">Chưa có bookmark</string>
+    <string name="no_bookmarks_message">Hãy bookmark các câu hỏi bạn quan tâm!</string>
+    <string name="bookmarks_count">%1$d câu hỏi đã bookmark</string>
+    <string name="remove_bookmark">Xóa bookmark</string>
+    <string name="ask_question_fab">Đặt câu hỏi</string>
+    <string name="view_bookmarks">Xem Bookmarks</string>
+    <string name="validation_title_too_short_msg">Tiêu đề phải có ít nhất 10 ký tự</string>
+    <string name="validation_content_too_short_msg">Mô tả phải có ít nhất 20 ký tự</string>
+    <string name="validation_category_required_msg">Vui lòng chọn danh mục</string>
+    <string name="validation_tags_required_msg">Vui lòng thêm ít nhất 1 tag</string>
+    <string name="sort_activity">Hoạt động</string>
+    <string name="sort_newest">Mới nhất</string>
+    <string name="sort_oldest">Cũ nhất</string>
+    <string name="sort_votes">Nhiều vote</string>
+    <string name="sort_unanswered">Chưa trả lời</string>
+    <string name="sort_by">Sắp xếp</string>
+    
+    <!-- Message Codes - Success Messages -->
+    <string name="msg_success">Thành công</string>
+    <string name="msg_created_success">Tạo thành công</string>
+    <string name="msg_updated_success">Cập nhật thành công</string>
+    <string name="msg_deleted_success">Xóa thành công</string>
+    
+    <!-- Message Codes - Auth Messages -->
+    <string name="msg_login_success">Đăng nhập thành công</string>
+    <string name="msg_logout_success">Đăng xuất thành công</string>
+    <string name="msg_register_success">Đăng ký thành công</string>
+    <string name="msg_refresh_token_success">Làm mới token thành công</string>
+    <string name="msg_password_changed_success">Đổi mật khẩu thành công</string>
+    <string name="msg_password_reset_success">Đặt lại mật khẩu thành công</string>
+    <string name="msg_email_verified_success">Xác thực email thành công</string>
+    <string name="msg_profile_updated_success">Cập nhật hồ sơ thành công</string>
+    <string name="msg_profile_retrieved_success">Lấy thông tin hồ sơ thành công</string>
+    <string name="msg_oauth_success">Xác thực OAuth thành công</string>
+    <string name="msg_google_sdk_login_success">Đăng nhập Google thành công</string>
+    <string name="msg_facebook_sdk_login_success">Đăng nhập Facebook thành công</string>
+    
+    <!-- Message Codes - User Messages -->
+    <string name="msg_user_created_success">Tạo người dùng thành công</string>
+    <string name="msg_user_updated_success">Cập nhật người dùng thành công</string>
+    <string name="msg_user_deleted_success">Xóa người dùng thành công</string>
+    <string name="msg_user_list_success">Lấy danh sách người dùng thành công</string>
+    <string name="msg_user_detail_success">Lấy thông tin người dùng thành công</string>
+    <string name="msg_avatar_updated_success">Cập nhật ảnh đại diện thành công</string>
+    
+    <!-- Message Codes - Course Messages -->
+    <string name="msg_course_created_success">Tạo khóa học thành công</string>
+    <string name="msg_course_updated_success">Cập nhật khóa học thành công</string>
+    <string name="msg_course_deleted_success">Xóa khóa học thành công</string>
+    <string name="msg_course_list_success">Lấy danh sách khóa học thành công</string>
+    <string name="msg_course_detail_success">Lấy thông tin khóa học thành công</string>
+    <string name="msg_course_enrolled_success">Đăng ký khóa học thành công</string>
+    <string name="msg_course_submitted_for_review_success">Gửi khóa học để duyệt thành công</string>
+    <string name="msg_enrollment_success">Đăng ký thành công</string>
+    <string name="msg_unenrollment_success">Hủy đăng ký thành công</string>
+    <string name="msg_enrollment_not_found">Không tìm thấy đăng ký</string>
+    <string name="msg_already_enrolled">Đã đăng ký rồi</string>
+    <string name="msg_payment_required">Yêu cầu thanh toán</string>
+    
+    <!-- Message Codes - Category Messages -->
+    <string name="msg_category_created_success">Tạo danh mục thành công</string>
+    <string name="msg_category_updated_success">Cập nhật danh mục thành công</string>
+    <string name="msg_category_deleted_success">Xóa danh mục thành công</string>
+    <string name="msg_category_list_success">Lấy danh sách danh mục thành công</string>
+    <string name="msg_category_detail_success">Lấy thông tin danh mục thành công</string>
+    
+    <!-- Message Codes - Cart Messages -->
+    <string name="msg_cart_item_added_success">Thêm vào giỏ hàng thành công</string>
+    <string name="msg_cart_item_updated_success">Cập nhật giỏ hàng thành công</string>
+    <string name="msg_cart_item_deleted_success">Xóa khỏi giỏ hàng thành công</string>
+    <string name="msg_cart_cleared_success">Xóa giỏ hàng thành công</string>
+    <string name="msg_cart_list_success">Lấy danh sách giỏ hàng thành công</string>
+    
+    <!-- Message Codes - Order Messages -->
+    <string name="msg_order_created_success">Tạo đơn hàng thành công</string>
+    <string name="msg_order_updated_success">Cập nhật đơn hàng thành công</string>
+    <string name="msg_order_cancelled_success">Hủy đơn hàng thành công</string>
+    <string name="msg_order_list_success">Lấy danh sách đơn hàng thành công</string>
+    <string name="msg_order_detail_success">Lấy thông tin đơn hàng thành công</string>
+    <string name="msg_order_status_updated_success">Cập nhật trạng thái đơn hàng thành công</string>
+    <string name="msg_order_payment_processed_success">Xử lý thanh toán đơn hàng thành công</string>
+    <string name="msg_order_not_found">Không tìm thấy đơn hàng</string>
+    <string name="msg_vnpay_payment_url_success">Tạo URL thanh toán VNPay thành công</string>
+    <string name="msg_vnpay_query_success">Truy vấn VNPay thành công</string>
+    <string name="msg_vnpay_query_failed">Truy vấn VNPay thất bại</string>
+    <string name="msg_vnpay_status_success">Kiểm tra trạng thái VNPay thành công</string>
+    
+    <!-- Message Codes - Coupon Messages -->
+    <string name="msg_coupon_created_success">Tạo mã giảm giá thành công</string>
+    <string name="msg_coupon_updated_success">Cập nhật mã giảm giá thành công</string>
+    <string name="msg_coupon_deleted_success">Xóa mã giảm giá thành công</string>
+    <string name="msg_coupon_list_success">Lấy danh sách mã giảm giá thành công</string>
+    <string name="msg_coupon_detail_success">Lấy thông tin mã giảm giá thành công</string>
+    <string name="msg_coupon_valid_success">Mã giảm giá hợp lệ</string>
+    <string name="msg_coupon_invalid">Mã giảm giá không hợp lệ</string>
+    <string name="msg_coupon_not_found">Không tìm thấy mã giảm giá</string>
+    <string name="msg_coupon_already_exists">Mã giảm giá đã tồn tại</string>
+    
+    <!-- Message Codes - Learning Path Messages -->
+    <string name="msg_learning_path_created_success">Tạo lộ trình học tập thành công</string>
+    <string name="msg_learning_path_updated_success">Cập nhật lộ trình học tập thành công</string>
+    <string name="msg_learning_path_deleted_success">Xóa lộ trình học tập thành công</string>
+    <string name="msg_learning_path_list_success">Lấy danh sách lộ trình học tập thành công</string>
+    <string name="msg_learning_path_detail_success">Lấy thông tin lộ trình học tập thành công</string>
+    <string name="msg_learning_path_courses_success">Lấy danh sách khóa học trong lộ trình thành công</string>
+    <string name="msg_learning_path_course_added_success">Thêm khóa học vào lộ trình thành công</string>
+    <string name="msg_learning_path_course_removed_success">Xóa khóa học khỏi lộ trình thành công</string>
+    <string name="msg_learning_path_course_updated_success">Cập nhật khóa học trong lộ trình thành công</string>
+    <string name="msg_learning_path_enrolled_success">Đăng ký lộ trình học tập thành công</string>
+    <string name="msg_learning_path_already_enrolled">Đã đăng ký lộ trình học tập rồi</string>
+    <string name="msg_learning_path_not_found">Không tìm thấy lộ trình học tập</string>
+    <string name="msg_learning_path_course_already_exists">Khóa học đã có trong lộ trình</string>
+    <string name="msg_learning_path_course_not_found">Không tìm thấy khóa học trong lộ trình</string>
+    
+    <!-- Message Codes - Wishlist Messages -->
+    <string name="msg_wishlist_item_added_success">Thêm vào yêu thích thành công</string>
+    <string name="msg_wishlist_item_deleted_success">Xóa khỏi yêu thích thành công</string>
+    <string name="msg_wishlist_list_success">Lấy danh sách yêu thích thành công</string>
+    
+    <!-- Message Codes - Review Messages -->
+    <string name="msg_review_created_success">Tạo đánh giá thành công</string>
+    <string name="msg_review_updated_success">Cập nhật đánh giá thành công</string>
+    <string name="msg_review_deleted_success">Xóa đánh giá thành công</string>
+    <string name="msg_review_list_success">Lấy danh sách đánh giá thành công</string>
+    <string name="msg_review_already_exists">Đánh giá đã tồn tại</string>
+    <string name="msg_review_not_found">Không tìm thấy đánh giá</string>
+    
+    <!-- Message Codes - Notification Messages -->
+    <string name="msg_notification_created_success">Tạo thông báo thành công</string>
+    <string name="msg_notification_list_success">Lấy danh sách thông báo thành công</string>
+    <string name="msg_notification_read_success">Đánh dấu đã đọc thành công</string>
+    <string name="msg_notification_deleted_success">Xóa thông báo thành công</string>
+    <string name="msg_notification_not_found">Không tìm thấy thông báo</string>
+    
+    <!-- Message Codes - Notification Content Messages -->
+    <string name="msg_noti_title_course_enrolled">Đã đăng ký khóa học</string>
+    <string name="msg_noti_title_course_completed">Hoàn thành khóa học</string>
+    <string name="msg_noti_title_course_new_lesson">Bài học mới trong khóa học</string>
+    <string name="msg_noti_title_course_approved">Khóa học đã được duyệt</string>
+    <string name="msg_noti_title_course_rejected">Khóa học bị từ chối</string>
+    <string name="msg_noti_course_enrolled">Bạn đã đăng ký khóa học %1$s</string>
+    <string name="msg_noti_course_completed">Chúc mừng! Bạn đã hoàn thành khóa học %1$s</string>
+    <string name="msg_noti_course_new_lesson">Bài học mới đã được thêm vào khóa học %1$s</string>
+    <string name="msg_noti_course_approved">Khóa học %1$s của bạn đã được duyệt</string>
+    <string name="msg_noti_course_rejected">Khóa học %1$s của bạn đã bị từ chối</string>
+    <string name="msg_noti_title_order_created">Đơn hàng mới</string>
+    <string name="msg_noti_title_order_paid">Đơn hàng đã thanh toán</string>
+    <string name="msg_noti_title_order_cancelled">Đơn hàng đã hủy</string>
+    <string name="msg_noti_order_created">Đơn hàng %1$s đã được tạo</string>
+    <string name="msg_noti_order_paid">Đơn hàng %1$s đã được thanh toán thành công</string>
+    <string name="msg_noti_order_cancelled">Đơn hàng %1$s đã bị hủy</string>
+    <string name="msg_noti_title_certificate_issued">Chứng chỉ đã được cấp</string>
+    <string name="msg_noti_certificate_issued">Chứng chỉ của khóa học %1$s đã được cấp</string>
+    <string name="msg_noti_title_assignment_new">Bài tập mới</string>
+    <string name="msg_noti_title_assignment_graded">Bài tập đã được chấm</string>
+    <string name="msg_noti_title_assignment_due_soon">Bài tập sắp đến hạn</string>
+    <string name="msg_noti_assignment_new">Bài tập mới đã được giao trong khóa học %1$s</string>
+    <string name="msg_noti_assignment_graded">Bài tập %1$s đã được chấm điểm</string>
+    <string name="msg_noti_assignment_due_soon">Bài tập %1$s sắp đến hạn nộp</string>
+    <string name="msg_noti_title_lesson_completed">Hoàn thành bài học</string>
+    <string name="msg_noti_title_lesson_discussion_reply">Có trả lời mới trong thảo luận</string>
+    <string name="msg_noti_lesson_completed">Bạn đã hoàn thành bài học %1$s</string>
+    <string name="msg_noti_lesson_discussion_reply">Có trả lời mới cho câu hỏi của bạn trong bài học %1$s</string>
+    <string name="msg_noti_title_book_activated">Sách đã được kích hoạt</string>
+    <string name="msg_noti_title_book_approved">Sách đã được duyệt</string>
+    <string name="msg_noti_title_book_rejected">Sách bị từ chối</string>
+    <string name="msg_noti_book_activated">Sách %1$s đã được kích hoạt thành công</string>
+    <string name="msg_noti_book_approved">Sách %1$s của bạn đã được duyệt</string>
+    <string name="msg_noti_book_rejected">Sách %1$s của bạn đã bị từ chối</string>
+    <string name="msg_noti_title_live_class_scheduled">Lớp học trực tiếp đã được lên lịch</string>
+    <string name="msg_noti_title_live_class_starting">Lớp học trực tiếp sắp bắt đầu</string>
+    <string name="msg_noti_title_live_class_started">Lớp học trực tiếp đã bắt đầu</string>
+    <string name="msg_noti_live_class_scheduled">Lớp học trực tiếp %1$s đã được lên lịch</string>
+    <string name="msg_noti_live_class_starting">Lớp học trực tiếp %1$s sắp bắt đầu</string>
+    <string name="msg_noti_live_class_started">Lớp học trực tiếp %1$s đã bắt đầu</string>
+    <string name="msg_noti_title_learning_path_enrolled">Đã đăng ký lộ trình học tập</string>
+    <string name="msg_noti_title_learning_path_completed">Hoàn thành lộ trình học tập</string>
+    <string name="msg_noti_learning_path_enrolled">Bạn đã đăng ký lộ trình học tập %1$s</string>
+    <string name="msg_noti_learning_path_completed">Chúc mừng! Bạn đã hoàn thành lộ trình học tập %1$s</string>
+    <string name="msg_noti_title_forum_question_answered">Câu hỏi đã được trả lời</string>
+    <string name="msg_noti_title_forum_answer_accepted">Câu trả lời đã được chấp nhận</string>
+    <string name="msg_noti_forum_question_answered">Câu hỏi của bạn đã được trả lời</string>
+    <string name="msg_noti_forum_answer_accepted">Câu trả lời của bạn đã được chấp nhận</string>
+    <string name="msg_answer_not_accepted">Câu trả lời không được chấp nhận</string>
+    <string name="msg_noti_title_review_replied">Đánh giá đã được phản hồi</string>
+    <string name="msg_noti_title_review_helpful_milestone">Đánh giá đạt mốc hữu ích</string>
+    <string name="msg_noti_review_replied">Đánh giá của bạn đã được phản hồi</string>
+    <string name="msg_noti_review_helpful_milestone">Đánh giá của bạn đã đạt mốc hữu ích</string>
+    <string name="msg_noti_title_wishlist_on_sale">Sản phẩm yêu thích đang giảm giá</string>
+    <string name="msg_noti_wishlist_on_sale">Sản phẩm %1$s trong danh sách yêu thích đang giảm giá</string>
+    <string name="msg_noti_title_coupon_applied">Mã giảm giá đã được áp dụng</string>
+    <string name="msg_noti_title_coupon_expiring">Mã giảm giá sắp hết hạn</string>
+    <string name="msg_noti_coupon_applied">Mã giảm giá %1$s đã được áp dụng thành công</string>
+    <string name="msg_noti_coupon_expiring">Mã giảm giá %1$s sắp hết hạn</string>
+    <string name="msg_noti_title_system_announcement">Thông báo hệ thống</string>
+    <string name="msg_noti_title_system_maintenance">Bảo trì hệ thống</string>
+    <string name="msg_noti_system_announcement">%1$s</string>
+    <string name="msg_noti_system_maintenance">Hệ thống sẽ bảo trì vào %1$s</string>
+    
+    <!-- Message Codes - Lesson Messages -->
+    <string name="msg_lesson_created_success">Tạo bài học thành công</string>
+    <string name="msg_lesson_updated_success">Cập nhật bài học thành công</string>
+    <string name="msg_lesson_deleted_success">Xóa bài học thành công</string>
+    <string name="msg_lesson_not_found">Không tìm thấy bài học</string>
+    <string name="msg_lesson_progress_updated_success">Cập nhật tiến độ bài học thành công</string>
+    <string name="msg_video_progress_retrieved_success">Lấy tiến độ video thành công</string>
+    <string name="msg_video_progress_updated_success">Cập nhật tiến độ video thành công</string>
+    
+    <!-- Message Codes - Assignment Messages -->
+    <string name="msg_assignment_created_success">Tạo bài tập thành công</string>
+    <string name="msg_assignment_updated_success">Cập nhật bài tập thành công</string>
+    <string name="msg_assignment_deleted_success">Xóa bài tập thành công</string>
+    <string name="msg_assignment_not_found">Không tìm thấy bài tập</string>
+    <string name="msg_assignment_list_success">Lấy danh sách bài tập thành công</string>
+    <string name="msg_assignment_detail_success">Lấy thông tin bài tập thành công</string>
+    <string name="msg_question_added_to_assignment_success">Thêm câu hỏi vào bài tập thành công</string>
+    <string name="msg_question_removed_from_assignment_success">Xóa câu hỏi khỏi bài tập thành công</string>
+    <string name="msg_question_not_found">Không tìm thấy câu hỏi</string>
+    <string name="msg_question_updated_success">Cập nhật câu hỏi thành công</string>
+    <string name="msg_question_created_success">Tạo câu hỏi thành công</string>
+    <string name="msg_questions_created_success">Tạo danh sách câu hỏi thành công</string>
+    <string name="msg_assignment_submitted_success">Nộp bài tập thành công</string>
+    <string name="msg_assignment_graded_success">Chấm bài tập thành công</string>
+    <string name="msg_max_attempts_exceeded">Đã vượt quá số lần thử tối đa</string>
+    <string name="msg_attempt_not_found">Không tìm thấy lần thử</string>
+    <string name="msg_assignment_due_date_passed">Đã quá hạn nộp bài tập</string>
+    <string name="msg_invalid_default_points_configuration">Cấu hình điểm mặc định không hợp lệ</string>
+    <string name="msg_total_points_must_equal_ten">Tổng điểm phải bằng 10</string>
+    <string name="msg_assignment_answers_not_available">Câu trả lời bài tập chưa có sẵn</string>
+    <string name="msg_assignment_attempt_in_progress">Bài tập đang được làm</string>
+    <string name="msg_assignment_time_limit_exceeded">Đã vượt quá thời gian làm bài</string>
+    <string name="msg_assignment_attempt_already_completed">Bài tập đã được hoàn thành</string>
+    <string name="msg_assignment_batch_graded_success">Chấm hàng loạt bài tập thành công</string>
+    
+    <!-- Message Codes - Lesson Material Messages -->
+    <string name="msg_lesson_material_created_success">Tạo tài liệu bài học thành công</string>
+    <string name="msg_lesson_material_updated_success">Cập nhật tài liệu bài học thành công</string>
+    <string name="msg_lesson_material_deleted_success">Xóa tài liệu bài học thành công</string>
+    <string name="msg_lesson_material_not_found">Không tìm thấy tài liệu bài học</string>
+    <string name="msg_lesson_material_list_success">Lấy danh sách tài liệu bài học thành công</string>
+    
+    <!-- Message Codes - Discussion Messages -->
+    <string name="msg_discussion_created_success">Tạo thảo luận thành công</string>
+    <string name="msg_discussion_updated_success">Cập nhật thảo luận thành công</string>
+    <string name="msg_discussion_deleted_success">Xóa thảo luận thành công</string>
+    <string name="msg_discussion_not_found">Không tìm thấy thảo luận</string>
+    <string name="msg_reply_created_success">Tạo phản hồi thành công</string>
+    <string name="msg_discussion_like_success">Thích thảo luận thành công</string>
+    <string name="msg_discussion_unlike_success">Bỏ thích thảo luận thành công</string>
+    <string name="msg_like_updated_success">Cập nhật lượt thích thành công</string>
+    
+    <!-- Message Codes - Live Class Messages -->
+    <string name="msg_live_class_created_success">Tạo lớp học trực tiếp thành công</string>
+    <string name="msg_live_class_updated_success">Cập nhật lớp học trực tiếp thành công</string>
+    <string name="msg_live_class_deleted_success">Xóa lớp học trực tiếp thành công</string>
+    <string name="msg_live_class_not_found">Không tìm thấy lớp học trực tiếp</string>
+    <string name="msg_live_class_joined_success">Tham gia lớp học trực tiếp thành công</string>
+    <string name="msg_live_class_left_success">Rời khỏi lớp học trực tiếp thành công</string>
+    <string name="msg_live_class_full">Lớp học trực tiếp đã đầy</string>
+    <string name="msg_live_class_not_started">Lớp học trực tiếp chưa bắt đầu</string>
+    <string name="msg_live_class_ended">Lớp học trực tiếp đã kết thúc</string>
+    <string name="msg_live_class_already_joined">Đã tham gia lớp học trực tiếp rồi</string>
+    <string name="msg_live_class_participation_not_found">Không tìm thấy thông tin tham gia</string>
+    <string name="msg_live_class_has_participants">Lớp học trực tiếp đã có người tham gia</string>
+    <string name="msg_live_class_instructor_only">Chỉ giảng viên mới được thực hiện hành động này</string>
+    
+    <!-- Message Codes - Certificate Messages -->
+    <string name="msg_certificate_generated_success">Tạo chứng chỉ thành công</string>
+    <string name="msg_certificate_not_found">Không tìm thấy chứng chỉ</string>
+    <string name="msg_certificate_verified_success">Xác thực chứng chỉ thành công</string>
+    <string name="msg_certificate_requirements_not_met">Chưa đáp ứng yêu cầu để nhận chứng chỉ</string>
+    
+    <!-- Message Codes - Analytics Messages -->
+    <string name="msg_analytics_dashboard_success">Lấy dữ liệu phân tích dashboard thành công</string>
+    <string name="msg_analytics_course_success">Lấy dữ liệu phân tích khóa học thành công</string>
+    <string name="msg_analytics_instructor_success">Lấy dữ liệu phân tích giảng viên thành công</string>
+    <string name="msg_invalid_period">Khoảng thời gian không hợp lệ</string>
+    
+    <!-- Message Codes - Backup Messages -->
+    <string name="msg_backup_created_success">Tạo sao lưu thành công</string>
+    <string name="msg_backup_list_success">Lấy danh sách sao lưu thành công</string>
+    <string name="msg_backup_detail_success">Lấy thông tin sao lưu thành công</string>
+    <string name="msg_backup_deleted_success">Xóa sao lưu thành công</string>
+    <string name="msg_backup_download_success">Tải xuống sao lưu thành công</string>
+    <string name="msg_backup_restore_success">Khôi phục sao lưu thành công</string>
+    <string name="msg_backup_settings_updated_success">Cập nhật cài đặt sao lưu thành công</string>
+    <string name="msg_backup_in_progress">Đang tiến hành sao lưu</string>
+    <string name="msg_backup_failed">Sao lưu thất bại</string>
+    <string name="msg_backup_not_found">Không tìm thấy sao lưu</string>
+    <string name="msg_backup_restore_failed">Khôi phục sao lưu thất bại</string>
+    <string name="msg_backup_restore_confirmation_required">Cần xác nhận để khôi phục sao lưu</string>
+    
+    <!-- Message Codes - Error Messages - Validation -->
+    <string name="msg_validation_error">Lỗi xác thực dữ liệu</string>
+    <string name="msg_invalid_input">Dữ liệu đầu vào không hợp lệ</string>
+    <string name="msg_invalid_email">Email không hợp lệ</string>
+    <string name="msg_invalid_password">Mật khẩu không hợp lệ</string>
+    <string name="msg_invalid_phone_number">Số điện thoại không hợp lệ</string>
+    <string name="msg_invalid_phone_format">Định dạng số điện thoại không hợp lệ</string>
+    <string name="msg_invalid_language">Ngôn ngữ không hợp lệ</string>
+    <string name="msg_invalid_timezone">Múi giờ không hợp lệ</string>
+    <string name="msg_file_required">Yêu cầu có file</string>
+    <string name="msg_invalid_file_type">Loại file không hợp lệ</string>
+    <string name="msg_file_too_large">File quá lớn</string>
+    
+    <!-- Message Codes - Error Messages - Authentication -->
+    <string name="msg_unauthorized">Không có quyền truy cập</string>
+    <string name="msg_forbidden">Bị cấm truy cập</string>
+    <string name="msg_token_expired">Token đã hết hạn</string>
+    <string name="msg_token_invalid">Token không hợp lệ</string>
+    <string name="msg_refresh_token_invalid">Refresh token không hợp lệ</string>
+    <string name="msg_refresh_token_expired">Refresh token đã hết hạn</string>
+    <string name="msg_invalid_credentials">Thông tin đăng nhập không đúng</string>
+    <string name="msg_account_locked">Tài khoản đã bị khóa</string>
+    <string name="msg_account_not_verified">Tài khoản chưa được xác thực</string>
+    <string name="msg_oauth_invalid_state_or_code">OAuth state hoặc code không hợp lệ</string>
+    <string name="msg_oauth_token_exchange_failed">Trao đổi token OAuth thất bại</string>
+    <string name="msg_oauth_invalid_token_response">Phản hồi token OAuth không hợp lệ</string>
+    <string name="msg_oauth_failed_fetch_user_info">Không thể lấy thông tin người dùng OAuth</string>
+    <string name="msg_facebook_clientid_not_configured">Facebook Client ID chưa được cấu hình</string>
+    <string name="msg_facebook_clientsecret_not_configured">Facebook Client Secret chưa được cấu hình</string>
+    <string name="msg_facebook_email_permission_required">Yêu cầu quyền truy cập email Facebook</string>
+    <string name="msg_student_must_use_oauth">Học viên phải sử dụng OAuth để đăng nhập</string>
+    <string name="msg_reset_token_invalid">Token đặt lại mật khẩu không hợp lệ</string>
+    <string name="msg_reset_token_expired">Token đặt lại mật khẩu đã hết hạn</string>
+    <string name="msg_email_verification_token_invalid">Token xác thực email không hợp lệ</string>
+    <string name="msg_email_verification_token_expired">Token xác thực email đã hết hạn</string>
+    <string name="msg_register_failed">Đăng ký thất bại</string>
+    <string name="msg_password_change_failed">Đổi mật khẩu thất bại</string>
+    <string name="msg_user_does_not_exist">Người dùng không tồn tại</string>
+    <string name="msg_username_email_exists">Tên người dùng hoặc email đã tồn tại</string>
+    <string name="msg_password_not_strong_enough">Mật khẩu không đủ mạnh</string>
+    <string name="msg_current_password_incorrect">Mật khẩu hiện tại không đúng</string>
+    
+    <!-- Message Codes - Error Messages - Resource -->
+    <string name="msg_not_found">Không tìm thấy</string>
+    <string name="msg_resource_not_found">Không tìm thấy tài nguyên</string>
+    <string name="msg_user_not_found">Không tìm thấy người dùng</string>
+    <string name="msg_course_not_found">Không tìm thấy khóa học</string>
+    <string name="msg_category_not_found">Không tìm thấy danh mục</string>
+    <string name="msg_cart_item_not_found">Không tìm thấy sản phẩm trong giỏ hàng</string>
+    
+    <!-- Message Codes - Error Messages - Business Logic -->
+    <string name="msg_email_already_exists">Email đã tồn tại</string>
+    <string name="msg_username_already_exists">Tên người dùng đã tồn tại</string>
+    <string name="msg_weak_password">Mật khẩu yếu</string>
+    <string name="msg_password_mismatch">Mật khẩu không khớp</string>
+    <string name="msg_course_already_enrolled">Đã đăng ký khóa học rồi</string>
+    <string name="msg_insufficient_permission">Không đủ quyền</string>
+    <string name="msg_item_already_in_cart">Sản phẩm đã có trong giỏ hàng</string>
+    <string name="msg_item_already_in_wishlist">Sản phẩm đã có trong danh sách yêu thích</string>
+    
+    <!-- Message Codes - Error Messages - System -->
+    <string name="msg_internal_server_error">Lỗi máy chủ nội bộ</string>
+    <string name="msg_database_error">Lỗi cơ sở dữ liệu</string>
+    <string name="msg_external_service_error">Lỗi dịch vụ bên ngoài</string>
+    
+    <!-- Message Codes - Error Messages - Rate Limiting -->
+    <string name="msg_rate_limit_exceeded">Đã vượt quá giới hạn yêu cầu</string>
+    <string name="msg_too_many_requests">Quá nhiều yêu cầu</string>
+    
+    <!-- Message Codes - Settings Messages -->
+    <string name="msg_settings_updated_success">Cập nhật cài đặt thành công</string>
+    <string name="msg_setting_created_success">Tạo cài đặt thành công</string>
+    <string name="msg_setting_key_already_exists">Khóa cài đặt đã tồn tại</string>
+    
+    <!-- Message Codes - File/Upload Messages -->
+    <string name="msg_upload_success">Tải lên thành công</string>
+    <string name="msg_upload_failed">Tải lên thất bại</string>
+    <string name="msg_presigned_url_generated">Tạo URL ký trước thành công</string>
+    <string name="msg_file_deleted_success">Xóa file thành công</string>
+    <string name="msg_file_delete_failed">Xóa file thất bại</string>
+    <string name="msg_file_not_found">Không tìm thấy file</string>
+    <string name="msg_batch_delete_failed">Xóa hàng loạt thất bại</string>
+    <string name="msg_file_cleanup_success">Dọn dẹp file thành công</string>
+    <string name="msg_file_created_success">Tạo file thành công</string>
+    <string name="msg_file_create_failed">Tạo file thất bại</string>
+    <string name="msg_file_updated_success">Cập nhật file thành công</string>
+    <string name="msg_file_update_failed">Cập nhật file thất bại</string>
+    <string name="msg_file_copied_success">Sao chép file thành công</string>
+    <string name="msg_file_copy_failed">Sao chép file thất bại</string>
+    
+    <!-- Message Codes - Book Messages -->
+    <string name="msg_book_created_success">Tạo sách thành công</string>
+    <string name="msg_book_updated_success">Cập nhật sách thành công</string>
+    <string name="msg_book_deleted_success">Xóa sách thành công</string>
+    <string name="msg_book_not_found">Không tìm thấy sách</string>
+    <string name="msg_book_question_created_success">Tạo câu hỏi sách thành công</string>
+    <string name="msg_book_question_updated_success">Cập nhật câu hỏi sách thành công</string>
+    <string name="msg_book_solution_created_success">Tạo đáp án sách thành công</string>
+    <string name="msg_book_solution_updated_success">Cập nhật đáp án sách thành công</string>
+    <string name="msg_activation_code_generated_success">Tạo mã kích hoạt thành công</string>
+    <string name="msg_activation_code_activated_success">Kích hoạt mã thành công</string>
+    <string name="msg_activation_code_invalid">Mã kích hoạt không hợp lệ</string>
+    <string name="msg_activation_code_expired">Mã kích hoạt đã hết hạn</string>
+    <string name="msg_activation_code_already_used">Mã kích hoạt đã được sử dụng</string>
+    <string name="msg_book_already_owned">Bạn đã sở hữu sách này</string>
+    <string name="msg_book_activated_success">Kích hoạt sách thành công</string>
+    <string name="msg_my_books_retrieved_success">Lấy danh sách sách của tôi thành công</string>
+    <string name="msg_book_chapters_retrieved_success">Lấy danh sách chương sách thành công</string>
+    <string name="msg_book_chapter_created_success">Tạo chương sách thành công</string>
+    <string name="msg_book_chapter_updated_success">Cập nhật chương sách thành công</string>
+    <string name="msg_book_chapter_deleted_success">Xóa chương sách thành công</string>
+    <string name="msg_book_chapter_not_found">Không tìm thấy chương sách</string>
+    
+    <!-- Message Codes - Unknown -->
+    <string name="msg_unknown">Lỗi không xác định</string>
 </resources>

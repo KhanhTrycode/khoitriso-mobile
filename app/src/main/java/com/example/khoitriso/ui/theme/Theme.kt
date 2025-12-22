@@ -13,47 +13,86 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-    background = Color.White,
-    onBackground = Color.Black
+    primary = EdPrimary,
+    onPrimary = EdWhite,
+    primaryContainer = Color(0xFF1E3A8A),
+    onPrimaryContainer = EdPrimaryContainer,
+
+    secondary = EdSecondary,
+    onSecondary = EdWhite,
+    secondaryContainer = Color(0xFF581C87),
+    onSecondaryContainer = EdSecondaryContainer,
+
+    tertiary = EdSuccess,
+    onTertiary = EdWhite,
+    tertiaryContainer = Color(0xFF064E3B),
+    onTertiaryContainer = EdSuccessContainer,
+
+    background = EdGray900,
+    onBackground = EdGray100,
+
+    surface = EdGray800,
+    onSurface = EdGray100,
+    surfaceVariant = EdGray700,
+    onSurfaceVariant = EdGray300,
+
+    outline = EdGray600,
+    outlineVariant = EdGray700,
+
+    error = EdDanger,
+    onError = EdWhite,
+    errorContainer = Color(0xFF7F1D1D),
+    onErrorContainer = EdErrorContainer,
+
+    inverseSurface = EdGray100,
+    inverseOnSurface = EdGray900,
+    inversePrimary = EdPrimary,
+
+    scrim = Color(0x99000000)
 )
 
-private val LightColorScheme = lightColorScheme (
-    primary = Color(0xFF3B82F6),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE0F2FE),
+private val LightColorScheme = lightColorScheme(
+    // Primary Colors - Blue (#3B82F6)
+    primary = EdPrimary,
+    onPrimary = EdWhite,
+    primaryContainer = EdPrimaryContainer,
     onPrimaryContainer = Color(0xFF082F49),
 
-    secondary = Color(0xFF8B5CF6),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFEDE9FE),
+    // Secondary Colors - Purple (#8B5CF6)
+    secondary = EdSecondary,
+    onSecondary = EdWhite,
+    secondaryContainer = EdSecondaryContainer,
     onSecondaryContainer = Color(0xFF2E1065),
 
-    tertiary = Color(0xFF10B981),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFD1FAE5),
+    // Tertiary Colors - Green (#10B981)
+    tertiary = EdSuccess,
+    onTertiary = EdWhite,
+    tertiaryContainer = EdSuccessContainer,
     onTertiaryContainer = Color(0xFF064E3B),
 
-    background = Color(0xFFF8FAFC),
-    onBackground = Color(0xFF1F2937),
+    // Background - Light Gray (#F8FAFC)
+    background = EdBackground,
+    onBackground = EdGray800,
 
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF1F2937),
-    surfaceVariant = Color(0xFFF3F4F6),
-    onSurfaceVariant = Color(0xFF6B7280),
+    // Surface - White
+    surface = EdSurface,
+    onSurface = EdGray800,
+    surfaceVariant = EdGray100,
+    onSurfaceVariant = EdGray500,
 
-    outline = Color(0xFFE5E7EB),
-    outlineVariant = Color(0xFFD1D5DB),
+    // Outline
+    outline = EdGray200,
+    outlineVariant = EdGray300,
 
-    error = Color(0xFFEF4444),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFEE2E2),
+    // Error - Red (#EF4444)
+    error = EdDanger,
+    onError = EdWhite,
+    errorContainer = EdErrorContainer,
     onErrorContainer = Color(0xFF7F1D1D),
 
-    inverseSurface = Color(0xFF1F2937),
-    inverseOnSurface = Color(0xFFF9FAFB),
+    // Inverse
+    inverseSurface = EdGray800,
+    inverseOnSurface = EdGray100,
     inversePrimary = Color(0xFF93C5FD),
 
     scrim = Color(0x66000000)

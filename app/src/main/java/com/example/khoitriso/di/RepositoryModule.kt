@@ -8,6 +8,7 @@ import com.example.khoitriso.data.repository.BookRepositoryImpl
 import com.example.khoitriso.data.repository.CategoryRepositoryImpl
 import com.example.khoitriso.data.repository.CourseResponseImpl
 import com.example.khoitriso.data.repository.ForumRepositoryImpl
+import com.example.khoitriso.data.repository.LessonRepositoryImpl
 import com.example.khoitriso.data.repository.NotificationRepositoryImpl
 import com.example.khoitriso.data.repository.UserRepositoryImpl
 import com.example.khoitriso.domain.repository.AuthRepository
@@ -15,12 +16,17 @@ import com.example.khoitriso.domain.repository.BookRepository
 import com.example.khoitriso.domain.repository.CategoryRepository
 import com.example.khoitriso.domain.repository.CourseRepository
 import com.example.khoitriso.domain.repository.ForumRepository
+import com.example.khoitriso.domain.repository.LessonRepository
 import com.example.khoitriso.domain.repository.NotificationRepository
 import com.example.khoitriso.domain.repository.LessonDiscussionRepository
 import com.example.khoitriso.domain.repository.UserRepository
 import com.example.khoitriso.domain.repository.WishlistRepository
 import com.example.khoitriso.data.repository.LessonDiscussionRepositoryImpl
+import com.example.khoitriso.data.repository.ReviewRepositoryImpl
+import com.example.khoitriso.data.repository.CertificateRepositoryImpl
 import com.example.khoitriso.data.repository.WishlistRepositoryImpl
+import com.example.khoitriso.domain.repository.ReviewRepository
+import com.example.khoitriso.domain.repository.CertificateRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -83,5 +89,29 @@ abstract class RepositoryModule {
     abstract fun provideWishlistRepository(
         wishlistRepositoryImpl: WishlistRepositoryImpl
     ): WishlistRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideReviewRepository(
+        reviewRepositoryImpl: ReviewRepositoryImpl
+    ): ReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideCertificateRepository(
+        certificateRepositoryImpl: CertificateRepositoryImpl
+    ): CertificateRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideAssignmentRepository(
+        assignmentRepositoryImpl: com.example.khoitriso.data.repository.AssignmentRepositoryImpl
+    ): com.example.khoitriso.domain.repository.AssignmentRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideLessonRepository(
+        lessonRepositoryImpl: LessonRepositoryImpl
+    ): LessonRepository
 }
 

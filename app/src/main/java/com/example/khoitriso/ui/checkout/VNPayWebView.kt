@@ -1,6 +1,7 @@
 package com.example.khoitriso.ui.checkout
 
 import android.net.Uri
+import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -77,49 +78,56 @@ fun VNPayWebView(
                                 request: WebResourceRequest?
                             ): Boolean {
                                 val currentUrl = request?.url?.toString() ?: return false
+                                Log.d("VNPayWebView", "URL Loading: $currentUrl")
 
-                                // Detect VNPay callback
-                                // Backend callback URL format: /api/vnpay/callback?...
-                                // Or payment-result page with processed params
+                                // Detect VNPay callback or payment result
+                                // 1. Backend callback redirect: /api/vnpay/callback?vnp_...
+                                // 2. Frontend payment result: /payment-result?success=...
                                 if (currentUrl.contains("/api/vnpay/callback") ||
                                     currentUrl.contains("payment-result") ||
                                     currentUrl.contains("vnp_ResponseCode")
                                 ) {
+                                    Log.d("VNPayWebView", "Detected VNPay callback/result URL")
                                     val uri = Uri.parse(currentUrl)
                                     
-                                    // Check if this is direct VNPay callback (has vnp_ params)
-                                    val hasVnpParams = uri.queryParameterNames.any { it.startsWith("vnp_") }
-                                    
-                                    if (hasVnpParams && currentUrl.contains("/api/vnpay/callback")) {
-                                        // Direct VNPay callback - parse vnp_ params directly
-                                        val responseCode = uri.getQueryParameter("vnp_ResponseCode")
-                                        val orderCode = uri.getQueryParameter("vnp_TxnRef")
-                                            ?: uri.getQueryParameter("vnp_OrderInfo")
-                                        val message = uri.getQueryParameter("vnp_ResponseMessage")
-                                        
-                                        if (responseCode == "00") {
-                                            onPaymentSuccess(orderCode ?: "")
-                                        } else {
-                                            onPaymentError(message ?: "Thanh toán thất bại")
-                                        }
-                                        return true
-                                    }
-                                    
-                                    // Processed result from backend (payment-result page)
+                                    // Parse parameters from both VNPay direct callback and backend processed result
                                     val responseCode = uri.getQueryParameter("vnp_ResponseCode")
                                         ?: uri.getQueryParameter("responseCode")
+                                    val transactionStatus = uri.getQueryParameter("vnp_TransactionStatus")
+                                        ?: uri.getQueryParameter("transactionStatus")
                                     val orderCode = uri.getQueryParameter("vnp_TxnRef")
                                         ?: uri.getQueryParameter("orderCode")
-                                        ?: uri.getQueryParameter("vnp_OrderInfo")
-                                    val transactionStatus = uri.getQueryParameter("transactionStatus")
                                     val message = uri.getQueryParameter("message")
                                         ?: uri.getQueryParameter("vnp_ResponseMessage")
-                                    val success = uri.getQueryParameter("success") == "true"
-
-                                    if (success && responseCode == "00" && transactionStatus == "00") {
-                                        onPaymentSuccess(orderCode ?: "")
-                                    } else if (success == false || responseCode != "00") {
-                                        onPaymentError(message ?: "Thanh toán thất bại")
+                                    val success = uri.getQueryParameter("success")
+                                    
+                                    Log.d("VNPayWebView", "Params - responseCode: $responseCode, transactionStatus: $transactionStatus, orderCode: $orderCode, success: $success")
+                                    
+                                    // Determine if payment is successful
+                                    // Success criteria:
+                                    // - success=true from backend OR
+                                    // - responseCode=00 AND transactionStatus=00 from VNPay
+                                    val isSuccess = (success == "true") ||
+                                        (responseCode == "00" && transactionStatus == "00")
+                                    
+                                    Log.d("VNPayWebView", "Payment Result - isSuccess: $isSuccess")
+                                    
+                                    if (isSuccess && !orderCode.isNullOrEmpty()) {
+                                        Log.d("VNPayWebView", "Payment SUCCESS - OrderCode: $orderCode")
+                                        onPaymentSuccess(orderCode)
+                                    } else {
+                                        // Extract error message based on response code
+                                        val errorMessage = when {
+                                            !message.isNullOrEmpty() -> message
+                                            responseCode == "24" -> "Khách hàng hủy giao dịch"
+                                            responseCode == "51" -> "Tài khoản không đủ số dư"
+                                            responseCode == "11" -> "Đã hết hạn chờ thanh toán"
+                                            responseCode == "12" -> "Thẻ/Tài khoản bị khóa"
+                                            responseCode != null -> "Thanh toán thất bại (Mã lỗi: $responseCode)"
+                                            else -> "Thanh toán thất bại"
+                                        }
+                                        Log.d("VNPayWebView", "Payment ERROR: $errorMessage")
+                                        onPaymentError(errorMessage)
                                     }
                                     return true
                                 }

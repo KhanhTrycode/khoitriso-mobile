@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.khoitriso.R
 import com.example.khoitriso.domain.models.User
+import com.example.khoitriso.ui.common.ObserverAsEvent
 import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
@@ -81,6 +83,17 @@ fun ProfileScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadUserInfo()
+    }
+
+    // Observe navigation events for token expiration
+    ObserverAsEvent(viewModel.navigationEvents) { event ->
+        when (event) {
+            is com.example.khoitriso.ui.behavior.NavigationEvent.NavigateToLogin -> {
+                navController.navigate(com.example.khoitriso.utils.NavRoute.LOGIN) {
+                    popUpTo(0) { inclusive = true } // Clear entire back stack
+                }
+            }
+        }
     }
 
     // Lắng nghe kết quả kích hoạt sách
@@ -177,12 +190,16 @@ fun ProfileScreen(
         // -- Phần 3: Quản lý & Tiện ích --
         item {
             var showWishlistDialog by remember { mutableStateOf(false) }
+            var showQuestionLookupDialog by remember { mutableStateOf(false) }
             
             SettingsSection(
                 title = stringResource(R.string.management_utilities),
                 items = listOf(
                     SettingsItemData(stringResource(R.string.activate_book), Icons.Default.VpnKey) {
                         showActivationDialog = true
+                    },
+                    SettingsItemData("Tra cứu câu hỏi sách", Icons.Default.Search) {
+                        showQuestionLookupDialog = true
                     },
                     SettingsItemData(stringResource(R.string.order_history), Icons.Default.History) {
                         navController.navigate(NavRoute.ORDER_HISTORY)
@@ -197,6 +214,16 @@ fun ProfileScreen(
             if (showWishlistDialog) {
                 WishlistDialog(
                     onDismiss = { showWishlistDialog = false },
+                    viewModel = viewModel
+                )
+            }
+            
+            if (showQuestionLookupDialog) {
+                QuestionLookupDialog(
+                    onDismiss = { 
+                        showQuestionLookupDialog = false
+                        viewModel.resetQuestionLookup()
+                    },
                     viewModel = viewModel
                 )
             }
@@ -242,6 +269,12 @@ fun ProfileScreen(
 
     // --- HIỂN THỊ DIALOG KÍCH HOẠT ---
     if (showActivationDialog) {
+        // Reset state when dialog opens
+        LaunchedEffect(showActivationDialog) {
+            if (showActivationDialog) {
+                viewModel.resetActivationState()
+            }
+        }
         ActivationDialog(
             onDismiss = {
                 showActivationDialog = false
@@ -262,11 +295,28 @@ fun ActivationDialog(
     uiState: UiState<String>
 ) {
     var code by remember { mutableStateOf("") }
+    // Only show loading if state is explicitly Loading, not Success("")
     val isLoading = uiState is UiState.Loading
     val errorMessage = (uiState as? UiState.Error)?.message
+    val isSuccess = uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()
+
+    // Reset code when dialog opens
+    LaunchedEffect(Unit) {
+        code = ""
+    }
+    
+    // Reset code after successful activation
+    LaunchedEffect(uiState) {
+        if (isSuccess) {
+            code = ""
+        }
+    }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            code = ""
+            onDismiss()
+        },
         icon = { Icon(Icons.Default.VpnKey, contentDescription = null) },
         title = { Text(stringResource(R.string.activate_book_title)) },
         text = {
@@ -279,13 +329,14 @@ fun ActivationDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = code,
-                    onValueChange = { code = it },
+                    onValueChange = { if (!isLoading) code = it },
                     label = { Text(stringResource(R.string.activation_code)) },
                     placeholder = { Text(stringResource(R.string.activation_code_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     isError = errorMessage != null,
-                    enabled = !isLoading
+                    enabled = !isLoading,
+                    readOnly = isLoading
                 )
                 if (errorMessage != null) {
                     Text(
@@ -739,6 +790,225 @@ private fun WishlistDialog(
 }
 
 @Composable
+private fun QuestionLookupDialog(
+    onDismiss: () -> Unit,
+    viewModel: ProfileViewModel
+) {
+    var questionId by remember { mutableStateOf("") }
+    val lookupState by viewModel.questionLookup.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text("Tra cứu câu hỏi sách")
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = questionId,
+                    onValueChange = { questionId = it },
+                    label = { Text("ID câu hỏi") },
+                    placeholder = { Text("Nhập ID câu hỏi") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    ),
+                    enabled = lookupState !is UiState.Loading
+                )
+
+                Button(
+                    onClick = { viewModel.lookupQuestion(questionId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = questionId.isNotBlank() && lookupState !is UiState.Loading
+                ) {
+                    if (lookupState is UiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(if (lookupState is UiState.Loading) "Đang tra cứu..." else "Tra cứu")
+                }
+
+                // Display result
+                when (val state = lookupState) {
+                    is UiState.Success -> {
+                        state.data?.let { question ->
+                            QuestionDetailCard(question)
+                        }
+                    }
+                    is UiState.Error -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = state.message,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Đóng")
+            }
+        }
+    )
+}
+
+@Composable
+private fun QuestionDetailCard(question: com.example.khoitriso.domain.models.BookQuestion) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Question header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Câu hỏi #${question.id}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                
+                question.chapterTitle?.let { title ->
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Divider()
+
+            // Question content
+            Text(
+                text = question.questionContent,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            // Options
+            if (question.options.isNotEmpty()) {
+                Text(
+                    text = "Đáp án:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                question.options.sortedBy { it.orderIndex }.forEach { option ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            if (option.isCorrect) Icons.Default.CheckCircle else Icons.Default.Circle,
+                            contentDescription = null,
+                            tint = if (option.isCorrect) 
+                                MaterialTheme.colorScheme.tertiary 
+                            else 
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = option.optionText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = if (option.isCorrect) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+
+            // Explanation
+            question.explanationContent?.let { explanation ->
+                Divider()
+                Text(
+                    text = "Giải thích:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = explanation,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            // Video URL
+            question.videoUrl?.let { url ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.VideoLibrary,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Video hướng dẫn",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun WishlistItemRow(
     item: com.example.khoitriso.domain.models.WishlistItem,
     onRemove: () -> Unit
@@ -751,16 +1021,6 @@ private fun WishlistItemRow(
             (item.item as com.example.khoitriso.domain.models.Course).title
         }
         else -> "Unknown Item"
-    }
-
-    val itemImage = when {
-        item.item is com.example.khoitriso.domain.models.Book -> {
-            (item.item as com.example.khoitriso.domain.models.Book).coverImage
-        }
-        item.item is com.example.khoitriso.domain.models.Course -> {
-            (item.item as com.example.khoitriso.domain.models.Course).thumbnail
-        }
-        else -> null
     }
 
     val itemTypeName = when (item.itemType) {
@@ -780,38 +1040,30 @@ private fun WishlistItemRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SafeImage(
-                url = itemImage,
-                contentDescription = itemTitle,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            // Hiển thị loại item (Book hoặc Course)
+            Text(
+                text = itemTypeName,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(end = 8.dp)
             )
 
-            Column(
+            // Title
+            Text(
+                text = itemTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = itemTitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-                Text(
-                    text = itemTypeName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
 
+            // Icon trái tim đỏ - luôn hiển thị vì đã trong wishlist
             IconButton(onClick = onRemove) {
                 Icon(
-                    Icons.Default.Delete,
+                    imageVector = Icons.Default.Favorite,
                     contentDescription = stringResource(R.string.remove_from_wishlist),
-                    tint = MaterialTheme.colorScheme.error
+                    tint = Color(0xFFFF6B6B) // Màu đỏ cho trái tim
                 )
             }
         }

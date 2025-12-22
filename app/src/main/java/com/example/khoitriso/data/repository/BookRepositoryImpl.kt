@@ -7,6 +7,7 @@ import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.data.dto.toDomain
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.BookQuestion
 import com.example.khoitriso.domain.models.Chapter
 import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyResponese
@@ -32,17 +33,22 @@ class BookRepositoryImpl @Inject constructor(
                     sortBy = getPagingRequest.sortBy,
                     sortOrder = getPagingRequest.sortOrder
                 )
-            } else bookApi.getBooks()
+            } else {
+                bookApi.getBooks()
+            }
+
 
             if (response.isSuccessful) {
-                val body = response.body()?.Result
-                if (body != null) {
-                    Result.success(body.toDomain(BookDto::toDomain))
+                val body = response.body()
+                val result = body?.Result
+                if (result != null) {
+                    Result.success(result.toDomain(BookDto::toDomain))
                 } else {
                     Result.failure(Exception("Response body or Result is null"))
                 }
             } else {
-                Result.failure(Exception("API error: ${response.code()}"))
+                val errorBody = response.errorBody()?.string()
+                Result.failure(Exception("API error: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -126,5 +132,46 @@ class BookRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun activeCode(code: String): Result<Boolean> {
+        return try {
+            val response = bookApi.activeBook(code = code)
+            if (response.isSuccessful) {
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.IsValid)
+                } else {
+                    Result.failure(Exception("Response body or Result is null"))
+                }
+            } else {
+                Result.failure(Exception("API error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
+    override suspend fun getBookQuestionById(questionId: Int): Result<BookQuestion> {
+        return try {
+            val response = bookApi.getBookQuestionById(questionId)
+            if (response.isSuccessful) {
+                val body = response.body()?.Result
+                if (body != null) {
+                    Result.success(body.toDomain())
+                } else {
+                    Result.failure(Exception("Không tìm thấy câu hỏi"))
+                }
+            } else {
+                val errorCode = response.code()
+                val errorMessage = when (errorCode) {
+                    401 -> "Bạn cần đăng nhập để xem câu hỏi này"
+                    403 -> "Bạn chưa sở hữu sách này"
+                    404 -> "Không tìm thấy câu hỏi"
+                    else -> "Lỗi API: $errorCode"
+                }
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Lỗi kết nối: ${e.message}"))
+        }
+    }
 }

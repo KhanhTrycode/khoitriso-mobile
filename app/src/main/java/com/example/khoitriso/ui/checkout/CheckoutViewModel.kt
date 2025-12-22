@@ -10,7 +10,6 @@ import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.OrderItem
 import com.example.khoitriso.domain.usecase.order.CartUsecase
 import com.example.khoitriso.domain.usecase.order.OrderUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.OrderStatus
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -54,11 +52,29 @@ class CheckoutViewModel @Inject constructor(
     fun loadCart() {
         loadData(
             stateFlow = _cart,
-            mockData = MockData.mockCart,
             apiCall = {
                 cartUsecase.getCart()
             }
         )
+    }
+
+    fun loadSingleCart(item: ItemBuyNow, cartItemId: Int) {
+        _cart.value = UiState.Loading
+        val cart = Carts(
+            cartItems = listOf(
+                CartItem(
+                    id = cartItemId,
+                    itemId = item.itemId,
+                    itemType = item.itemType,
+                    price = item.price,
+                    coverImage = item.coverImage,
+                    title = item.title
+                )),
+            totalItems = 1,
+            totalPrice = item.price
+        )
+
+        _cart.value = UiState.Success(cart)
     }
 
     fun loadSingleItemForCheckout(item: ItemBuyNow) {
@@ -66,37 +82,15 @@ class CheckoutViewModel @Inject constructor(
             _cart.value = UiState.Loading
             
             // Với BuyNow, cần thêm item vào cart trước để lấy cartItemId thực sự
-            if (_isTestMode) {
-                // Test mode: Tạo mock cartItem với id giả
-                val mockCartItemId = (1000..9999).random()
-                val result = CartItem(
-                    id = mockCartItemId,
-                    itemId = item.itemId,
-                    itemType = item.itemType,
-                    price = item.price,
-                    coverImage = item.coverImage,
-                    title = item.title
-                )
-                _cart.value = UiState.Success(
-                    Carts(
-                        listOf(result),
-                        totalItems = 1,
-                        totalPrice = result.price
-                    )
-                )
-            } else {
-                // Real mode: Thêm vào cart trước, sau đó load cart để lấy cartItemId thực sự
-                val addResult = cartUsecase.addToCart(item.itemId, item.itemType)
-                addResult.fold(
-                    onSuccess = {
-                        // Load lại cart để lấy cartItemId thực sự
-                        loadCart()
-                    },
-                    onFailure = { exception ->
-                        _cart.value = UiState.Error(exception.message ?: "Không thể thêm vào giỏ hàng")
-                    }
-                )
-            }
+            val addResult = cartUsecase.addToCart(item.itemId, item.itemType)
+            addResult.fold(
+                onSuccess = {
+                    loadSingleCart(item,it)
+                },
+                onFailure = { exception ->
+                    _cart.value = UiState.Error(exception.message ?: "Không thể thêm vào giỏ hàng")
+                }
+            )
         }
     }
 
@@ -117,75 +111,6 @@ class CheckoutViewModel @Inject constructor(
             val cartItemIds = cartData.cartItems.map { it.id }
             val discount = _checkoutState.value.discountAmount
             val finalTotal = max(0.0, cartData.totalPrice - discount)
-
-            // --- TEST MODE LOGIC START ---
-            if (_isTestMode) {
-                delay(1500) // Giả lập độ trễ mạng
-                val mockOrderCode = "TEST-${System.currentTimeMillis().toString().takeLast(6)}"
-
-                // 1. Tạo danh sách OrderItem từ CartItem
-                val newOrderItems = cartData.cartItems.map { cartItem ->
-                    OrderItem(
-                        id = (1000..9999).random(), // ID giả
-                        itemId = cartItem.itemId,
-                        itemName = cartItem.title,
-                        itemType = cartItem.itemType,
-                        price = cartItem.price,
-                        quantity = 1, // Giả sử số lượng là 1 nếu model CartItem không có field quantity
-                        subTotal = cartItem.price.toInt()
-                    )
-                }
-
-                // 2. Tạo đối tượng Order mới
-                // Lưu ý: Các trường như id, userId điền giá trị giả định
-                val newOrder = Order(
-                    id = (MockData.mockOrders.maxOfOrNull { it.id } ?: 0) + 1, // Tự tăng ID
-                    orderCode = mockOrderCode,
-                    status = OrderStatus.Paid.value,
-                    statusName = OrderStatus.Paid.displayName,
-                    totalAmount = cartData.totalPrice,
-                    finalAmount = finalTotal,
-                    discountAmount = discount,
-                    items = newOrderItems,
-                    createdAt = "",
-                    // Các trường phụ điền giả
-                    currency = "VND",
-                    exchangeRate = 1,
-                    paidAt = "",
-                    paymentGateway = "TestGateway",
-                    paymentMethod = "Credit Card",
-                    taxAmount = 0.0,
-                    transactionId = "TRANS-TEST-${System.currentTimeMillis()}",
-                    userId = 1, // ID User đang test
-                    coupon = null,
-                    orderNotes = ""
-                )
-
-                // 3. Thêm vào MockData
-                MockData.mockOrders.add(0, newOrder) // Thêm vào đầu danh sách
-
-                // 4. Xử lý phản hồi UI
-                if (finalTotal <= 0) {
-                    // Case 1: Đơn hàng 0đ
-                    _checkoutState.update {
-                        it.copy(isProcessing = false, orderCode = mockOrderCode)
-                    }
-
-                } else {
-                    // Case 2: Đơn hàng có phí (Mock trả URL giả)
-                    val mockUrl = "https://google.com" // URL dummy
-
-                    _checkoutState.update {
-                        it.copy(
-                            isProcessing = false,
-                            paymentUrl = mockUrl,
-                            orderCode = mockOrderCode
-                        )
-                    }
-                }
-                return@launch
-            }
-            // --- TEST MODE LOGIC END ---
 
             val orderRequest = CreateOrderRequest(
                 CartItemIds = cartItemIds,
@@ -236,11 +161,12 @@ class CheckoutViewModel @Inject constructor(
         )
         orderUsecase.vnpayCreatePaymentUrl(vnpayRequest).fold(
             onSuccess = { response ->
+                // Chỉ set paymentUrl, không set lại orderCode (đã set trước đó)
+                // Tránh race condition với LaunchedEffect(orderCode)
                 _checkoutState.update {
                     it.copy(
                         isProcessing = false,
-                        paymentUrl = response.PaymentUrl,
-                        orderCode = orderCode
+                        paymentUrl = response.PaymentUrl
                     )
                 }
             },

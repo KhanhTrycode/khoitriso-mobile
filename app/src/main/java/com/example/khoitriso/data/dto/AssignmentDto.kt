@@ -4,7 +4,7 @@ import com.example.khoitriso.domain.models.Assignment
 
 data class AssignmentDto(
     val Description: String,
-    val DueDate: String,
+    val DueDate: String?,
     val Id: Int,
     val IsPublished: Boolean,
     val LessonId: Int,
@@ -17,23 +17,23 @@ data class AssignmentDto(
     val ShuffleQuestions: Boolean,
     val TimeLimit: Int,
     val Title: String,
-    val UserAttempts: List<UserDTO>
+    val UserAttempts: List<UserAssignmentAttemptDto>?
 )
 
-fun AssignmentDto.toDomain() =Assignment(
+fun AssignmentDto.toDomain() = Assignment(
     description = Description,
-    dueDate = DueDate,
+    dueDate = DueDate ?: "",
     id = Id,
     isPublished = IsPublished,
     lessonId = LessonId,
     maxAttempts = MaxAttempts,
     maxScore = MaxScore,
     passingScore = PassingScore,
-    questions = Questions?.map { it.toDomain() }?: emptyList(),
+    questions = Questions?.map { it.toDomain() } ?: emptyList(),
     showAnswersAfter = ShowAnswersAfter,
     shuffleOptions = ShuffleOptions,
     shuffleQuestions = ShuffleQuestions,
     timeLimit = TimeLimit,
     title = Title,
-    userAttempts = UserAttempts.map { it.toDomain() }
+    attemptCount = UserAttempts?.size ?: 0  // Đếm số lần đã nộp
 )

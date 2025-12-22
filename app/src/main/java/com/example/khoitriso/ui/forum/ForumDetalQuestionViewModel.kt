@@ -14,7 +14,6 @@ import com.example.khoitriso.domain.request.CreateAnswerRequest
 import com.example.khoitriso.domain.request.CreateCommentRequest
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.ForumViewModel
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
@@ -86,8 +85,12 @@ class ForumDetalQuestionViewModel @Inject constructor(
 
         when (val currentState = _question.value) {
             is UiState.Success<ForumQuestion> -> {
-                loadUserVoteForQuestion(currentState.data.id, currentState.data.userId)
-                loadBookmarksForQuestion(currentState.data.id, currentState.data.userId)
+                // Lấy userId của người dùng hiện tại đang đăng nhập
+                val currentUserId = (_currentUser.value as? UiState.Success<User>)?.data?.id
+                if (currentUserId != null) {
+                    loadUserVoteForQuestion(currentState.data.id, currentUserId)
+                    loadBookmarksForQuestion(currentState.data.id, currentUserId)
+                }
                 loadComments(1, currentState.data.id)
                 loadAnswers(currentState.data.id)
             }
@@ -103,7 +106,6 @@ class ForumDetalQuestionViewModel @Inject constructor(
         val questionId = savedStateHandle.get<String>("questionId") ?: ""
         loadData(
             stateFlow = _question,
-            mockData = MockData.mockForumQuestions[0],
             apiCall = {
                 forumUsecase.getQuestionById(questionId)
             }
@@ -112,12 +114,8 @@ class ForumDetalQuestionViewModel @Inject constructor(
 
     private fun loadUserVoteForQuestion(questionId: String, userId: Int) {
         viewModelScope.launch {
-            if (_isTestMode) {
-                _isVoted.value = 1 // Mock: user has upvoted
-            } else {
-                forumUsecase.getUserVote(1, questionId, userId).onSuccess { voteType ->
-                    _isVoted.value = voteType
-                }
+            forumUsecase.getUserVote(1, questionId, userId).onSuccess { voteType ->
+                _isVoted.value = voteType
             }
         }
     }
@@ -125,7 +123,6 @@ class ForumDetalQuestionViewModel @Inject constructor(
     private fun loadBookmarksForQuestion(questionId: String, userId: Int) {
         loadDataWithNoResult(
             stateFlow = _isBookmarked,
-            mockData = false,
             apiCall = {
                 forumUsecase.isBookmarked(questionId, userId)
             }
@@ -133,8 +130,31 @@ class ForumDetalQuestionViewModel @Inject constructor(
     }
 
     fun vote(targetType: Int, targetId: String, userId: Int, voteType: Int) {
-        voteInParent(targetType, targetId, userId, voteType, onSuccess = {
-            _isVoted.value = it
+        voteInParent(targetType, targetId, userId, voteType, onSuccess = { newVoteType ->
+            if (targetType == 1) {
+                // Update question vote
+                _isVoted.value = newVoteType
+                // Reload question to get updated vote count
+                val currentState = _question.value
+                if (currentState is UiState.Success) {
+                    loadQuestionById()
+                }
+            } else if (targetType == 2) {
+                // Update answer vote
+                val key = "2-$targetId"
+                _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
+                    if (newVoteType != 0) {
+                        put(key, newVoteType)
+                    } else {
+                        remove(key)
+                    }
+                }
+                // Reload answers to get updated vote count
+                val currentState = _question.value
+                if (currentState is UiState.Success) {
+                    loadAnswers(currentState.data.id)
+                }
+            }
         })
     }
 
@@ -157,23 +177,7 @@ class ForumDetalQuestionViewModel @Inject constructor(
         onError: (String) -> Unit,
     ) {
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                Result.success({
-                    MockData.mockForumAnswers.add(
-                        ForumAnswer(
-                            id = "99",
-                            questionId = "99",
-                            content = request.content,
-                            userId = request.userId,
-                            userName = request.userName,
-                            createdAt = "2024-10-01T08:00:00Z",
-                            updatedAt = "2024-10-01T08:00:00Z"
-                        )
-                    )
-                })
-            } else {
-                forumUsecase.createAnswer(questionId, request)
-            }
+            val result = forumUsecase.createAnswer(questionId, request)
             result.fold(
                 onSuccess = {
                     onSuccess()
@@ -191,25 +195,7 @@ class ForumDetalQuestionViewModel @Inject constructor(
         Unit,
     ) {
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                Result.success({
-                    MockData.mockForumComments.add(
-                        ForumComment(
-                            parentId = request.parentId,
-                            parentType = request.parentType,
-                            content = request.content,
-                            userId = request.userId,
-                            id = "99",
-                            userName = request.userName,
-                            createdAt = "2024-10-01T08:00:00Z",
-                            updatedAt = "2024-10-01T08:00:00Z",
-                            userAvatar = ""
-                        )
-                    )
-                })
-            } else {
-                forumUsecase.createComment(request)
-            }
+            val result = forumUsecase.createComment(request)
             result.fold(
                 onSuccess = {
                     loadComments(request.parentType, request.parentId) // Refresh comments
@@ -225,7 +211,6 @@ class ForumDetalQuestionViewModel @Inject constructor(
     fun loadAnswers(questionId: String) {
         loadData(
             stateFlow = _answers,
-            mockData = MockData.mockForumAnswers,
             apiCall = {
                 forumUsecase.getAnswers(questionId)
             },
@@ -244,21 +229,12 @@ class ForumDetalQuestionViewModel @Inject constructor(
     private fun loadUserVoteForAnswer(answerId: String, userId: Int) {
         viewModelScope.launch {
             val key = "2-$answerId"
-            if (_isTestMode) {
-                // Mock: Set some votes for testing
-                if (answerId == "fa1") {
-                    _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
-                        put(key, 1) // First answer is upvoted
-                    }
-                }
-            } else {
-                forumUsecase.getUserVote(2, answerId, userId).onSuccess { voteType ->
-                    _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
-                        if (voteType != 0) {
-                            put(key, voteType)
-                        } else {
-                            remove(key) // Remove if no vote
-                        }
+            forumUsecase.getUserVote(2, answerId, userId).onSuccess { voteType ->
+                _userVoteAnswers.value = _userVoteAnswers.value.toMutableMap().apply {
+                    if (voteType != 0) {
+                        put(key, voteType)
+                    } else {
+                        remove(key) // Remove if no vote
                     }
                 }
             }
@@ -267,11 +243,7 @@ class ForumDetalQuestionViewModel @Inject constructor(
 
     fun loadComments(parentType: Int, parentId: String) {
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                Result.success(MockData.mockForumComments)
-            } else {
-                forumUsecase.getComments(parentType, parentId)
-            }
+            val result = forumUsecase.getComments(parentType, parentId)
             result.onSuccess { commentsList ->
                 _comments.value = _comments.value.toMutableMap().apply {
                     put(parentId, commentsList)
@@ -282,12 +254,7 @@ class ForumDetalQuestionViewModel @Inject constructor(
 
     fun acceptAnswer(answerId: String) {
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                debug("Accepting answer in TestMode", "ForumDetailViewModel")
-                Result.success(Unit)
-            } else {
-                forumUsecase.acceptAnswer(answerId)
-            }
+            val result = forumUsecase.acceptAnswer(answerId)
 
             result.fold(
                 onSuccess = {

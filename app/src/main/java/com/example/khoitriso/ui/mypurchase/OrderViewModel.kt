@@ -5,7 +5,6 @@ import com.example.khoitriso.data.request.VNPayPaymentRequest
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.usecase.order.OrderUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.OrderStatus
 import com.example.khoitriso.utils.UiState
@@ -36,7 +35,6 @@ class OrderViewModel @Inject constructor(
     fun loadOrders() {
         loadDataWithPage(
             stateFlow = _orders,
-            mockData = MockData.mockOrders,
             apiCall = {
                 orderUsecase.getOrder()
             }

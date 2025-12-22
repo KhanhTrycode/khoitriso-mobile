@@ -16,5 +16,5 @@ data class Assignment(
     val shuffleQuestions: Boolean,
     val timeLimit: Int,
     val title: String,
-    val userAttempts: List<User>
+    val attemptCount: Int = 0  // Số lần đã nộp của user hiện tại
 )

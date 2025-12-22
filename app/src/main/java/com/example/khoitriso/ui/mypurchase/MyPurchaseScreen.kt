@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -33,6 +35,7 @@ import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -59,7 +62,7 @@ fun MyPurchaseScreen(
                 .padding(paddingValues)
         ) {
             // Tabs
-            TabRow(selectedTabIndex = if (activeTab == 0) 0 else 1) {
+            TabRow(selectedTabIndex = activeTab) {
                 Tab(
                     selected = activeTab == 0,
                     onClick = { viewModel.setActiveTab(0) },
@@ -150,7 +153,8 @@ private fun MyCourseTab(courses: List<MyCourse>,navController: NavHostController
             MyCourseCard(
                 course = courses[i],
                 onClick = {
-                    navController.navigate(NavRoute.NavLearningCourse(courses[i].courseId))
+                    debug(courses[i].courseId.toString(),"My")
+                    navController.navigate(NavRoute.NavLearningCourse(courses[i].course.id))
                 }
             )
         }

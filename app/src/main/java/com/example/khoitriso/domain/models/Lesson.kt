@@ -12,5 +12,8 @@ data class Lesson(
     val title: String,
     val videoDuration: Int,
     val videoUrl: String,
-    val assignments: List<Assignment>
+    val assignments: List<AssignmentPreview>,
+    val isCompleted: Boolean = false,
+    val watchTime: Int = 0,
+    val videoPosition: Int = 0
 )

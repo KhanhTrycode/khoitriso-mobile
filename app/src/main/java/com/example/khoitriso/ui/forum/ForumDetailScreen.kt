@@ -217,7 +217,7 @@ private fun ContentScreen(
             items(sortedAnswers, key = { it.id }) { answer ->
                 AnswerCard(
                     answer = answer,
-                    userVote = userVoteAnswers["2-${question.id}"],
+                    userVote = userVoteAnswers["2-${answer.id}"],
                     canAccept = isQuestionOwner && !answer.isDeleted,
                     onVote = { voteType ->
                         currentUserId?.let { viewModel.vote(2, answer.id, it, voteType) }
@@ -567,7 +567,9 @@ private fun QuestionHeader(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (isPinned) Badge { Text(stringResource(R.string.pinned)) }
-                if (isSolved) Badge(containerColor = Color(0xFF10B981)) { Text(stringResource(R.string.solved_badge)) }
+                if (isSolved) Badge(containerColor = Color(0xFF10B981), contentColor = Color.White) {
+                    Text(stringResource(R
+                    .string.solved_badge)) }
             }
         }
         IconButton(onClick = onBookmarkClick, modifier = Modifier.align(Alignment.TopEnd)) {

@@ -19,4 +19,9 @@ data class CourseDetail(
     val totalStudents: Int,
     val updatedAt: String = "",
     val whatYouWillLearn: List<String>
-)
+) {
+    // Tính progress từ số lesson completed
+    val progressPercentage: Double
+        get() = if (lessons.isEmpty()) 0.0
+        else (lessons.count { it.isCompleted }.toDouble() / lessons.size) * 100
+}

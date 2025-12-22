@@ -3,7 +3,7 @@ package com.example.khoitriso.ui.notification
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khoitriso.domain.models.Notification
-import com.example.khoitriso.test.MockData
+import com.example.khoitriso.domain.usecase.notification.NotificationUsecase
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -19,13 +19,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NotificationViewModel @Inject constructor(
-
+    private val notificationUsecase: NotificationUsecase
 ) : ViewModel() {
 
     // --- STATE ---
-    // Giả lập Database local bằng một MutableStateFlow
-    private val _allNotifications = MutableStateFlow(MockData.mockNotifications)
-
+    private val _uiState = MutableStateFlow<UiState<List<Notification>>>(UiState.Loading)
+    
     // Các biến Filter
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
@@ -38,38 +37,68 @@ class NotificationViewModel @Inject constructor(
     val filterType = _filterType.asStateFlow()
 
     // --- COMBINED LOGIC ---
-    // Tự động tính toán danh sách hiển thị dựa trên Source + Filters
-    val uiState: StateFlow<UiState<List<Notification>>> = combine(
-        _allNotifications,
-        _searchQuery,
-        _filterUnreadOnly,
-        _filterType
-    ) { notifications, query, unreadOnly, type ->
+    val uiState: StateFlow<UiState<List<Notification>>> = _uiState.asStateFlow()
 
+    init {
+        loadNotifications()
+        observeFilters()
+    }
+    
+    private fun observeFilters() {
+        viewModelScope.launch {
+            combine(
+                _searchQuery,
+                _filterUnreadOnly,
+                _filterType
+            ) { query, unreadOnly, type ->
+                Triple(query, unreadOnly, type)
+            }.collect { (query, unreadOnly, type) ->
+                applyFilters(query, unreadOnly, type)
+            }
+        }
+    }
+    
+    private fun applyFilters(query: String, unreadOnly: Boolean, type: Int?) {
+        val currentState = _uiState.value
+        if (currentState is UiState.Success) {
+            val allNotifications = currentState.data
+            val filtered = allNotifications.filter { item ->
+                val matchQuery = query.isEmpty() ||
+                        item.title.contains(query, ignoreCase = true) ||
+                        (item.content?.contains(query, ignoreCase = true) == true)
 
-        val filtered = notifications.filter { item ->
-            val matchQuery = query.isEmpty() ||
-                    item.title.contains(query, ignoreCase = true) ||
-                    (item.content?.contains(query, ignoreCase = true) == true)
+                val matchRead = if (unreadOnly) !item.isRead else true
+                val matchType = if (type == null) true else item.type == type
 
-            // 2. Lọc theo trạng thái Đọc
-            val matchRead = if (unreadOnly) !item.isRead else true
+                matchQuery && matchRead && matchType
+            }.sortedByDescending { it.createdAt }
 
-            // 3. Lọc theo Loại
-            val matchType = if (type == null) true else item.type == type
-
-            matchQuery && matchRead && matchType
-        }.sortedByDescending { it.createdAt } // Mới nhất lên đầu
-
-        if (filtered.isEmpty()) UiState.Success(emptyList()) else UiState.Success(filtered)
-
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UiState.Loading
-    )
+            _uiState.value = UiState.Success(filtered)
+        }
+    }
 
     // --- ACTIONS ---
+    
+    private fun loadNotifications() {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            
+            notificationUsecase.getUserNotifications(
+                isRead = null,
+                type = null,
+                priority = null,
+                page = 1,
+                pageSize = 100
+            ).fold(
+                onSuccess = { result ->
+                    _uiState.value = UiState.Success(result.items)
+                },
+                onFailure = { error ->
+                    _uiState.value = UiState.Error(error.message ?: "Không thể tải thông báo")
+                }
+            )
+        }
+    }
 
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
@@ -85,27 +114,55 @@ class NotificationViewModel @Inject constructor(
 
     fun markAsRead(notificationId: Int) {
         viewModelScope.launch {
-            // Cập nhật trực tiếp vào luồng dữ liệu giả lập
-            _allNotifications.update { currentList ->
-                currentList.map {
-                    if (it.id == notificationId) it.copy(isRead = true) else it
+            notificationUsecase.markAsRead(notificationId).fold(
+                onSuccess = {
+                    // Cập nhật local state
+                    val currentState = _uiState.value
+                    if (currentState is UiState.Success) {
+                        val updatedList = currentState.data.map {
+                            if (it.id == notificationId) it.copy(isRead = true) else it
+                        }
+                        _uiState.value = UiState.Success(updatedList)
+                    }
+                },
+                onFailure = {
+                    // Vẫn cập nhật local để UX mượt hơn
+                    val currentState = _uiState.value
+                    if (currentState is UiState.Success) {
+                        val updatedList = currentState.data.map {
+                            if (it.id == notificationId) it.copy(isRead = true) else it
+                        }
+                        _uiState.value = UiState.Success(updatedList)
+                    }
                 }
-            }
+            )
         }
     }
 
     fun markAllAsRead() {
         viewModelScope.launch {
-            _allNotifications.update { currentList ->
-                currentList.map { it.copy(isRead = true) }
-            }
+            notificationUsecase.markAllAsRead().fold(
+                onSuccess = {
+                    // Cập nhật tất cả thành đã đọc
+                    val currentState = _uiState.value
+                    if (currentState is UiState.Success) {
+                        val updatedList = currentState.data.map { it.copy(isRead = true) }
+                        _uiState.value = UiState.Success(updatedList)
+                    }
+                },
+                onFailure = {
+                    // Vẫn cập nhật local
+                    val currentState = _uiState.value
+                    if (currentState is UiState.Success) {
+                        val updatedList = currentState.data.map { it.copy(isRead = true) }
+                        _uiState.value = UiState.Success(updatedList)
+                    }
+                }
+            )
         }
     }
 
     fun refresh() {
-        // Giả lập reload
-        viewModelScope.launch {
-            // Có thể reset lại mock data gốc hoặc fetch mới
-        }
+        loadNotifications()
     }
 }

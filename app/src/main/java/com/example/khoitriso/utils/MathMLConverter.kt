@@ -26,7 +26,8 @@ object MathMLConverter {
             val content = matcher.group(1) ?: ""
             val latex = convertMathMLContentToLatex(content)
             if (latex.isNotEmpty()) {
-                replacements.add(mathml to "$$$latex$$")
+                // Sử dụng \[ ... \] cho display math (JLatexMathPlugin nhận diện tốt hơn)
+                replacements.add(mathml to "\\[$latex\\]")
             }
         }
         

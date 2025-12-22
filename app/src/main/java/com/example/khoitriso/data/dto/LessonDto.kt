@@ -3,7 +3,7 @@ package com.example.khoitriso.data.dto
 import com.example.khoitriso.domain.models.Lesson
 
 data class LessonDto(
-    val Assignments: List<AssignmentDto>?,
+    val Assignments: List<AssignmentPreviewDto>?,
     val ContentText: String?,
     val CourseId: Int?,
     val Description: String,
@@ -15,7 +15,9 @@ data class LessonDto(
     val Title: String,
     val VideoDuration: Int,
     val VideoUrl: String,
-
+    val IsCompleted: Boolean?,
+    val WatchTime: Int?,
+    val VideoPosition: Int?
 )
 
 fun LessonDto.toDomain() = Lesson(
@@ -30,5 +32,8 @@ fun LessonDto.toDomain() = Lesson(
     materials = Materials?.map { it.toDomain() } ?: emptyList(),
     title = Title,
     videoDuration = VideoDuration,
-    videoUrl = VideoUrl
+    videoUrl = VideoUrl,
+    isCompleted = IsCompleted ?: false,
+    watchTime = WatchTime ?: 0,
+    videoPosition = VideoPosition ?: 0
 )

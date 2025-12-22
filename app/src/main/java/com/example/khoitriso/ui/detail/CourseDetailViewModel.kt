@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,14 +17,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.core.net.toUri
 import androidx.media3.common.PlaybackException
-import com.example.khoitriso.domain.models.CartItem
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.domain.usecase.order.CartUsecase
 import com.example.khoitriso.domain.usecase.order.OrderUsecase
-import com.example.khoitriso.test.MockData.mockCart
-import com.example.khoitriso.test.MockData.mockCartItems
+import com.example.khoitriso.domain.usecase.wishlist.WishlistUsecase
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.ItemType
 import com.example.khoitriso.utils.UiEvent
@@ -38,6 +35,7 @@ class CourseDetailViewModel @Inject constructor(
     private val courseUsecase: CourseUsecase,
     private val cartUsecase: CartUsecase,
     private val orderUsecase: OrderUsecase,
+    private val wishlistUsecase: WishlistUsecase,
 ) : BaseViewModel() {
     private val _course: MutableStateFlow<UiState<CourseDetail>> = MutableStateFlow(UiState.Loading)
     val course: StateFlow<UiState<CourseDetail>> = _course
@@ -46,6 +44,10 @@ class CourseDetailViewModel @Inject constructor(
     val playerState: StateFlow<ExoPlayer?> = _playerState
     private val _selectedLesson = MutableStateFlow<Lesson?>(null)
     val selectedLesson: StateFlow<Lesson?> = _selectedLesson
+    
+    private val _isInWishlist = MutableStateFlow<Boolean?>(null)
+    val isInWishlist: StateFlow<Boolean?> = _isInWishlist
+    
     private val _events = Channel<UiEvent>()
     val events = _events.receiveAsFlow()
 
@@ -56,9 +58,54 @@ class CourseDetailViewModel @Inject constructor(
     private fun getCourse() {
         loadData(
             stateFlow = _course,
-            mockData = MockData.mockCourseDetail1,
-            apiCall = { courseUsecase.getCourseById(courseId) }
+            apiCall = { courseUsecase.getCourseById(courseId) },
+            onSuccess = {
+                checkWishlistStatus(courseId)
+            }
         )
+    }
+    
+    fun checkWishlistStatus(courseId: Int) {
+        viewModelScope.launch {
+            wishlistUsecase.isInWishlist(courseId, ItemType.Course).fold(
+                onSuccess = { isInWishlist ->
+                    _isInWishlist.value = isInWishlist
+                },
+                onFailure = { }
+            )
+        }
+    }
+    
+    fun toggleWishlist(courseId: Int) {
+        viewModelScope.launch {
+            val currentStatus = _isInWishlist.value ?: false
+            val result = if (currentStatus) {
+                wishlistUsecase.removeItemFromWishlist(courseId, ItemType.Course)
+            } else {
+                wishlistUsecase.addToWishlist(courseId, ItemType.Course)
+            }
+            result.fold(
+                onSuccess = {
+                    // Reload status từ server sau khi thêm/xóa thành công
+                    checkWishlistStatus(courseId)
+                    _events.send(UiEvent.ShowSnackbar(
+                        if (!currentStatus) "Đã thêm vào yêu thích!" else "Đã xóa khỏi yêu thích!"
+                    ))
+                },
+                onFailure = { error ->
+                    val message = when {
+                        error.message?.contains("409") == true || 
+                        error.message?.contains("đã có") == true ||
+                        error.message?.contains("already exists") == true -> {
+                            _isInWishlist.value = true
+                            "Item đã có trong danh sách yêu thích"
+                        }
+                        else -> "Lỗi: ${error.message}"
+                    }
+                    _events.send(UiEvent.ShowSnackbar(message))
+                }
+            )
+        }
     }
 
     fun initializePlayer(
@@ -90,26 +137,8 @@ class CourseDetailViewModel @Inject constructor(
 
     fun addToCart(itemId: Int) {
         viewModelScope.launch {
-            val currentCourse = (_course.value as? UiState.Success)?.data
-            val result = if (_isTestMode) {
-                Result.success(true)
-            } else {
-                cartUsecase.addToCart(itemId = itemId, itemType = ItemType.Course)
-            }
-            result.fold(
+            cartUsecase.addToCart(itemId = itemId, itemType = ItemType.Course).fold(
                 onSuccess = {
-                    // Chỉ cập nhật mock data khi ở chế độ test
-                    if (_isTestMode && currentCourse != null) {
-                        val newCartItem = CartItem(
-                            id = mockCartItems.size + 1,
-                            itemId = itemId,
-                            itemType = ItemType.Course,
-                            price = currentCourse.price,
-                            coverImage = currentCourse.thumbnail,
-                            title = currentCourse.title
-                        )
-                        mockCartItems.add(newCartItem)
-                    }
                     // Gửi sự kiện thành công lên UI
                     _events.send(UiEvent.ShowSnackbar("Đã thêm vào giỏ hàng thành công!"))
                 },

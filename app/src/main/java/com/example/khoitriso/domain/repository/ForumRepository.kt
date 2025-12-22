@@ -47,6 +47,7 @@ interface ForumRepository {
     suspend fun vote(request: ForumVoteRequest): Result<Int> // Returns total vote count
     suspend fun getVotes(targetType: Int, targetId: String): Result<Int>
      suspend fun getUserVote(targetType: Int, targetId: String, userId: Int): Result<Int> // -1, 0, 1
+     suspend fun getUserVotes(userId: Int): Result<Map<String, Int>> // Map of targetId to voteType
 
     // Bookmarks
     suspend fun addBookmark(questionId: String, userId: Int): Result<Unit>

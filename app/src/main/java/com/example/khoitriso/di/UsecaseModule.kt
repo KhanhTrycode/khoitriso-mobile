@@ -1,7 +1,9 @@
 package com.example.khoitriso.di
 
 import com.example.khoitriso.data.api.BooksApi
+import com.example.khoitriso.data.local.UserManager
 import com.example.khoitriso.data.repository.BookRepositoryImpl
+import com.example.khoitriso.domain.repository.AssignmentRepository
 import com.example.khoitriso.domain.repository.AuthRepository
 import com.example.khoitriso.domain.repository.BookRepository
 import com.example.khoitriso.domain.repository.CartRepository
@@ -25,9 +27,12 @@ import com.example.khoitriso.domain.usecase.category.CategoryUsecase
 import com.example.khoitriso.domain.usecase.category.GetCategory
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
 import com.example.khoitriso.domain.usecase.course.GetAssignmentById
+import com.example.khoitriso.domain.usecase.course.GetAssignmentQuestions
 import com.example.khoitriso.domain.usecase.course.GetCourse
 import com.example.khoitriso.domain.usecase.course.GetCourseById
+import com.example.khoitriso.domain.usecase.course.GetLessonById
 import com.example.khoitriso.domain.usecase.course.GetMyCourse
+import com.example.khoitriso.domain.usecase.course.MarkLessonComplete
 import com.example.khoitriso.domain.usecase.forum.*
 import com.example.khoitriso.domain.usecase.notification.*
 import com.example.khoitriso.domain.usecase.order.AddToCart
@@ -51,8 +56,11 @@ import com.example.khoitriso.domain.usecase.user.UserUsecase
 import com.example.khoitriso.domain.repository.UserRepository
 import com.example.khoitriso.domain.repository.LessonDiscussionRepository
 import com.example.khoitriso.domain.repository.WishlistRepository
+import com.example.khoitriso.domain.usecase.book.ActiveCode
+import com.example.khoitriso.domain.usecase.book.GetBookQuestionById
 import com.example.khoitriso.domain.usecase.discussion.*
 import com.example.khoitriso.domain.usecase.wishlist.*
+import com.example.khoitriso.domain.usecase.assignment.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -70,18 +78,23 @@ object UsecaseModule {
             getBook = GetBook(bookRepository),
             getBookById = GetBookById(bookRepository),
             getMyBook = GetMyBook(bookRepository),
-            getChapterOfBook = GetChapterOfBook(bookRepository)
+            getChapterOfBook = GetChapterOfBook(bookRepository),
+            activeCode = ActiveCode(bookRepository),
+            getBookQuestionById = GetBookQuestionById(bookRepository)
         )
     }
 
     @Provides
     @Singleton
-    fun provideAuthUsecase(authRepository: AuthRepository): AuthUsecase {
+    fun provideAuthUsecase(
+        authRepository: AuthRepository,
+        userManager: UserManager
+    ): AuthUsecase {
         return AuthUsecase(
             authGoogleSDK = AuthGoogleSDK(authRepository),
             refresh = RefreshToken(authRepository),
             getMe = GetMe(authRepository),
-            loadCurrentUserInfo = LoadCurrentUserInfo(authRepository)
+            loadCurrentUserInfo = LoadCurrentUserInfo(authRepository, userManager)
         )
     }
 
@@ -92,7 +105,10 @@ object UsecaseModule {
             getCourse = GetCourse(courseRepository),
             getCourseById = GetCourseById(courseRepository),
             getMyCourse = GetMyCourse(courseRepository),
-            getAssignmentById = GetAssignmentById(courseRepository)
+            getAssignmentById = GetAssignmentById(courseRepository),
+            getLessonById = GetLessonById(courseRepository),
+            getAssignmentQuestions = GetAssignmentQuestions(courseRepository),
+            markLessonComplete = MarkLessonComplete(courseRepository)
         )
     }
 
@@ -125,6 +141,7 @@ object UsecaseModule {
             vote = Vote(forumRepository),
             getVotes = GetVotes(forumRepository),
             getUserVote = GetUserVote(forumRepository),
+            getUserVotes = GetUserVotes(forumRepository),
             addBookmark = AddBookmark(forumRepository),
             removeBookmark = RemoveBookmark(forumRepository),
             isBookmarked = IsBookmarked(forumRepository),
@@ -219,6 +236,22 @@ object UsecaseModule {
             removeItemFromWishlist = RemoveItemFromWishlist(wishlistRepository),
             isInWishlist = IsInWishlist(wishlistRepository),
             clearWishlist = ClearWishlist(wishlistRepository)
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAssignmentUsecase(
+        assignmentRepository: AssignmentRepository
+    ): AssignmentUsecase {
+        return AssignmentUsecase(
+            getAssignments = GetAssignments(assignmentRepository),
+            getAssignmentById = GetAssignmentById(assignmentRepository),
+            getAssignmentQuestions = GetAssignmentQuestions(assignmentRepository),
+            getAssignmentAnswers = GetAssignmentAnswers(assignmentRepository),
+            submitAssignment = SubmitAssignment(assignmentRepository),
+            getSubmissions = GetSubmissions(assignmentRepository),
+            getSubmissionById = GetSubmissionById(assignmentRepository)
         )
     }
 }

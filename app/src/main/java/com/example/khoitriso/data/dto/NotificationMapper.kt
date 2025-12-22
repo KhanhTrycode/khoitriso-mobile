@@ -5,9 +5,9 @@ import com.example.khoitriso.domain.models.Notification
 fun NotificationDto.toDomain(): Notification {
     return Notification(
         id = Id,
-        userId = UserId,
+        userId = UserId ?: 0,
         title = Title,
-        content = Content,
+        content = Message,
         type = Type,
         priority = Priority,
         isRead = IsRead,

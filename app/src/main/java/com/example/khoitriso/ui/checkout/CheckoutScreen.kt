@@ -39,8 +39,6 @@ fun CheckoutScreen(
     val cartState by viewModel.cart.collectAsState()
     val checkoutState by viewModel.checkoutState.collectAsState()
 
-    var showVNPayWebView by remember { mutableStateOf(false) }
-
     if (itemBuyNow != null){
         viewModel.loadSingleItemForCheckout(itemBuyNow)
     }
@@ -48,14 +46,21 @@ fun CheckoutScreen(
         viewModel.loadCart()
     }
 
-    // Xử lý Payment URL
-    LaunchedEffect(checkoutState.paymentUrl) {
-        if (checkoutState.paymentUrl != null) {
-            showVNPayWebView = true
+    // Xử lý Payment URL - Navigate to PaymentProcessingScreen
+    LaunchedEffect(checkoutState.paymentUrl, checkoutState.orderCode) {
+        if (checkoutState.paymentUrl != null && checkoutState.orderCode != null) {
+            navController.navigate(
+                NavRoute.NavPaymentProcessing(
+                    paymentUrl = checkoutState.paymentUrl!!,
+                    orderCode = checkoutState.orderCode!!
+                )
+            ) {
+                popUpTo(NavRoute.CHECKOUT) { inclusive = true }
+            }
         }
     }
 
-    // Xử lý thành công (Free order hoặc Payment done logic)
+    // Xử lý thành công (Free order)
     LaunchedEffect(checkoutState.orderCode) {
         if (checkoutState.orderCode != null && checkoutState.paymentUrl == null) {
             navController.navigate(
@@ -170,27 +175,6 @@ fun CheckoutScreen(
                 }
             }
         }
-    }
-
-    if (showVNPayWebView && checkoutState.paymentUrl != null) {
-        VNPayWebView(
-            url = checkoutState.paymentUrl!!,
-            onPaymentSuccess = { orderCode ->
-                showVNPayWebView = false
-                navController.navigate(
-                    NavRoute.NavPaymentResult(success = true, orderCode = orderCode)
-                )
-            },
-            onPaymentError = { error ->
-                showVNPayWebView = false
-                navController.navigate(
-                    NavRoute.NavPaymentResult(success = false, orderCode = null)
-                )
-            },
-            onDismiss = {
-                showVNPayWebView = false
-            }
-        )
     }
 }
 

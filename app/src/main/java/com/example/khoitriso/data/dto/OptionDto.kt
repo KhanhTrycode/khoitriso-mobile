@@ -5,7 +5,7 @@ import com.example.khoitriso.domain.models.Option
 data class OptionDto(
     val CreatedAt: String,
     val Id: Int,
-    val OptionText: String,
+    val OptionText: String?, // Có thể null
     val OrderIndex: Int,
     val PointsValue: Int,
     val QuestionId: Int,
@@ -13,7 +13,7 @@ data class OptionDto(
 
 fun OptionDto.toDomain() = Option(
     id = Id,
-    optionText = OptionText,
+    optionText = OptionText ?: "", // Xử lý null bằng empty string
     orderIndex = OrderIndex,
     pointsValue = PointsValue,
     questionId = QuestionId

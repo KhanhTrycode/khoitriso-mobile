@@ -9,7 +9,9 @@ import com.example.khoitriso.data.dto.LessonDto
 import com.example.khoitriso.data.dto.MyCourseDto
 import com.example.khoitriso.domain.models.Book
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -41,4 +43,25 @@ interface CourseApi {
     suspend fun getAssignmentById(
         @Path("id") id: Int
     ): Response<ApiRespone<AssignmentDto>>
+
+    @POST("assignments/{id}/submit")
+    suspend fun submitAssignment(
+        @Path("id") id: Int,
+        @Body request: com.example.khoitriso.data.dto.request.AssignmentSubmissionRequest
+    ): Response<ApiRespone<com.example.khoitriso.data.dto.AssignmentSubmissionDto>>
+
+    @GET("assignments/{id}/results")
+    suspend fun getAssignmentResults(
+        @Path("id") id: Int
+    ): Response<ApiRespone<com.example.khoitriso.data.dto.AssignmentResultDto>>
+
+    @GET("assignments/{id}/attempts")
+    suspend fun getUserAttempts(
+        @Path("id") id: Int
+    ): Response<ApiRespone<List<com.example.khoitriso.data.dto.AssignmentSubmissionDto>>>
+
+    @GET("assignments/{id}/questions")
+    suspend fun getAssignmentQuestions(
+        @Path("id") id: Int
+    ): Response<ApiRespone<List<com.example.khoitriso.data.dto.QuestionDto>>>
 }

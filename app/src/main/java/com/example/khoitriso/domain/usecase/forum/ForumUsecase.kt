@@ -30,6 +30,7 @@ data class ForumUsecase(
     val vote: Vote,
     val getVotes: GetVotes,
     val getUserVote: GetUserVote,
+    val getUserVotes: GetUserVotes,
     val addBookmark: AddBookmark,
     val removeBookmark: RemoveBookmark,
     val isBookmarked: IsBookmarked,
@@ -148,6 +149,12 @@ class GetVotes(private val repo: ForumRepository) {
 class GetUserVote(private val repo: ForumRepository) {
     suspend operator fun invoke(targetType: Int, targetId: String, userId: Int): Result<Int> {
         return repo.getUserVote(targetType, targetId, userId)
+    }
+}
+
+class GetUserVotes(private val repo: ForumRepository) {
+    suspend operator fun invoke(userId: Int): Result<Map<String, Int>> {
+        return repo.getUserVotes(userId)
     }
 }
 

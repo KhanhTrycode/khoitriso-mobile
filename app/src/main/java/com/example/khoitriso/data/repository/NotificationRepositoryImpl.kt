@@ -33,7 +33,7 @@ class NotificationRepositoryImpl @Inject constructor(
                 val result = body?.Result
                 
                 if (result != null) {
-                    val items = (result.Items ?: emptyList()).map { it.toDomain() }
+                    val items = (result.Data ?: emptyList()).map { it.toDomain() }
                     
                     Result.success(
                         NotificationsResult(

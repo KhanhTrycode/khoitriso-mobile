@@ -7,7 +7,6 @@ import com.example.khoitriso.domain.models.BookDetail
 import com.example.khoitriso.domain.models.Chapter
 import com.example.khoitriso.domain.models.Question
 import com.example.khoitriso.domain.usecase.book.BookUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.convertMathMLToLatex
@@ -47,7 +46,6 @@ class LearningBookViewModel @Inject constructor(
         val id = savedStateHandle.get<Int>("bookId") ?: -1
         loadData(
             stateFlow = _book,
-            mockData = MockData.mockBookDetail1,
             apiCall = {
                 bookUsecase.getBookById(id)
             },
@@ -56,16 +54,16 @@ class LearningBookViewModel @Inject constructor(
     }
 
     private fun loadChapters(){
-//        val id = savedStateHandle.get<Int>("bookId") ?: -1
-//        loadData(
-//            stateFlow = _chapters,
-//            mockData = MockData.mockChapters,
-//            apiCall = {
-//                bookUsecase.getChapterOfBook(id)
-//            }
-//        )
-        _chapters.value = UiState.Success(MockData.mockChapters)
-        loadQuestion()
+        val id = savedStateHandle.get<Int>("bookId") ?: -1
+        loadData(
+            stateFlow = _chapters,
+            apiCall = {
+                bookUsecase.getChapterOfBook(id)
+            },
+            onSuccess = {
+                loadQuestion()
+            }
+        )
     }
 
     fun changeChapter(chapterIndex: Int){
@@ -73,8 +71,7 @@ class LearningBookViewModel @Inject constructor(
     }
 
     private fun loadQuestion(){
-        // Convert MathML sang LaTeX sau khi load data
-        val convertedQuestions = MockData.mockQuestionList.convertMathMLToLatex()
-        _questions.value = UiState.Success(convertedQuestions)
+        // TODO: Implement actual API call for questions
+        _questions.value = UiState.Success(emptyList())
     }
 }

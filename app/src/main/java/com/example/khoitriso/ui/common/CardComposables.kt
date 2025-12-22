@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,19 +35,28 @@ import com.example.khoitriso.utils.toDecimal
 import com.example.khoitriso.utils.toVND
 
 @Composable
-fun RowCourseCard(listItem: List<Course>, navController: NavController) {
+fun RowCourseCard(
+    listItem: List<Course>, 
+    navController: NavController,
+    onAddToCart: (Int, Int) -> Unit = { _, _ -> }
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items(listItem.size) { index ->
+            val course = listItem[index]
+            
             CourseCard(
-                course = listItem[index],
+                course = course,
                 navController = navController,
                 modifier = Modifier.width(260.dp),
                 onActionClick = {
-                    navController.navigate(NavRoute.NavCourseDetail(listItem[index].id))
+                    navController.navigate(NavRoute.NavCourseDetail(course.id))
+                },
+                onAddToCart = {
+                    onAddToCart(course.id, com.example.khoitriso.utils.ItemType.Course)
                 }
             )
         }
@@ -54,19 +64,28 @@ fun RowCourseCard(listItem: List<Course>, navController: NavController) {
 }
 
 @Composable
-fun RowBookCard(listItem: List<Book>, navController: NavController) {
+fun RowBookCard(
+    listItem: List<Book>, 
+    navController: NavController,
+    onAddToCart: (Int, Int) -> Unit = { _, _ -> }
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items(listItem.size) { index ->
+            val book = listItem[index]
+            
             BookCard(
-                book = listItem[index],
+                book = book,
                 navController = navController,
                 modifier = Modifier.width(260.dp),
                 onActionClick = {
-                    navController.navigate(NavRoute.NavBookDetail(listItem[index].id))
+                    navController.navigate(NavRoute.NavBookDetail(book.id))
+                },
+                onAddToCart = {
+                    onAddToCart(book.id, com.example.khoitriso.utils.ItemType.Book)
                 }
             )
         }
@@ -79,6 +98,7 @@ fun BookCard(
     navController: NavController,
     modifier: Modifier = Modifier,
     onActionClick: () -> Unit = {},
+    onAddToCart: () -> Unit = {},
 ) {
     Card(
         modifier = modifier
@@ -138,7 +158,7 @@ fun BookCard(
                     isFree = false,
                     price = book.price,
                     totalReviews = book.totalReviews,
-                    onActionClick = onActionClick
+                    onActionClick = onAddToCart
                 )
             }
         }
@@ -150,8 +170,8 @@ fun CourseCard(
     course: Course,
     navController: NavController,
     modifier: Modifier = Modifier,
-    onFavorite: () -> Unit = {},
     onActionClick: () -> Unit = {},
+    onAddToCart: () -> Unit = {},
 ) {
     Card(
         modifier = modifier
@@ -173,26 +193,6 @@ fun CourseCard(
                 )
                 if (course.isFree) {
                     FreeBadge(modifier = Modifier.align(Alignment.TopStart))
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 4.dp,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(36.dp)
-                        .align(Alignment.TopEnd)
-                        .clickable { onFavorite() }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorite",
-                            modifier = Modifier.size(20.dp),
-                            tint = Color.Gray
-                        )
-                    }
                 }
             }
 
@@ -276,7 +276,7 @@ fun CourseCard(
                     price = course.price,
                     totalReviews = course.totalReviews,
                     estimatedDuration = null,
-                    onActionClick = onActionClick
+                    onActionClick = onAddToCart
                 )
             }
         }
@@ -367,15 +367,11 @@ fun FreeAction(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.tertiary
             )
-            Text(
-                text = stringResource(R.string.can_learn_now),
-                style = MaterialTheme.typography.labelSmall,
-            )
         }
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.tertiary)
+                .background(MaterialTheme.colorScheme.primary)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -384,16 +380,16 @@ fun FreeAction(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowCircleRight,
+                    imageVector = Icons.Default.ShoppingCart,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onTertiary
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.learn_now),
+                    text = stringResource(R.string.add_to_cart),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onTertiary,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -433,11 +429,11 @@ fun BuyAction(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onTertiary
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.buy_now_action),
+                    text = stringResource(R.string.add_to_cart),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold

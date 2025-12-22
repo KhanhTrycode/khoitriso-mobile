@@ -11,7 +11,6 @@ import com.example.khoitriso.domain.models.MyCourse
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +41,7 @@ class MyPurchaseViewModel @Inject constructor(
         when(savedStateHandle.get<String>("tab")){
             "courses" -> setActiveTab(0)
             "books" -> setActiveTab(1)
+            "materials" -> setActiveTab(2)
         }
 
         loadCourses()
@@ -51,7 +51,6 @@ class MyPurchaseViewModel @Inject constructor(
     fun loadCourses() {
         loadData(
             stateFlow = _courses,
-            mockData = MockData.mockMyCoursesList,
             apiCall = {
                 courseUsecase.getMyCourse()
             }
@@ -61,48 +60,15 @@ class MyPurchaseViewModel @Inject constructor(
     fun loadBooks() {
         loadData(
             stateFlow = _books,
-            mockData = MockData.mockMyBooksList,
             apiCall = {
                 bookUsecase.getMyBook()
             }
         )
     }
 
-//    fun exportBookToWord(bookId: Int, includeExplanation: Boolean) {
-//        viewModelScope.launch {
-//            _uiState.value = _uiState.value.copy(exportingBookId = bookId, error = null)
-//            bookRepository.exportBookToWord(bookId, includeExplanation).fold(
-//                onSuccess = { bytes ->
-//                    _uiState.value = _uiState.value.copy(
-//                        exportingBookId = null,
-//                        exportedBookBytes = bytes,
-//                        exportedBookId = bookId
-//                    )
-//                },
-//                onFailure = { exception ->
-//                    _uiState.value = _uiState.value.copy(
-//                        exportingBookId = null,
-//                        error = "Không thể xuất sách. Vui lòng thử lại sau."
-//                    )
-//                }
-//            )
-//        }
-//    }
-
     fun setActiveTab(tab: Int) {
         _activeTab.value = tab
     }
-//
-//    fun clearExportedBook() {
-//        _uiState.value = _uiState.value.copy(
-//            exportedBookBytes = null,
-//            exportedBookId = null
-//        )
-//    }
-//
-//    fun clearError() {
-//        _uiState.value = _uiState.value.copy(error = null)
-//    }
 }
 
 

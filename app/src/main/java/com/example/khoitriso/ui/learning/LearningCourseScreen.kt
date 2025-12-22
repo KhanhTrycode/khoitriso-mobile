@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -40,12 +39,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Assignment
+import com.example.khoitriso.domain.models.AssignmentPreview
 import com.example.khoitriso.domain.models.CourseDetail
 import com.example.khoitriso.domain.models.Lesson
 import com.example.khoitriso.domain.models.LessonDiscussion
 import com.example.khoitriso.domain.models.Material
 import com.example.khoitriso.ui.common.ErrorDisplay
 import com.example.khoitriso.ui.common.Media3AndroidView
+import com.example.khoitriso.ui.common.VideoPlayerView
 import com.example.khoitriso.ui.common.LoadingIndicator
 import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.ui.common.FormatTimeAgo
@@ -54,6 +55,7 @@ import com.example.khoitriso.ui.common.SafeImage
 import com.example.khoitriso.ui.common.FormatTimeAgo
 import com.example.khoitriso.utils.NavRoute
 import com.example.khoitriso.utils.UiState
+import com.example.khoitriso.utils.debug
 import com.example.khoitriso.utils.toFileSize
 
 
@@ -125,7 +127,20 @@ fun ContentScreen(
             val course = state.data
             Column(modifier = modifier.fillMaxSize()) {
                 // 1. VIDEO PLAYER
-                Media3AndroidView(player = player)
+                when (val lesson = currentLesson) {
+                    is UiState.Success -> {
+                        VideoPlayerView(
+                            videoUrl = lesson.data.videoUrl,
+                            player = player,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    else -> {
+                        if (player != null) {
+                            Media3AndroidView(player = player)
+                        }
+                    }
+                }
 
                 when (val lesson = currentLesson) {
                     is UiState.Loading -> Box(
@@ -143,7 +158,8 @@ fun ContentScreen(
                     is UiState.Success -> {
                         viewModel.onLessonClicked(lesson.data, context)
                         CurrentLessonInfo(
-                            lesson = lesson.data
+                            lesson = lesson.data,
+                            viewModel = viewModel
                         )
                         // 3. THANH NAV VÀ DANH SÁCH BÀI HỌC
                         CourseContentTabs(
@@ -153,6 +169,7 @@ fun ContentScreen(
                                 viewModel.onLessonClicked(lesson, context)
                             },
                             onAssignmentClick = { assignment ->
+                                // Navigate với assignmentId
                                 navController.navigate(NavRoute.NavAssignment(assignment.id))
                             },
                             onMaterialClick = {material ->
@@ -171,23 +188,74 @@ fun ContentScreen(
 // --- CÁC COMPOSABLE CON ---
 
 @Composable
-fun CurrentLessonInfo(lesson: Lesson) {
+fun CurrentLessonInfo(
+    lesson: Lesson,
+    viewModel: LearningCourseViewModel = hiltViewModel()
+) {
+    var showCompleteDialog by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = lesson.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = lesson.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            // Nút hoàn thành bài học
+            FilledTonalButton(
+                onClick = { showCompleteDialog = true },
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Hoàn thành")
+            }
+        }
+        
         // Thay thế bằng mô tả thực của bài học nếu có
         Text(
             text = "Đây là mô tả cho bài học. Nội dung này sẽ giúp bạn hiểu rõ hơn về video.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    
+    if (showCompleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showCompleteDialog = false },
+            icon = { Icon(Icons.Default.CheckCircle, contentDescription = null) },
+            title = { Text("Hoàn thành bài học") },
+            text = { Text("Đánh dấu bài học này đã hoàn thành?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.markLessonComplete(lesson.id)
+                        showCompleteDialog = false
+                    }
+                ) {
+                    Text("Xác nhận")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCompleteDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 }
@@ -207,10 +275,26 @@ fun CourseContentTabs(
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Tổng quan", "Bài tập", "Tài liệu", "Hỏi đáp")
     
-    // Load discussions when tab changes to "Hỏi đáp" and lesson is available
+    val assignmentsState by viewModel.assignments.collectAsState()
+    val fullAssignmentsState by viewModel.fullAssignments.collectAsState()
+
+    // Load assignments when tab changes to "Bài tập" and lesson is available
     LaunchedEffect(selectedTabIndex, currentLesson?.id) {
+        if (selectedTabIndex == 1 && currentLesson != null) {
+            // Bước 1: Load danh sách assignment previews từ lesson
+            viewModel.loadAssignments(currentLesson.id)
+        }
+        // Load discussions when tab changes to "Hỏi đáp" and lesson is available
         if (selectedTabIndex == 3 && currentLesson != null) {
             viewModel.loadDiscussions(currentLesson.id)
+        }
+    }
+
+    // Khi có danh sách assignment previews, load full assignments
+    LaunchedEffect(assignmentsState, selectedTabIndex) {
+        if (selectedTabIndex == 1 && assignmentsState is UiState.Success) {
+            val previews = (assignmentsState as UiState.Success<List<com.example.khoitriso.domain.models.AssignmentPreview>>).data
+            viewModel.loadFullAssignments(previews)
         }
     }
 
@@ -233,11 +317,40 @@ fun CourseContentTabs(
                 onLessonClick = onLessonClick
             )
 
-            1 -> AssignmentList(
-                assignments = currentLesson?.assignments ?: emptyList(),
-                currentLesson = currentLesson,
-                onAssignmentClick = onAssignmentClick
-            )
+            1 -> {
+                when (val fullAssignments = fullAssignmentsState) {
+                    is UiState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    is UiState.Error -> {
+                        ErrorDisplay(
+                            message = fullAssignments.message,
+                            onRetry = {
+                                currentLesson?.let { 
+                                    viewModel.loadAssignments(it.id)
+                                    // Sau khi load previews, sẽ tự động load full assignments
+                                }
+                            }
+                        )
+                    }
+                    is UiState.Success -> {
+                        if (fullAssignments.data.isEmpty()) {
+                            PlaceholderContent(text = "Bài học này không có bài tập.")
+                        } else {
+                            AssignmentList(
+                                assignments = fullAssignments.data,
+                                currentLesson = currentLesson,
+                                onAssignmentClick = onAssignmentClick
+                            )
+                        }
+                    }
+                }
+            }
 
             2 -> MaterialList(
                 materials = currentLesson?.materials ?: emptyList(),
@@ -444,31 +557,40 @@ fun AssignmentItem(assignment: Assignment, index: Int, isPlaying: Boolean, onCli
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (assignment.description.isNotBlank()) {
+                if (assignment.dueDate.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    KatexHtmlContent(
-                        html = assignment.description,
-                        textColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textSizeSp = 14f
+                    Text(
+                        text = "Hạn nộp: ${assignment.dueDate}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Divider()
+            // Phần 2: Thông tin bài tập (nếu có)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Điểm số
-                InfoTag(label = "Điểm tối đa", value = "${assignment.maxScore}")
-                InfoTag(label = "Điểm đạt", value = "${assignment.passingScore}")
-
-                // Thời gian
-                InfoTag(label = "Thời gian", value = "${assignment.timeLimit} phút")
+                if (assignment.timeLimit > 0) {
+                    InfoTag(
+                        label = "Thời gian",
+                        value = "${assignment.timeLimit} phút"
+                    )
+                }
+                if (assignment.maxScore > 0) {
+                    InfoTag(
+                        label = "Điểm tối đa",
+                        value = "${assignment.maxScore} điểm"
+                    )
+                }
+                if (assignment.maxAttempts > 0) {
+                    InfoTag(
+                        label = "Số lần làm",
+                        value = "${assignment.maxAttempts} lần"
+                    )
+                }
             }
-            InfoTag(label = "Số lần làm bài", value = "${assignment.maxAttempts} lần")
-
 
             // Phần 3: Nút Làm bài
             Button(
@@ -516,6 +638,7 @@ fun LessonList(
         modifier = Modifier.fillMaxSize()
     ) {
         itemsIndexed(lessons) { index, lesson ->
+            debug(lessons.toString(),"Test")
             LessonItem(
                 lesson = lesson,
                 index = index + 1,
@@ -547,9 +670,21 @@ fun LessonItem(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Icon(
-            imageVector = if (isPlaying) Icons.Default.PlayCircleOutline else Icons.Default.CheckCircle,
-            contentDescription = if (isPlaying) "Đang phát" else "Chưa phát",
-            tint = if (isPlaying) MaterialTheme.colorScheme.primary else Color.Gray
+            imageVector = when {
+                lesson.isCompleted -> Icons.Default.CheckCircle
+                isPlaying -> Icons.Default.PlayCircleOutline
+                else -> Icons.Default.CheckCircle
+            },
+            contentDescription = when {
+                lesson.isCompleted -> "Đã hoàn thành"
+                isPlaying -> "Đang phát"
+                else -> "Chưa phát"
+            },
+            tint = when {
+                lesson.isCompleted -> Color.Green
+                isPlaying -> MaterialTheme.colorScheme.primary
+                else -> Color.Gray
+            }
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -558,11 +693,24 @@ fun LessonItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = "${lesson.videoDuration} phút",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${lesson.videoDuration} phút",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (lesson.isCompleted) {
+                    Text(
+                        text = "• Đã hoàn thành",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Green,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     }
 }
@@ -810,7 +958,7 @@ fun DiscussionItem(
 
                 TextButton(onClick = onReplyClick) {
                     Icon(
-                        Icons.Default.Comment,
+                        Icons.AutoMirrored.Filled.Comment,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )

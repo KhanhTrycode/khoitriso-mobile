@@ -7,7 +7,6 @@ import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
 import com.example.khoitriso.domain.usecase.forum.IsBookmarked
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,16 +22,11 @@ abstract class ForumViewModel(
         viewModelScope.launch {
             loadData(
                 stateFlow = currentUser,
-                mockData = MockData.mockUser1,
                 apiCall = {
-                    authUsecase.loadCurrentUserInfo(userManager)
+                    authUsecase.loadCurrentUserInfo()
                 }
             )
         }
-    }
-
-    fun loginAgain(): User {
-        return MockData.mockUser1
     }
 
 
@@ -44,19 +38,13 @@ abstract class ForumViewModel(
         onSuccess: (Int) -> Unit
     ) {
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                // Logic cho test mode
-                debug("Voting in TestMode", "ForumViewModel")
-                Result.success(voteType)
-            } else {
-                val request = ForumVoteRequest(
-                    targetId = targetId,
-                    targetType = targetType,
-                    userId = userId,
-                    voteType = voteType
-                )
-                forumUsecase.vote(request)
-            }
+            val request = ForumVoteRequest(
+                targetId = targetId,
+                targetType = targetType,
+                userId = userId,
+                voteType = voteType
+            )
+            val result = forumUsecase.vote(request)
 
             result.fold(
                 onSuccess = { total ->
@@ -78,17 +66,10 @@ abstract class ForumViewModel(
         onSuccess: (Unit) -> Unit
     ){
         viewModelScope.launch {
-            val result = if (_isTestMode) {
-                // Logic cho test mode
-                debug(if (isCurrentlyBookmarked) "removeBookmark" else "addBookmark", "TestMode")
-                Result.success(Unit)
+            val result = if (isCurrentlyBookmarked) {
+                forumUsecase.removeBookmark(questionId, userId)
             } else {
-                // Logic gọi API thật
-                if (isCurrentlyBookmarked) {
-                    forumUsecase.removeBookmark(questionId, userId)
-                } else {
-                    forumUsecase.addBookmark(questionId, userId)
-                }
+                forumUsecase.addBookmark(questionId, userId)
             }
             result.fold(
                 onSuccess = { total ->

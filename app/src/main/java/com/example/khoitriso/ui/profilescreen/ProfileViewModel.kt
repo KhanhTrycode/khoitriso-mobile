@@ -5,12 +5,14 @@ import com.example.khoitriso.data.local.AppLanguage
 import com.example.khoitriso.data.local.AppTheme
 import com.example.khoitriso.data.local.LanguageManager
 import com.example.khoitriso.data.local.ThemeManager
+import com.example.khoitriso.domain.models.BookQuestion
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.domain.models.WishlistItem
+import com.example.khoitriso.domain.usecase.book.BookUsecase
+import com.example.khoitriso.domain.usecase.order.OrderUsecase
 import com.example.khoitriso.domain.usecase.user.UserUsecase
 import com.example.khoitriso.domain.usecase.wishlist.WishlistUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,8 +28,10 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userUsecase: UserUsecase,
     private val wishlistUsecase: WishlistUsecase,
+    private val orderUsecase: OrderUsecase,
     private val languageManager: LanguageManager,
-    private val themeManager: ThemeManager
+    private val themeManager: ThemeManager,
+    private val bookUsecase: BookUsecase
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -44,6 +48,10 @@ class ProfileViewModel @Inject constructor(
     // State cho wishlist
     private val _wishlist = MutableStateFlow<UiState<List<WishlistItem>>>(UiState.Loading)
     val wishlist: StateFlow<UiState<List<WishlistItem>>> = _wishlist
+
+    // State cho tra cứu câu hỏi sách
+    private val _questionLookup = MutableStateFlow<UiState<BookQuestion>>(UiState.Loading)
+    val questionLookup: StateFlow<UiState<BookQuestion>> = _questionLookup
 
     init {
         loadUserInfo()
@@ -62,9 +70,11 @@ class ProfileViewModel @Inject constructor(
                     )
                 },
                 onFailure = { exception ->
+                    // User load failed - likely token expired
+                    _navigationEvents.send(com.example.khoitriso.ui.behavior.NavigationEvent.NavigateToLogin)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = "Không thể tải thông tin. Vui lòng thử lại sau." // TODO: Use stringResource
+                        error = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
                     )
                 }
             )
@@ -139,29 +149,27 @@ class ProfileViewModel @Inject constructor(
 
         viewModelScope.launch {
             _activationState.value = UiState.Loading
-            delay(1500) // Giả lập gọi API
-
-            // Mock logic: Nếu code bắt đầu bằng "BOOK", thành công
-            if (code.startsWith("BOOK", ignoreCase = true)) {
-                _activationState.value = UiState.Success("Kích hoạt sách thành công! Sách đã được thêm vào thư viện.")
-                // Ở đây thực tế bạn sẽ gọi EventBus hoặc reload lại data của MyLearningViewModel
-            } else {
-                _activationState.value = UiState.Error("Mã kích hoạt không hợp lệ hoặc đã sử dụng.")
-            }
+            bookUsecase.activeCode(code)
         }
     }
 
     fun resetActivationState() {
-        _activationState.value = UiState.Loading
+        // Reset to a neutral state that allows input
+        _activationState.value = UiState.Success("")
     }
 
     // Hàm lấy lịch sử đơn hàng
     fun loadOrderHistory() {
         viewModelScope.launch {
             _orders.value = UiState.Loading
-            delay(1000)
-            // Lấy từ MockData
-            _orders.value = UiState.Success(MockData.mockOrders.sortedByDescending { it.createdAt })
+            orderUsecase.getOrder().fold(
+                onSuccess = { response ->
+                    _orders.value = UiState.Success(response.items.sortedByDescending { it.createdAt })
+                },
+                onFailure = { exception ->
+                    _orders.value = UiState.Error(exception.message ?: "Không thể tải lịch sử đơn hàng")
+                }
+            )
         }
     }
 
@@ -187,43 +195,55 @@ class ProfileViewModel @Inject constructor(
     fun loadWishlist() {
         viewModelScope.launch {
             _wishlist.value = UiState.Loading
-            delay(500) // Simulate API call
-
-            if (_isTestMode) {
-                _wishlist.value = UiState.Success(MockData.mockWishlistItems)
-            } else {
-                wishlistUsecase.getWishlist().fold(
-                    onSuccess = { response ->
-                        _wishlist.value = UiState.Success(response.items)
-                    },
-                    onFailure = { exception ->
-                        _wishlist.value = UiState.Error(exception.message ?: "Không thể tải wishlist")
-                    }
-                )
-            }
+            wishlistUsecase.getWishlist().fold(
+                onSuccess = { response ->
+                    _wishlist.value = UiState.Success(response)
+                },
+                onFailure = { exception ->
+                    _wishlist.value = UiState.Error(exception.message ?: "Không thể tải wishlist")
+                }
+            )
         }
     }
 
     fun removeFromWishlist(wishlistId: Int) {
         viewModelScope.launch {
-            if (_isTestMode) {
-                // Mock: Remove from list
-                val currentItems = (_wishlist.value as? UiState.Success)?.data ?: emptyList()
-                val updatedItems = currentItems.filter { it.id != wishlistId }
-                _wishlist.value = UiState.Success(updatedItems)
-            } else {
-                wishlistUsecase.removeFromWishlist(wishlistId).fold(
-                    onSuccess = {
-                        // Reload wishlist
-                        loadWishlist()
-                    },
-                    onFailure = { exception ->
-                        // Show error
-                        _wishlist.value = UiState.Error(exception.message ?: "Không thể xóa khỏi wishlist")
-                    }
-                )
-            }
+            wishlistUsecase.removeFromWishlist(wishlistId).fold(
+                onSuccess = {
+                    // Reload wishlist
+                    loadWishlist()
+                },
+                onFailure = { exception ->
+                    // Show error
+                    _wishlist.value = UiState.Error(exception.message ?: "Không thể xóa khỏi wishlist")
+                }
+            )
         }
+    }
+
+    // Question lookup functions
+    fun lookupQuestion(questionId: String) {
+        val id = questionId.toIntOrNull()
+        if (id == null || id <= 0) {
+            _questionLookup.value = UiState.Error("ID câu hỏi không hợp lệ")
+            return
+        }
+
+        viewModelScope.launch {
+            _questionLookup.value = UiState.Loading
+            bookUsecase.getBookQuestionById(id).fold(
+                onSuccess = { question ->
+                    _questionLookup.value = UiState.Success(question)
+                },
+                onFailure = { exception ->
+                    _questionLookup.value = UiState.Error(exception.message ?: "Không thể tải câu hỏi")
+                }
+            )
+        }
+    }
+
+    fun resetQuestionLookup() {
+        _questionLookup.value = UiState.Loading
     }
 }
 

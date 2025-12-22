@@ -5,10 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +59,12 @@ fun DetailHeader(
 }
 
 @Composable
-fun ActionButtons(price: Double, onBuy: () -> Unit, onCart: () -> Unit) {
+fun ActionButtons(
+    price: Double, 
+    onCart: () -> Unit,
+    isInWishlist: Boolean = false,
+    onWishlistClick: () -> Unit = {}
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 16.dp,
@@ -67,23 +76,31 @@ fun ActionButtons(price: Double, onBuy: () -> Unit, onCart: () -> Unit) {
                 .padding(horizontal = 20.dp, vertical = 16.dp)
                 .navigationBarsPadding(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedIconButton(
-                onClick = onCart,
-                modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            // Wishlist button
+            IconButton(
+                onClick = onWishlistClick,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(
+                        1.dp,
+                        if (isInWishlist) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        RoundedCornerShape(12.dp)
+                    )
             ) {
                 Icon(
-                    Icons.Outlined.ShoppingCart,
-                    contentDescription = "Add to Cart",
-                    tint = MaterialTheme.colorScheme.primary
+                    imageVector = if (isInWishlist) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Wishlist",
+                    modifier = Modifier.size(24.dp),
+                    tint = if (isInWishlist) Color(0xFFFF6B6B) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
+            
+            // Add to cart button
             Button(
-                onClick = onBuy,
+                onClick = onCart,
                 modifier = Modifier
                     .weight(1f)
                     .height(56.dp),
@@ -93,8 +110,15 @@ fun ActionButtons(price: Double, onBuy: () -> Unit, onCart: () -> Unit) {
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
+                Icon(
+                    Icons.Outlined.ShoppingCart,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.buy_now),
+                    text = stringResource(R.string.add_to_cart),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

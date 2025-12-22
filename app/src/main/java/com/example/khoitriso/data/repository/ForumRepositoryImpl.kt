@@ -389,6 +389,29 @@ class ForumRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getUserVotes(userId: Int): Result<Map<String, Int>> {
+        return try {
+            val response = forumApi.getUserVotes(userId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                val result = body?.Result
+                if (result != null && result.Votes != null) {
+                    // Convert list of votes to map: targetId -> voteType
+                    val votesMap = result.Votes.associate { vote ->
+                        vote.TargetId to vote.VoteType
+                    }
+                    Result.success(votesMap)
+                } else {
+                    Result.success(emptyMap())
+                }
+            } else {
+                Result.success(emptyMap())
+            }
+        } catch (e: Exception) {
+            Result.success(emptyMap())
+        }
+    }
+
     override suspend fun addBookmark(questionId: String, userId: Int): Result<Unit> {
         return try {
             val dto = ForumBookmarkRequestDto(QuestionId = questionId, UserId = userId)

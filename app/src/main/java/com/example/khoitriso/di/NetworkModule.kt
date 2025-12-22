@@ -214,6 +214,11 @@ object NetworkModule {
     fun provideVNPayApi(@Named("secureRetrofit") retrofit: Retrofit): com.example.khoitriso.data.api.VNPayApi =
         retrofit.create(com.example.khoitriso.data.api.VNPayApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideAssignmentApi(@Named("secureRetrofit") retrofit: Retrofit): AssignmentApi =
+        retrofit.create(AssignmentApi::class.java)
+
     // SignalR Service
     @Provides
     @Singleton

@@ -15,5 +15,4 @@ data class Question(
     val orderIndex: Int,
     val questionContent: String,
     val questionType: Int,
-    val updatedAt: String,
 )

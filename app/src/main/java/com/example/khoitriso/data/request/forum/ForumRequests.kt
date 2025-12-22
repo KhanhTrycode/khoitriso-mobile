@@ -65,6 +65,16 @@ data class ForumUserVoteResponse(
     val VoteType: Int? // -1, 0, 1
 )
 
+data class ForumUserVotesResponse(
+    val Votes: List<ForumUserVoteDto>? = null
+)
+
+data class ForumUserVoteDto(
+    val TargetId: String,
+    val TargetType: Int, // 1 = Question, 2 = Answer, 3 = Comment
+    val VoteType: Int // -1 = downvote, 1 = upvote
+)
+
 data class ForumBookmarkRequestDto(
     val QuestionId: String,
     val UserId: Int

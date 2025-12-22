@@ -57,12 +57,17 @@ fun OrderScreen(
     val paymentError by viewModel.paymentError.collectAsState()
 
     var selectedOrder by remember { mutableStateOf<Order?>(null) }
-    var showVNPayWebView by remember { mutableStateOf(false) }
     
-    // Xử lý Payment URL
-    LaunchedEffect(paymentUrl) {
-        if (paymentUrl != null) {
-            showVNPayWebView = true
+    // Xử lý Payment URL - Navigate to PaymentProcessingScreen
+    LaunchedEffect(paymentUrl, selectedOrder) {
+        if (paymentUrl != null && selectedOrder != null) {
+            navController.navigate(
+                NavRoute.NavPaymentProcessing(
+                    paymentUrl = paymentUrl!!,
+                    orderCode = selectedOrder!!.orderCode
+                )
+            )
+            viewModel.clearPaymentUrl()
         }
     }
 
@@ -145,32 +150,7 @@ fun OrderScreen(
             )
         }
         
-        // 4. Hiển thị VNPay WebView nếu có paymentUrl
-        if (showVNPayWebView && paymentUrl != null) {
-            VNPayWebView(
-                url = paymentUrl!!,
-                onPaymentSuccess = { orderCode ->
-                    showVNPayWebView = false
-                    viewModel.clearPaymentUrl()
-                    navController.navigate(
-                        NavRoute.NavPaymentResult(success = true, orderCode = orderCode)
-                    )
-                },
-                onPaymentError = { error ->
-                    showVNPayWebView = false
-                    viewModel.clearPaymentUrl()
-                    navController.navigate(
-                        NavRoute.NavPaymentResult(success = false, orderCode = null)
-                    )
-                },
-                onDismiss = {
-                    showVNPayWebView = false
-                    viewModel.clearPaymentUrl()
-                }
-            )
-        }
-        
-        // 5. Hiển thị lỗi nếu có
+        // 4. Hiển thị lỗi nếu có
         paymentError?.let { error ->
             LaunchedEffect(error) {
                 // Có thể hiển thị Snackbar hoặc AlertDialog

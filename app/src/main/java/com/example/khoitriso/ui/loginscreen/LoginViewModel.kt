@@ -30,6 +30,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val authUsecase: AuthUsecase,
     private val tokenManager: TokenManager,
+    private val userManager: com.example.khoitriso.data.local.UserManager,
 ) : ViewModel() {
 
     private val _token = MutableStateFlow<UiState<Authorization>?>(null)
@@ -38,6 +39,115 @@ class LoginViewModel @Inject constructor(
     val errorMessage = mutableStateOf<String?>(null)
 
     private var googleSignInLauncher: ActivityResultLauncher<Intent>? = null
+
+    init {
+        // Check if user is already logged in
+        checkExistingToken()
+    }
+
+    private suspend fun clearAllAuthData() {
+        tokenManager.clearTokens()
+        userManager.clearUser()
+    }
+
+    private fun checkExistingToken() {
+        viewModelScope.launch {
+            val accessToken = tokenManager.getAccessToken()
+            if (accessToken == null) {
+                // No token, need to login
+                _token.value = null
+                return@launch
+            }
+
+            // Check if token is expired
+            if (tokenManager.isTokenExpired(accessToken)) {
+                // Token expired, try to refresh
+                val refreshToken = tokenManager.getRefreshToken()
+                if (refreshToken != null) {
+                    val refreshed = authUsecase.refresh(tokenManager)
+                    if (refreshed != null) {
+                        // Save refreshed tokens
+                        tokenManager.saveTokens(refreshed.accessToken, refreshed.refresh)
+                        // Verify by loading user
+                        val userResult = authUsecase.getMe()
+                        userResult.fold(
+                            onSuccess = { user ->
+                                // Token is valid, save user and set success state
+                                authUsecase.loadCurrentUserInfo.saveUser(user)
+                                _token.value = UiState.Success(refreshed)
+                            },
+                            onFailure = {
+                                // Failed to get user, clear tokens and require login
+                                clearAllAuthData()
+                                _token.value = null
+                            }
+                        )
+                    } else {
+                        // Refresh failed, clear tokens
+                        clearAllAuthData()
+                        _token.value = null
+                    }
+                } else {
+                    // No refresh token, clear and require login
+                    clearAllAuthData()
+                    _token.value = null
+                }
+            } else {
+                // Token not expired, verify it by calling /auth/me
+                val userResult = authUsecase.getMe()
+                userResult.fold(
+                    onSuccess = { user ->
+                        // Token is valid, save user and set success state
+                        authUsecase.loadCurrentUserInfo.saveUser(user)
+                        val refreshToken = tokenManager.getRefreshToken()
+                        if (refreshToken != null) {
+                            _token.value = UiState.Success(
+                                Authorization(
+                                    accessToken = accessToken,
+                                    refresh = refreshToken
+                                )
+                            )
+                        } else {
+                            // No refresh token, require login
+                            clearAllAuthData()
+                            _token.value = null
+                        }
+                    },
+                    onFailure = {
+                        // Token is invalid or API call failed, try to refresh
+                        val refreshToken = tokenManager.getRefreshToken()
+                        if (refreshToken != null) {
+                            val refreshed = authUsecase.refresh(tokenManager)
+                            if (refreshed != null) {
+                                tokenManager.saveTokens(refreshed.accessToken, refreshed.refresh)
+                                // Try to get user again with new token
+                                val retryUserResult = authUsecase.getMe()
+                                retryUserResult.fold(
+                                    onSuccess = { user ->
+                                        authUsecase.loadCurrentUserInfo.saveUser(user)
+                                        _token.value = UiState.Success(refreshed)
+                                    },
+                                    onFailure = {
+                                        // Still failed, clear tokens
+                                        clearAllAuthData()
+                                        _token.value = null
+                                    }
+                                )
+                            } else {
+                                // Refresh failed, clear tokens
+                                clearAllAuthData()
+                                _token.value = null
+                            }
+                        } else {
+                            // No refresh token, clear and require login
+                            clearAllAuthData()
+                            _token.value = null
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     fun setGoogleSignInLauncher(launcher: ActivityResultLauncher<Intent>) {
         googleSignInLauncher = launcher

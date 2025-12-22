@@ -17,35 +17,43 @@ import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.models.User
 import com.example.khoitriso.utils.UiState
 import com.example.khoitriso.utils.debug
+import com.example.khoitriso.utils.UiEvent
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 abstract class BaseViewModel : ViewModel() {
 
-    // Nên đặt là isTestMode cho rõ ràng hơn
-    protected val _isTestMode = false // Dùng protected để lớp con có thể truy cập
+    // Channel for navigation events (e.g., token expired, navigate to login)
+    protected val _navigationEvents = Channel<NavigationEvent>()
+    val navigationEvents = _navigationEvents.receiveAsFlow()
 
-    protected fun loadUser(user: MutableStateFlow<User?>, userManager: UserManager) {
+    protected fun loadUser(
+        user: MutableStateFlow<User?>,
+        userManager: UserManager,
+        onUserLoadFailed: suspend () -> Unit = {}
+    ) {
         viewModelScope.launch {
-            user.value = userManager.getCurrentUser()
+            val loadedUser = userManager.getCurrentUser()
+            if (loadedUser != null) {
+                user.value = loadedUser
+            } else {
+                // User not found in local storage, trigger callback
+                onUserLoadFailed()
+            }
         }
     }
 
     protected fun <T> loadData(
         stateFlow: MutableStateFlow<UiState<T>>,
-        mockData: T,
-        isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<T>,
         onSuccess: (UiState.Success<T>) -> Unit = {},
         onFailure: () -> Unit = {},
     ) {
         viewModelScope.launch {
             stateFlow.value = UiState.Loading
-            val result = if (isTestMode) {
-                Result.success(mockData)
-            } else {
-                apiCall()
-            }
+            val result = apiCall()
             result.fold(
                 onSuccess = {
                     stateFlow.value = UiState.Success(it)
@@ -61,57 +69,37 @@ abstract class BaseViewModel : ViewModel() {
 
     protected fun <T> loadDataWithNoResult(
         stateFlow: MutableStateFlow<T>,
-        mockData: T,
-        isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<T>,
     ) {
         viewModelScope.launch {
-            if (isTestMode) {
-                stateFlow.value = mockData
-            } else {
-                try {
-                    val result = apiCall()
-                    result.fold(
-                        onSuccess = { item ->
-                            stateFlow.value = item
-                        },
-                        onFailure = { exception ->
-                            // Nếu thất bại, cập nhật state với thông báo lỗi
-                            stateFlow.value = 0 as T
-                        }
-                    )
-                } catch (e: Exception) {
-                    // Xử lý lỗi nếu cần
-                    e.printStackTrace()
-                }
+            try {
+                val result = apiCall()
+                result.fold(
+                    onSuccess = { item ->
+                        stateFlow.value = item
+                    },
+                    onFailure = { exception ->
+                        // Nếu thất bại, cập nhật state với thông báo lỗi
+                        stateFlow.value = 0 as T
+                    }
+                )
+            } catch (e: Exception) {
+                // Xử lý lỗi nếu cần
+                e.printStackTrace()
             }
         }
     }
 
     protected fun <T> loadDataWithPage(
         stateFlow: MutableStateFlow<UiState<MyResponese<T>>>,
-        mockData: List<T>,
-        isTestMode: Boolean = _isTestMode,
         apiCall: suspend () -> Result<MyResponese<T>>,
         onFailure: () -> Unit = {},
         onSuccess: (UiState.Success<MyResponese<T>>) -> Unit = {},
     ) {
         viewModelScope.launch {
             stateFlow.value = UiState.Loading
-            val result = if (isTestMode) {
-                Result.success(
-                    MyResponese(
-                        items = mockData,
-                        page = 1,
-                        pageSize = mockData.size,
-                        total = mockData.size,
-                        totalPages = 1
-                    )
-                )
-            } else {
-                apiCall()
-            }
             try {
+                val result = apiCall()
                 result.fold(
                     onSuccess = { item ->
                         stateFlow.value = UiState.Success(item)
@@ -128,7 +116,7 @@ abstract class BaseViewModel : ViewModel() {
             } catch (e: Exception) {
                 // Xử lý lỗi nếu cần
                 e.printStackTrace()
-                UiState.Error(e.message ?: "Unknown error")
+                stateFlow.value = UiState.Error(e.message ?: "Unknown error")
             }
         }
     }
@@ -140,10 +128,18 @@ abstract class BaseViewModel : ViewModel() {
         // Chỉ tạo player nếu nó chưa tồn tại
         if (playerState.value == null) {
             viewModelScope.launch {
-                val exoPlayer = ExoPlayer.Builder(context).build().also {
+                val exoPlayer = ExoPlayer.Builder(context).build().also { player ->
+                    // Set audio attributes để có âm thanh
+                    val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
+                        .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
+                        .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                        .build()
+                    player.setAudioAttributes(audioAttributes, true)
+                    
                     // Không set media item ở đây nữa, sẽ set ở hàm changeVideoSource
-                    it.playWhenReady = false
-                    it.addListener(object : Player.Listener {
+                    player.playWhenReady = false
+                    player.volume = 1f // Đảm bảo volume = 1 (100%)
+                    player.addListener(object : Player.Listener {
                         override fun onPlayerError(error: PlaybackException) {
                             handleErrorInparent(error)
                         }
@@ -160,11 +156,17 @@ abstract class BaseViewModel : ViewModel() {
     ) {
         // Lấy player hiện tại
         val currentPlayer = playerState.value ?: return
-        var url =
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        
+        // Check if it's YouTube URL - ExoPlayer doesn't support YouTube directly
+        // YouTube videos will be handled by WebView in the UI
+        if (com.example.khoitriso.utils.YouTubeUtils.isYouTubeUrl(videoUrl)) {
+            debug("YouTube URL detected, will use WebView: $videoUrl", "BaseViewModel")
+            return
+        }
+        
         viewModelScope.launch {
             // Tạo media item mới từ URL
-            val mediaItem = MediaItem.fromUri(url.toUri())
+            val mediaItem = MediaItem.fromUri(videoUrl.toUri())
 
             // Dừng video hiện tại (nếu có)
             currentPlayer.stop()
@@ -239,6 +241,9 @@ abstract class BaseViewModel : ViewModel() {
             e.printStackTrace()
         }
     }
+}
 
-
+// Navigation events for ViewModels
+sealed class NavigationEvent {
+    object NavigateToLogin : NavigationEvent()
 }

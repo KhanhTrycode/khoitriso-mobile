@@ -2,8 +2,10 @@ package com.example.khoitriso.data.api
 
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.ApiResponeData
+import com.example.khoitriso.data.dto.PagedWishlistResultDto
 import com.example.khoitriso.data.dto.WishlistItemDto
 import com.example.khoitriso.data.request.AddToWishlistRequestDto
+import com.example.khoitriso.domain.models.MyResponese
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -13,7 +15,7 @@ interface WishlistApi {
         @Query("page") page: Int = 1,
         @Query("pageSize") pageSize: Int = 20,
         @Query("itemType") itemType: Int? = null // Filter by item type: 0 = Book, 1 = Course, 2 = LearningPath
-    ): Response<ApiResponeData<WishlistItemDto>>
+    ): Response<ApiRespone<PagedWishlistResultDto>>
 
     @POST("wishlist")
     suspend fun addToWishlist(

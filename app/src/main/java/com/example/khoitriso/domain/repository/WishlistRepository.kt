@@ -9,7 +9,7 @@ interface WishlistRepository {
         page: Int = 1,
         pageSize: Int = 20,
         itemType: Int? = null
-    ): Result<MyResponese<WishlistItem>>
+    ): Result<List<WishlistItem>>
 
     suspend fun addToWishlist(
         itemId: Int,

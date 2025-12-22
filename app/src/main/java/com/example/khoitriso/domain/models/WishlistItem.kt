@@ -5,7 +5,7 @@ data class WishlistItem(
     val itemId: Int,
     val itemType: Int, // 0: Book, 1: Course, 2: LearningPath
     val addedAt: String,
-    val item: Any? = null // Full item data (Course, Book, etc.)
+    val item: Any? = null // Book or Course object
 )
 
 data class Wishlist(

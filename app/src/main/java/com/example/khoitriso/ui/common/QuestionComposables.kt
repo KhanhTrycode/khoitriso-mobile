@@ -25,49 +25,66 @@ import com.example.khoitriso.ui.forum.KatexHtmlContent
 import com.example.khoitriso.utils.QuestionType
 
 @Composable
-fun QuestionItem(question: Question, onOptionSelected: (Int, Int) -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+fun QuestionItem(
+    question: Question, 
+    onOptionSelected: (Int, Int) -> Unit,
+    questionNumber: Int? = null // Số thứ tự câu hỏi (đã bỏ GroupTitle)
+) {
+    // GroupTitle được hiển thị như một tiêu đề nhóm, không phải câu hỏi
+    if (QuestionType.fromInt(question.questionType) == QuestionType.GroupTitle) {
+        GroupTitleItem(question = question)
+    } else {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            Row(verticalAlignment = Alignment.Top) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(top = 2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.question_number, question.orderIndex),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.question_number, 
+                                    questionNumber ?: question.orderIndex
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                    // Hiển thị nội dung câu hỏi với hỗ trợ hình ảnh và bảng
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        KatexHtmlContent(
+                            html = question.questionContent,
+                            textSizeSp = 16f
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    KatexHtmlContent(html = question.questionContent)
-                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                OptionList(
+                    questionType = question.questionType,
+                    options = question.options,
+                    onOptionSelected = {
+                        onOptionSelected(it, question.id)
+                    }
+                )
             }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-            OptionList(
-                questionType = question.questionType,
-                options = question.options,
-                onOptionSelected = {
-                    onOptionSelected(it, question.id)
-                }
-            )
         }
     }
 }
@@ -82,6 +99,10 @@ fun OptionList(
         QuestionType.MultipleChoice -> MultipleChoiceOptionList(options, onOptionSelected)
         QuestionType.TrueFalse -> TrueFalseOptionList(options, onOptionSelected)
         QuestionType.ShortAnswer -> ShortAnswerInput()
+        QuestionType.GroupTitle -> {
+            // GroupTitle không có options, không hiển thị gì ở đây
+            Spacer(modifier = Modifier.height(0.dp))
+        }
         else -> Text("Loại câu hỏi chưa hỗ trợ", color = MaterialTheme.colorScheme.error)
     }
 }
@@ -240,5 +261,78 @@ fun ShortAnswerInput() {
             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
         )
     )
+}
+
+@Composable
+fun GroupTitleItem(question: Question) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+    ) {
+        // Divider phía trên
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            thickness = 2.dp,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        
+        // Card GroupTitle với style nổi bật hơn
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(
+                3.dp,
+                MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Icon lớn hơn và nổi bật hơn
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiary,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Label,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                
+                // Nội dung GroupTitle
+                Box(modifier = Modifier.weight(1f)) {
+                    KatexHtmlContent(
+                        html = question.questionContent,
+                        textColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textSizeSp = 20f
+                    )
+                }
+            }
+        }
+        
+        // Divider phía dưới
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            thickness = 2.dp,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+    }
 }
 

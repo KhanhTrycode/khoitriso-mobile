@@ -4,7 +4,7 @@ data class PagingRequest(
     val page: Int = 1,
     val pageSize: Int = 100,
     val search: String? = null,
-    val approvalStatus: Int? = null,
+    val approvalStatus: Int? = 2,
     val authorId: Int? = null,
     val sortBy: String? = null,
     val sortOrder: String? = null,

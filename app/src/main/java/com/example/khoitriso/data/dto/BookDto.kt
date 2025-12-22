@@ -1,18 +1,20 @@
 package com.example.khoitriso.data.dto
 
+import com.example.khoitriso.domain.models.Author
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.Category
 
 data class BookDto(
     val ApprovalStatus: Int,
-    val Author: AuthorDto,
+    val Author: AuthorDto?,
     val AuthorId: Int,
-    val Category: CategoryDto,
+    val Category: CategoryDto?,
     val CategoryId: Int,
     val CoverImage: String,
     val CreatedAt: String,
     val Description: String,
-    val EbookFile: String,
+    val EbookFile: String? = "",
     val Edition: String,
     val Id: Int,
     val IsActive: Boolean,
@@ -21,9 +23,11 @@ data class BookDto(
     val Price: Double,
     val PublicationYear: Int,
     val Rating: Float?,
-    val StaticPagePath: String,
+    val StaticPagePath: String? = "",
     val Title: String,
     val TotalReviews: Int?,
+    val TotalQuestions: Int? = null,
+    val TotalChapters: Int? = null,
     val UpdatedAt: String
 )
 
@@ -56,8 +60,8 @@ data class BookDetailDto(
 
 fun BookDto.toDomain() : Book = Book(
     approvalStatus = ApprovalStatus,
-    author = Author.toDomain(),
-    category = Category.toDomain(),
+    author = Author?.toDomain() ?: Author(id = AuthorId, fullName = "", avatar = ""),
+    category = Category?.toDomain() ?: Category(id = CategoryId, name = ""),
     coverImage = CoverImage,
     createdAt = CreatedAt,
     description = Description,

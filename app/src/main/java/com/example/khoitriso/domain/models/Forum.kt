@@ -56,10 +56,7 @@ data class ForumCategory(
     val id: String,
     val name: String,
     val description: String,
-    val color: String,
-    val icon: String,
-    val isActive: Boolean = true,
-    val sortOrder: Int = 0
+
 )
 
 data class ForumTag(

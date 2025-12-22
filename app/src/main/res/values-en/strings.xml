@@ -191,6 +191,7 @@
     <string name="can_learn_now">Can learn now</string>
     <string name="learn_now">Learn Now</string>
     <string name="buy_now_action">Buy Now</string>
+    <string name="add_to_cart">Add to Cart</string>
     <string name="level_recognition">Recognition</string>
     <string name="level_understanding">Understanding</string>
     <string name="level_low_application">Low Application</string>
@@ -214,5 +215,461 @@
     <string name="remove_from_wishlist">Remove from wishlist</string>
     <string name="book">Book</string>
     <string name="course">Course</string>
+    
+    <!-- Error Messages -->
+    <string name="error_response_body_null">Response body is null</string>
+    <string name="error_response_result_null">Response result is null</string>
+    <string name="error_api_error">API error: %1$d</string>
+    <string name="error_unknown">An unknown error occurred</string>
+    <string name="error_network">Network connection error</string>
+    <string name="error_item_already_in_cart">Item already in cart</string>
+    <string name="error_question_not_found">Question not found</string>
+    <string name="error_failed_to_create_question">Failed to create question</string>
+    <string name="error_failed_to_update_question">Failed to update question</string>
+    <string name="error_failed_to_create_answer">Failed to create answer</string>
+    <string name="error_failed_to_update_answer">Failed to update answer</string>
+    <string name="error_failed_to_create_comment">Failed to create comment</string>
+    <string name="error_failed_to_update_comment">Failed to update comment</string>
+    <string name="error_failed_to_vote">Failed to vote</string>
+    <string name="error_failed_to_get_stats">Failed to get stats</string>
+    <string name="error_response_data_null">Response data is null</string>
+    <string name="error_no_user_data">No user data</string>
+    <string name="error_course_not_found">Course not found</string>
+    <string name="error_book_not_found">Book not found</string>
+    
+    <!-- Forum Ask Screen -->
+    <string name="ask_question_title">Ask Question</string>
+    <string name="ask_question_subtitle">Share your question with the community</string>
+    <string name="question_title_label">Question Title *</string>
+    <string name="question_title_hint">E.g: How to calculate derivative...</string>
+    <string name="question_title_helper">Short, clear title that accurately describes the problem</string>
+    <string name="category_label">Category *</string>
+    <string name="content_label">Detailed Description *</string>
+    <string name="content_hint">Describe your question in detail...</string>
+    <string name="content_helper">The more detailed your description, the more likely you are to get an accurate answer</string>
+    <string name="tags_label">Tags * (Max 5)</string>
+    <string name="tag_input_hint">Enter tag and press Add</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="popular_tags">Popular Tags:</string>
+    <string name="tips_title">Tips for getting good answers</string>
+    <string name="tip_search_first">Search before asking to avoid duplicates</string>
+    <string name="tip_clear_title">Write a clear, specific title about the problem</string>
+    <string name="tip_detailed_description">Describe in detail what you have tried</string>
+    <string name="tip_use_tags">Use appropriate tags for easy searching</string>
+    <string name="tip_attach_images">Attach images if necessary</string>
+    <string name="post_question">Post Question</string>
+    <string name="validation_title_too_short">Title must be at least 10 characters</string>
+    <string name="validation_content_too_short">Description must be at least 20 characters</string>
+    <string name="validation_category_required">Please select a category</string>
+    <string name="validation_tags_required">Please add at least 1 tag</string>
+    <string name="error_loading_categories">Error loading categories: %1$s</string>
+    <string name="bookmarked_time_ago">Bookmarked %1$s</string>
+    <string name="no_bookmarks">No bookmarks</string>
+    <string name="no_bookmarks_message">Bookmark questions you are interested in!</string>
+    <string name="bookmarks_count">%1$d bookmarked questions</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="ask_question_fab">Ask Question</string>
+    <string name="view_bookmarks">View Bookmarks</string>
+    <string name="validation_title_too_short_msg">Title must be at least 10 characters</string>
+    <string name="validation_content_too_short_msg">Description must be at least 20 characters</string>
+    <string name="validation_category_required_msg">Please select a category</string>
+    <string name="validation_tags_required_msg">Please add at least 1 tag</string>
+    <string name="sort_activity">Activity</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_oldest">Oldest</string>
+    <string name="sort_votes">Most Votes</string>
+    <string name="sort_unanswered">Unanswered</string>
+    <string name="sort_by">Sort By</string>
+    
+    <!-- Message Codes - Success Messages -->
+    <string name="msg_success">Success</string>
+    <string name="msg_created_success">Created successfully</string>
+    <string name="msg_updated_success">Updated successfully</string>
+    <string name="msg_deleted_success">Deleted successfully</string>
+    
+    <!-- Message Codes - Auth Messages -->
+    <string name="msg_login_success">Login successful</string>
+    <string name="msg_logout_success">Logout successful</string>
+    <string name="msg_register_success">Registration successful</string>
+    <string name="msg_refresh_token_success">Token refreshed successfully</string>
+    <string name="msg_password_changed_success">Password changed successfully</string>
+    <string name="msg_password_reset_success">Password reset successfully</string>
+    <string name="msg_email_verified_success">Email verified successfully</string>
+    <string name="msg_profile_updated_success">Profile updated successfully</string>
+    <string name="msg_profile_retrieved_success">Profile retrieved successfully</string>
+    <string name="msg_oauth_success">OAuth authentication successful</string>
+    <string name="msg_google_sdk_login_success">Google login successful</string>
+    <string name="msg_facebook_sdk_login_success">Facebook login successful</string>
+    
+    <!-- Message Codes - User Messages -->
+    <string name="msg_user_created_success">User created successfully</string>
+    <string name="msg_user_updated_success">User updated successfully</string>
+    <string name="msg_user_deleted_success">User deleted successfully</string>
+    <string name="msg_user_list_success">User list retrieved successfully</string>
+    <string name="msg_user_detail_success">User details retrieved successfully</string>
+    <string name="msg_avatar_updated_success">Avatar updated successfully</string>
+    
+    <!-- Message Codes - Course Messages -->
+    <string name="msg_course_created_success">Course created successfully</string>
+    <string name="msg_course_updated_success">Course updated successfully</string>
+    <string name="msg_course_deleted_success">Course deleted successfully</string>
+    <string name="msg_course_list_success">Course list retrieved successfully</string>
+    <string name="msg_course_detail_success">Course details retrieved successfully</string>
+    <string name="msg_course_enrolled_success">Enrolled in course successfully</string>
+    <string name="msg_course_submitted_for_review_success">Course submitted for review successfully</string>
+    <string name="msg_enrollment_success">Enrollment successful</string>
+    <string name="msg_unenrollment_success">Unenrollment successful</string>
+    <string name="msg_enrollment_not_found">Enrollment not found</string>
+    <string name="msg_already_enrolled">Already enrolled</string>
+    <string name="msg_payment_required">Payment required</string>
+    
+    <!-- Message Codes - Category Messages -->
+    <string name="msg_category_created_success">Category created successfully</string>
+    <string name="msg_category_updated_success">Category updated successfully</string>
+    <string name="msg_category_deleted_success">Category deleted successfully</string>
+    <string name="msg_category_list_success">Category list retrieved successfully</string>
+    <string name="msg_category_detail_success">Category details retrieved successfully</string>
+    
+    <!-- Message Codes - Cart Messages -->
+    <string name="msg_cart_item_added_success">Item added to cart successfully</string>
+    <string name="msg_cart_item_updated_success">Cart item updated successfully</string>
+    <string name="msg_cart_item_deleted_success">Item removed from cart successfully</string>
+    <string name="msg_cart_cleared_success">Cart cleared successfully</string>
+    <string name="msg_cart_list_success">Cart list retrieved successfully</string>
+    
+    <!-- Message Codes - Order Messages -->
+    <string name="msg_order_created_success">Order created successfully</string>
+    <string name="msg_order_updated_success">Order updated successfully</string>
+    <string name="msg_order_cancelled_success">Order cancelled successfully</string>
+    <string name="msg_order_list_success">Order list retrieved successfully</string>
+    <string name="msg_order_detail_success">Order details retrieved successfully</string>
+    <string name="msg_order_status_updated_success">Order status updated successfully</string>
+    <string name="msg_order_payment_processed_success">Order payment processed successfully</string>
+    <string name="msg_order_not_found">Order not found</string>
+    <string name="msg_vnpay_payment_url_success">VNPay payment URL created successfully</string>
+    <string name="msg_vnpay_query_success">VNPay query successful</string>
+    <string name="msg_vnpay_query_failed">VNPay query failed</string>
+    <string name="msg_vnpay_status_success">VNPay status checked successfully</string>
+    
+    <!-- Message Codes - Coupon Messages -->
+    <string name="msg_coupon_created_success">Coupon created successfully</string>
+    <string name="msg_coupon_updated_success">Coupon updated successfully</string>
+    <string name="msg_coupon_deleted_success">Coupon deleted successfully</string>
+    <string name="msg_coupon_list_success">Coupon list retrieved successfully</string>
+    <string name="msg_coupon_detail_success">Coupon details retrieved successfully</string>
+    <string name="msg_coupon_valid_success">Coupon is valid</string>
+    <string name="msg_coupon_invalid">Coupon is invalid</string>
+    <string name="msg_coupon_not_found">Coupon not found</string>
+    <string name="msg_coupon_already_exists">Coupon already exists</string>
+    
+    <!-- Message Codes - Learning Path Messages -->
+    <string name="msg_learning_path_created_success">Learning path created successfully</string>
+    <string name="msg_learning_path_updated_success">Learning path updated successfully</string>
+    <string name="msg_learning_path_deleted_success">Learning path deleted successfully</string>
+    <string name="msg_learning_path_list_success">Learning path list retrieved successfully</string>
+    <string name="msg_learning_path_detail_success">Learning path details retrieved successfully</string>
+    <string name="msg_learning_path_courses_success">Learning path courses retrieved successfully</string>
+    <string name="msg_learning_path_course_added_success">Course added to learning path successfully</string>
+    <string name="msg_learning_path_course_removed_success">Course removed from learning path successfully</string>
+    <string name="msg_learning_path_course_updated_success">Learning path course updated successfully</string>
+    <string name="msg_learning_path_enrolled_success">Enrolled in learning path successfully</string>
+    <string name="msg_learning_path_already_enrolled">Already enrolled in learning path</string>
+    <string name="msg_learning_path_not_found">Learning path not found</string>
+    <string name="msg_learning_path_course_already_exists">Course already exists in learning path</string>
+    <string name="msg_learning_path_course_not_found">Course not found in learning path</string>
+    
+    <!-- Message Codes - Wishlist Messages -->
+    <string name="msg_wishlist_item_added_success">Item added to wishlist successfully</string>
+    <string name="msg_wishlist_item_deleted_success">Item removed from wishlist successfully</string>
+    <string name="msg_wishlist_list_success">Wishlist retrieved successfully</string>
+    
+    <!-- Message Codes - Review Messages -->
+    <string name="msg_review_created_success">Review created successfully</string>
+    <string name="msg_review_updated_success">Review updated successfully</string>
+    <string name="msg_review_deleted_success">Review deleted successfully</string>
+    <string name="msg_review_list_success">Review list retrieved successfully</string>
+    <string name="msg_review_already_exists">Review already exists</string>
+    <string name="msg_review_not_found">Review not found</string>
+    
+    <!-- Message Codes - Notification Messages -->
+    <string name="msg_notification_created_success">Notification created successfully</string>
+    <string name="msg_notification_list_success">Notification list retrieved successfully</string>
+    <string name="msg_notification_read_success">Notification marked as read successfully</string>
+    <string name="msg_notification_deleted_success">Notification deleted successfully</string>
+    <string name="msg_notification_not_found">Notification not found</string>
+    
+    <!-- Message Codes - Notification Content Messages -->
+    <string name="msg_noti_title_course_enrolled">Course Enrolled</string>
+    <string name="msg_noti_title_course_completed">Course Completed</string>
+    <string name="msg_noti_title_course_new_lesson">New Lesson in Course</string>
+    <string name="msg_noti_title_course_approved">Course Approved</string>
+    <string name="msg_noti_title_course_rejected">Course Rejected</string>
+    <string name="msg_noti_course_enrolled">You have enrolled in course %1$s</string>
+    <string name="msg_noti_course_completed">Congratulations! You have completed course %1$s</string>
+    <string name="msg_noti_course_new_lesson">A new lesson has been added to course %1$s</string>
+    <string name="msg_noti_course_approved">Your course %1$s has been approved</string>
+    <string name="msg_noti_course_rejected">Your course %1$s has been rejected</string>
+    <string name="msg_noti_title_order_created">New Order</string>
+    <string name="msg_noti_title_order_paid">Order Paid</string>
+    <string name="msg_noti_title_order_cancelled">Order Cancelled</string>
+    <string name="msg_noti_order_created">Order %1$s has been created</string>
+    <string name="msg_noti_order_paid">Order %1$s has been paid successfully</string>
+    <string name="msg_noti_order_cancelled">Order %1$s has been cancelled</string>
+    <string name="msg_noti_title_certificate_issued">Certificate Issued</string>
+    <string name="msg_noti_certificate_issued">Certificate for course %1$s has been issued</string>
+    <string name="msg_noti_title_assignment_new">New Assignment</string>
+    <string name="msg_noti_title_assignment_graded">Assignment Graded</string>
+    <string name="msg_noti_title_assignment_due_soon">Assignment Due Soon</string>
+    <string name="msg_noti_assignment_new">A new assignment has been given in course %1$s</string>
+    <string name="msg_noti_assignment_graded">Assignment %1$s has been graded</string>
+    <string name="msg_noti_assignment_due_soon">Assignment %1$s is due soon</string>
+    <string name="msg_noti_title_lesson_completed">Lesson Completed</string>
+    <string name="msg_noti_title_lesson_discussion_reply">New Reply in Discussion</string>
+    <string name="msg_noti_lesson_completed">You have completed lesson %1$s</string>
+    <string name="msg_noti_lesson_discussion_reply">There is a new reply to your question in lesson %1$s</string>
+    <string name="msg_noti_title_book_activated">Book Activated</string>
+    <string name="msg_noti_title_book_approved">Book Approved</string>
+    <string name="msg_noti_title_book_rejected">Book Rejected</string>
+    <string name="msg_noti_book_activated">Book %1$s has been activated successfully</string>
+    <string name="msg_noti_book_approved">Your book %1$s has been approved</string>
+    <string name="msg_noti_book_rejected">Your book %1$s has been rejected</string>
+    <string name="msg_noti_title_live_class_scheduled">Live Class Scheduled</string>
+    <string name="msg_noti_title_live_class_starting">Live Class Starting Soon</string>
+    <string name="msg_noti_title_live_class_started">Live Class Started</string>
+    <string name="msg_noti_live_class_scheduled">Live class %1$s has been scheduled</string>
+    <string name="msg_noti_live_class_starting">Live class %1$s is starting soon</string>
+    <string name="msg_noti_live_class_started">Live class %1$s has started</string>
+    <string name="msg_noti_title_learning_path_enrolled">Learning Path Enrolled</string>
+    <string name="msg_noti_title_learning_path_completed">Learning Path Completed</string>
+    <string name="msg_noti_learning_path_enrolled">You have enrolled in learning path %1$s</string>
+    <string name="msg_noti_learning_path_completed">Congratulations! You have completed learning path %1$s</string>
+    <string name="msg_noti_title_forum_question_answered">Question Answered</string>
+    <string name="msg_noti_title_forum_answer_accepted">Answer Accepted</string>
+    <string name="msg_noti_forum_question_answered">Your question has been answered</string>
+    <string name="msg_noti_forum_answer_accepted">Your answer has been accepted</string>
+    <string name="msg_answer_not_accepted">Answer not accepted</string>
+    <string name="msg_noti_title_review_replied">Review Replied</string>
+    <string name="msg_noti_title_review_helpful_milestone">Review Helpful Milestone</string>
+    <string name="msg_noti_review_replied">Your review has been replied to</string>
+    <string name="msg_noti_review_helpful_milestone">Your review has reached a helpful milestone</string>
+    <string name="msg_noti_title_wishlist_on_sale">Wishlist Item On Sale</string>
+    <string name="msg_noti_wishlist_on_sale">Item %1$s in your wishlist is on sale</string>
+    <string name="msg_noti_title_coupon_applied">Coupon Applied</string>
+    <string name="msg_noti_title_coupon_expiring">Coupon Expiring Soon</string>
+    <string name="msg_noti_coupon_applied">Coupon %1$s has been applied successfully</string>
+    <string name="msg_noti_coupon_expiring">Coupon %1$s is expiring soon</string>
+    <string name="msg_noti_title_system_announcement">System Announcement</string>
+    <string name="msg_noti_title_system_maintenance">System Maintenance</string>
+    <string name="msg_noti_system_announcement">%1$s</string>
+    <string name="msg_noti_system_maintenance">System will be under maintenance on %1$s</string>
+    
+    <!-- Message Codes - Lesson Messages -->
+    <string name="msg_lesson_created_success">Lesson created successfully</string>
+    <string name="msg_lesson_updated_success">Lesson updated successfully</string>
+    <string name="msg_lesson_deleted_success">Lesson deleted successfully</string>
+    <string name="msg_lesson_not_found">Lesson not found</string>
+    <string name="msg_lesson_progress_updated_success">Lesson progress updated successfully</string>
+    <string name="msg_video_progress_retrieved_success">Video progress retrieved successfully</string>
+    <string name="msg_video_progress_updated_success">Video progress updated successfully</string>
+    
+    <!-- Message Codes - Assignment Messages -->
+    <string name="msg_assignment_created_success">Assignment created successfully</string>
+    <string name="msg_assignment_updated_success">Assignment updated successfully</string>
+    <string name="msg_assignment_deleted_success">Assignment deleted successfully</string>
+    <string name="msg_assignment_not_found">Assignment not found</string>
+    <string name="msg_assignment_list_success">Assignment list retrieved successfully</string>
+    <string name="msg_assignment_detail_success">Assignment details retrieved successfully</string>
+    <string name="msg_question_added_to_assignment_success">Question added to assignment successfully</string>
+    <string name="msg_question_removed_from_assignment_success">Question removed from assignment successfully</string>
+    <string name="msg_question_not_found">Question not found</string>
+    <string name="msg_question_updated_success">Question updated successfully</string>
+    <string name="msg_question_created_success">Question created successfully</string>
+    <string name="msg_questions_created_success">Questions created successfully</string>
+    <string name="msg_assignment_submitted_success">Assignment submitted successfully</string>
+    <string name="msg_assignment_graded_success">Assignment graded successfully</string>
+    <string name="msg_max_attempts_exceeded">Maximum attempts exceeded</string>
+    <string name="msg_attempt_not_found">Attempt not found</string>
+    <string name="msg_assignment_due_date_passed">Assignment due date has passed</string>
+    <string name="msg_invalid_default_points_configuration">Invalid default points configuration</string>
+    <string name="msg_total_points_must_equal_ten">Total points must equal 10</string>
+    <string name="msg_assignment_answers_not_available">Assignment answers not available</string>
+    <string name="msg_assignment_attempt_in_progress">Assignment attempt in progress</string>
+    <string name="msg_assignment_time_limit_exceeded">Assignment time limit exceeded</string>
+    <string name="msg_assignment_attempt_already_completed">Assignment attempt already completed</string>
+    <string name="msg_assignment_batch_graded_success">Assignment batch graded successfully</string>
+    
+    <!-- Message Codes - Lesson Material Messages -->
+    <string name="msg_lesson_material_created_success">Lesson material created successfully</string>
+    <string name="msg_lesson_material_updated_success">Lesson material updated successfully</string>
+    <string name="msg_lesson_material_deleted_success">Lesson material deleted successfully</string>
+    <string name="msg_lesson_material_not_found">Lesson material not found</string>
+    <string name="msg_lesson_material_list_success">Lesson material list retrieved successfully</string>
+    
+    <!-- Message Codes - Discussion Messages -->
+    <string name="msg_discussion_created_success">Discussion created successfully</string>
+    <string name="msg_discussion_updated_success">Discussion updated successfully</string>
+    <string name="msg_discussion_deleted_success">Discussion deleted successfully</string>
+    <string name="msg_discussion_not_found">Discussion not found</string>
+    <string name="msg_reply_created_success">Reply created successfully</string>
+    <string name="msg_discussion_like_success">Discussion liked successfully</string>
+    <string name="msg_discussion_unlike_success">Discussion unliked successfully</string>
+    <string name="msg_like_updated_success">Like updated successfully</string>
+    
+    <!-- Message Codes - Live Class Messages -->
+    <string name="msg_live_class_created_success">Live class created successfully</string>
+    <string name="msg_live_class_updated_success">Live class updated successfully</string>
+    <string name="msg_live_class_deleted_success">Live class deleted successfully</string>
+    <string name="msg_live_class_not_found">Live class not found</string>
+    <string name="msg_live_class_joined_success">Joined live class successfully</string>
+    <string name="msg_live_class_left_success">Left live class successfully</string>
+    <string name="msg_live_class_full">Live class is full</string>
+    <string name="msg_live_class_not_started">Live class has not started</string>
+    <string name="msg_live_class_ended">Live class has ended</string>
+    <string name="msg_live_class_already_joined">Already joined live class</string>
+    <string name="msg_live_class_participation_not_found">Live class participation not found</string>
+    <string name="msg_live_class_has_participants">Live class has participants</string>
+    <string name="msg_live_class_instructor_only">This action is only available for instructors</string>
+    
+    <!-- Message Codes - Certificate Messages -->
+    <string name="msg_certificate_generated_success">Certificate generated successfully</string>
+    <string name="msg_certificate_not_found">Certificate not found</string>
+    <string name="msg_certificate_verified_success">Certificate verified successfully</string>
+    <string name="msg_certificate_requirements_not_met">Certificate requirements not met</string>
+    
+    <!-- Message Codes - Analytics Messages -->
+    <string name="msg_analytics_dashboard_success">Analytics dashboard data retrieved successfully</string>
+    <string name="msg_analytics_course_success">Course analytics data retrieved successfully</string>
+    <string name="msg_analytics_instructor_success">Instructor analytics data retrieved successfully</string>
+    <string name="msg_invalid_period">Invalid time period</string>
+    
+    <!-- Message Codes - Backup Messages -->
+    <string name="msg_backup_created_success">Backup created successfully</string>
+    <string name="msg_backup_list_success">Backup list retrieved successfully</string>
+    <string name="msg_backup_detail_success">Backup details retrieved successfully</string>
+    <string name="msg_backup_deleted_success">Backup deleted successfully</string>
+    <string name="msg_backup_download_success">Backup downloaded successfully</string>
+    <string name="msg_backup_restore_success">Backup restored successfully</string>
+    <string name="msg_backup_settings_updated_success">Backup settings updated successfully</string>
+    <string name="msg_backup_in_progress">Backup in progress</string>
+    <string name="msg_backup_failed">Backup failed</string>
+    <string name="msg_backup_not_found">Backup not found</string>
+    <string name="msg_backup_restore_failed">Backup restore failed</string>
+    <string name="msg_backup_restore_confirmation_required">Confirmation required to restore backup</string>
+    
+    <!-- Message Codes - Error Messages - Validation -->
+    <string name="msg_validation_error">Data validation error</string>
+    <string name="msg_invalid_input">Invalid input data</string>
+    <string name="msg_invalid_email">Invalid email</string>
+    <string name="msg_invalid_password">Invalid password</string>
+    <string name="msg_invalid_phone_number">Invalid phone number</string>
+    <string name="msg_invalid_phone_format">Invalid phone format</string>
+    <string name="msg_invalid_language">Invalid language</string>
+    <string name="msg_invalid_timezone">Invalid timezone</string>
+    <string name="msg_file_required">File required</string>
+    <string name="msg_invalid_file_type">Invalid file type</string>
+    <string name="msg_file_too_large">File too large</string>
+    
+    <!-- Message Codes - Error Messages - Authentication -->
+    <string name="msg_unauthorized">Unauthorized access</string>
+    <string name="msg_forbidden">Access forbidden</string>
+    <string name="msg_token_expired">Token expired</string>
+    <string name="msg_token_invalid">Invalid token</string>
+    <string name="msg_refresh_token_invalid">Invalid refresh token</string>
+    <string name="msg_refresh_token_expired">Refresh token expired</string>
+    <string name="msg_invalid_credentials">Invalid login credentials</string>
+    <string name="msg_account_locked">Account locked</string>
+    <string name="msg_account_not_verified">Account not verified</string>
+    <string name="msg_oauth_invalid_state_or_code">OAuth state or code invalid</string>
+    <string name="msg_oauth_token_exchange_failed">OAuth token exchange failed</string>
+    <string name="msg_oauth_invalid_token_response">Invalid OAuth token response</string>
+    <string name="msg_oauth_failed_fetch_user_info">Failed to fetch OAuth user info</string>
+    <string name="msg_facebook_clientid_not_configured">Facebook Client ID not configured</string>
+    <string name="msg_facebook_clientsecret_not_configured">Facebook Client Secret not configured</string>
+    <string name="msg_facebook_email_permission_required">Facebook email permission required</string>
+    <string name="msg_student_must_use_oauth">Student must use OAuth to login</string>
+    <string name="msg_reset_token_invalid">Password reset token invalid</string>
+    <string name="msg_reset_token_expired">Password reset token expired</string>
+    <string name="msg_email_verification_token_invalid">Email verification token invalid</string>
+    <string name="msg_email_verification_token_expired">Email verification token expired</string>
+    <string name="msg_register_failed">Registration failed</string>
+    <string name="msg_password_change_failed">Password change failed</string>
+    <string name="msg_user_does_not_exist">User does not exist</string>
+    <string name="msg_username_email_exists">Username or email already exists</string>
+    <string name="msg_password_not_strong_enough">Password not strong enough</string>
+    <string name="msg_current_password_incorrect">Current password incorrect</string>
+    
+    <!-- Message Codes - Error Messages - Resource -->
+    <string name="msg_not_found">Not found</string>
+    <string name="msg_resource_not_found">Resource not found</string>
+    <string name="msg_user_not_found">User not found</string>
+    <string name="msg_course_not_found">Course not found</string>
+    <string name="msg_category_not_found">Category not found</string>
+    <string name="msg_cart_item_not_found">Cart item not found</string>
+    
+    <!-- Message Codes - Error Messages - Business Logic -->
+    <string name="msg_email_already_exists">Email already exists</string>
+    <string name="msg_username_already_exists">Username already exists</string>
+    <string name="msg_weak_password">Weak password</string>
+    <string name="msg_password_mismatch">Password mismatch</string>
+    <string name="msg_course_already_enrolled">Already enrolled in course</string>
+    <string name="msg_insufficient_permission">Insufficient permission</string>
+    <string name="msg_item_already_in_cart">Item already in cart</string>
+    <string name="msg_item_already_in_wishlist">Item already in wishlist</string>
+    
+    <!-- Message Codes - Error Messages - System -->
+    <string name="msg_internal_server_error">Internal server error</string>
+    <string name="msg_database_error">Database error</string>
+    <string name="msg_external_service_error">External service error</string>
+    
+    <!-- Message Codes - Error Messages - Rate Limiting -->
+    <string name="msg_rate_limit_exceeded">Rate limit exceeded</string>
+    <string name="msg_too_many_requests">Too many requests</string>
+    
+    <!-- Message Codes - Settings Messages -->
+    <string name="msg_settings_updated_success">Settings updated successfully</string>
+    <string name="msg_setting_created_success">Setting created successfully</string>
+    <string name="msg_setting_key_already_exists">Setting key already exists</string>
+    
+    <!-- Message Codes - File/Upload Messages -->
+    <string name="msg_upload_success">Upload successful</string>
+    <string name="msg_upload_failed">Upload failed</string>
+    <string name="msg_presigned_url_generated">Presigned URL generated successfully</string>
+    <string name="msg_file_deleted_success">File deleted successfully</string>
+    <string name="msg_file_delete_failed">File deletion failed</string>
+    <string name="msg_file_not_found">File not found</string>
+    <string name="msg_batch_delete_failed">Batch deletion failed</string>
+    <string name="msg_file_cleanup_success">File cleanup successful</string>
+    <string name="msg_file_created_success">File created successfully</string>
+    <string name="msg_file_create_failed">File creation failed</string>
+    <string name="msg_file_updated_success">File updated successfully</string>
+    <string name="msg_file_update_failed">File update failed</string>
+    <string name="msg_file_copied_success">File copied successfully</string>
+    <string name="msg_file_copy_failed">File copy failed</string>
+    
+    <!-- Message Codes - Book Messages -->
+    <string name="msg_book_created_success">Book created successfully</string>
+    <string name="msg_book_updated_success">Book updated successfully</string>
+    <string name="msg_book_deleted_success">Book deleted successfully</string>
+    <string name="msg_book_not_found">Book not found</string>
+    <string name="msg_book_question_created_success">Book question created successfully</string>
+    <string name="msg_book_question_updated_success">Book question updated successfully</string>
+    <string name="msg_book_solution_created_success">Book solution created successfully</string>
+    <string name="msg_book_solution_updated_success">Book solution updated successfully</string>
+    <string name="msg_activation_code_generated_success">Activation code generated successfully</string>
+    <string name="msg_activation_code_activated_success">Activation code activated successfully</string>
+    <string name="msg_activation_code_invalid">Invalid activation code</string>
+    <string name="msg_activation_code_expired">Activation code expired</string>
+    <string name="msg_activation_code_already_used">Activation code already used</string>
+    <string name="msg_book_already_owned">You already own this book</string>
+    <string name="msg_book_activated_success">Book activated successfully</string>
+    <string name="msg_my_books_retrieved_success">My books retrieved successfully</string>
+    <string name="msg_book_chapters_retrieved_success">Book chapters retrieved successfully</string>
+    <string name="msg_book_chapter_created_success">Book chapter created successfully</string>
+    <string name="msg_book_chapter_updated_success">Book chapter updated successfully</string>
+    <string name="msg_book_chapter_deleted_success">Book chapter deleted successfully</string>
+    <string name="msg_book_chapter_not_found">Book chapter not found</string>
+    
+    <!-- Message Codes - Unknown -->
+    <string name="msg_unknown">Unknown error</string>
 </resources>
 

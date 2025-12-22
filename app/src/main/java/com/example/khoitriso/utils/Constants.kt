@@ -38,3 +38,4 @@ object SearchType {
     val COURSE = 1
     val BOOK = 2
 }
+

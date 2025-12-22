@@ -4,7 +4,7 @@ enum class QuestionType(val value: Int) {
     MultipleChoice(0),
     TrueFalse(1),
     ShortAnswer(2),
-    GroupType(3),
+    GroupTitle(3),
     Lesson(4),
     Book(5);
 

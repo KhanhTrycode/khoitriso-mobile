@@ -70,18 +70,12 @@ fun CourseDetailScreen(
             when (val state = courseState) {
                 is UiState.Success -> {
                     val course = state.data
+                    val isInWishlist by viewModel.isInWishlist.collectAsState()
                     ActionButtons(
                         price = course.price,
-                        onBuy = {
-                            navController.navigate(ItemBuyNow(
-                                itemId = course.id,
-                                itemType = ItemType.Book,
-                                coverImage = course.thumbnail,
-                                price = course.price,
-                                title = course.title,
-                            ))
-                        },
-                        onCart = { viewModel.addToCart(course.id) }
+                        onCart = { viewModel.addToCart(course.id) },
+                        isInWishlist = isInWishlist ?: false,
+                        onWishlistClick = { viewModel.toggleWishlist(course.id) }
                     )
                 }
                 else -> {}
@@ -129,17 +123,14 @@ private fun DetailContent(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 20.dp)
     ) {
-        if (selectedLesson != null && player != null) {
+        if (selectedLesson != null) {
             item {
                 Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .background(color = Color.Black)
-                    ) {
-                        Media3AndroidView(player)
-                    }
+                    VideoPlayerView(
+                        videoUrl = selectedLesson.videoUrl,
+                        player = player,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.surfaceContainer

@@ -18,7 +18,7 @@ class GetCart(private val cartRepository: CartRepository) {
 }
 
 class AddToCart(private val cartRepository: CartRepository) {
-    suspend operator fun invoke(itemId: Int, itemType: Int): Result<Boolean> {
+    suspend operator fun invoke(itemId: Int, itemType: Int): Result<Int> {
         return cartRepository.addToCart(itemId = itemId, itemType = itemType)
     }
 }

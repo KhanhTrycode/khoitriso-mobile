@@ -3,6 +3,7 @@ package com.example.khoitriso.domain.repository
 import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.BookDetail
+import com.example.khoitriso.domain.models.BookQuestion
 import com.example.khoitriso.domain.models.Chapter
 import com.example.khoitriso.domain.models.MyBook
 import com.example.khoitriso.domain.models.MyResponese
@@ -19,4 +20,10 @@ interface BookRepository {
     suspend fun exportBookToWord(bookId: Int, includeExplanation: Boolean): Result<ByteArray>
     fun searchBook(string: String) : Result<List<Book>>
     suspend fun getChaptersOfBook(id: Int): Result<List<Chapter>>
+    suspend fun activeCode(code: String): Result<Boolean>
+    
+    /**
+     * Get book question by ID with solutions
+     */
+    suspend fun getBookQuestionById(questionId: Int): Result<BookQuestion>
 }

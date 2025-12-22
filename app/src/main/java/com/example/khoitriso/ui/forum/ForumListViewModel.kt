@@ -17,7 +17,6 @@ import com.example.khoitriso.domain.repository.ForumRepository
 import com.example.khoitriso.domain.request.ForumVoteRequest
 import com.example.khoitriso.domain.usecase.auth.AuthUsecase
 import com.example.khoitriso.domain.usecase.forum.ForumUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.ui.behavior.ForumViewModel
 import com.example.khoitriso.utils.UiState
@@ -106,6 +105,11 @@ class ForumListViewModel @Inject constructor(
     fun loadQuestions(page: Int = 1) {
         _currentPage.value = page
         _questions.value = UiState.Loading
+        // Clear previous votes and bookmarks when loading new page
+        if (page == 1) {
+            _userVotes.value = emptyMap()
+            _bookmarks.value = emptySet()
+        }
         viewModelScope.launch {
             // Map sortBy to API format
             val apiSortBy = when (_sortBy.value) {
@@ -127,7 +131,6 @@ class ForumListViewModel @Inject constructor(
 
             loadDataWithPage(
                 stateFlow = _questions,
-                mockData = MockData.mockForumQuestions,
                 apiCall = {
                     forumUsecase.getQuestions(
                         search = _searchQuery.value.ifEmpty { null },
@@ -140,13 +143,11 @@ class ForumListViewModel @Inject constructor(
                         sortBy = apiSortBy,
                         desc = _desc.value
                     )
-                }
-            )
-            viewModelScope.launch {
-                _questions.collectLatest { questionsState ->
-                    if (questionsState is UiState.Success<MyResponese<ForumQuestion>>) {
-                        when (val userState = _currentUser.value) {
-                            is UiState.Success -> {
+                },
+                onSuccess = { questionsState ->
+                    when (val userState = _currentUser.value) {
+                        is UiState.Success -> {
+                            viewModelScope.launch {
                                 loadUserVotesForQuestions(
                                     questionsState.data.items,
                                     userState.data.id
@@ -156,34 +157,23 @@ class ForumListViewModel @Inject constructor(
                                     userState.data.id
                                 )
                             }
-                            else -> {}
                         }
+
+                        else -> {}
                     }
                 }
-            }
+            )
         }
     }
 
     private suspend fun loadUserVotesForQuestions(questions: List<ForumQuestion>, userId: Int) {
-        if (_isTestMode) {
-            // Mock: Set some votes for testing
-            questions.take(2).forEachIndexed { index, question ->
-                val key = "1-${question.id}"
-                _userVotes.value = _userVotes.value.toMutableMap().apply {
-                    put(key, if (index == 0) 1 else -1) // First upvoted, second downvoted
-                }
-            }
-        } else {
-            questions.forEach { question ->
-                forumUsecase.getUserVote(1, question.id, userId).onSuccess { voteType ->
-                    val key = "1-${question.id}"
-                    _userVotes.value = _userVotes.value.toMutableMap().apply {
-                        if (voteType != 0) {
-                            put(key, voteType)
-                        }
-                    }
-                }
-            }
+        // Load all user votes at once instead of per question
+        forumUsecase.getUserVotes(userId).onSuccess { votesMap ->
+            // votesMap: Map<targetId, voteType>
+            // Convert to "targetType-targetId" format for questions (targetType = 1)
+            val questionVotes = votesMap.mapKeys { (targetId, _) -> "1-$targetId" }
+            _userVotes.value = questionVotes
+            debug("Loaded ${votesMap.size} user votes", "ForumListViewModel")
         }
     }
 
@@ -245,18 +235,21 @@ class ForumListViewModel @Inject constructor(
     }
 
     fun vote(targetType: Int, targetId: String, userId: Int, voteType: Int) {
-        voteInParent(targetType, targetId, userId, voteType, onSuccess = {
+        voteInParent(targetType, targetId, userId, voteType, onSuccess = { newVoteType ->
             // Update user vote state
             val key = "$targetType-$targetId"
             _userVotes.value = _userVotes.value.toMutableMap().apply {
                 // Toggle vote: if same voteType, remove (set to 0), otherwise set to voteType
                 val currentVote = get(key) ?: 0
                 if (currentVote == voteType) {
-                    remove(key) // Toggle off
+                    remove(key) // Toggle off - user removed their vote
                 } else {
-                    put(key, voteType)
+                    put(key, voteType) // User voted or changed vote
                 }
             }
+
+            // Reload questions to get updated vote counts from server
+            loadQuestions(_currentPage.value)
         })
     }
 

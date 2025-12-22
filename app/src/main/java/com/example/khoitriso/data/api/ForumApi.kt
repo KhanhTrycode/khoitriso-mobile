@@ -93,6 +93,11 @@ interface ForumApi {
          @Path("targetId") targetId: String,
          @Query("userId") userId: Int
      ): Response<ApiRespone<ForumUserVoteResponse>>
+     
+     @GET("forum/users/{userId}/votes")
+     suspend fun getUserVotes(
+         @Path("userId") userId: Int
+     ): Response<ApiRespone<ForumUserVotesResponse>>
 
     // Bookmarks
     @POST("forum/bookmarks")

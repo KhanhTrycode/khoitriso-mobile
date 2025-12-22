@@ -27,6 +27,7 @@ import com.example.khoitriso.utils.Constants
 import com.example.khoitriso.utils.ItemBuyNow
 import com.example.khoitriso.utils.ItemType
 import com.example.khoitriso.utils.NavRoute
+import com.example.khoitriso.utils.UiEvent
 import com.example.khoitriso.utils.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,8 +37,18 @@ fun BookDetailScreen(
     viewModel: BookDetailViewModel = hiltViewModel(),
 ) {
     val bookState by viewModel.book.collectAsState()
+    val snackBarState = remember { SnackbarHostState() }
+
+    ObserverAsEvent(viewModel.events) { event ->
+        when (event) {
+            is UiEvent.ShowSnackbar -> {
+                snackBarState.showSnackbar(event.message)
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackBarState) },
         topBar = {
             DetailHeader(onBack = { navController.popBackStack() })
         },
@@ -45,18 +56,12 @@ fun BookDetailScreen(
             when (val state = bookState) {
                 is UiState.Success -> {
                     val book = state.data
+                    val isInWishlist by viewModel.isInWishlist.collectAsState()
                     ActionButtons(
                         price = book.price,
-                        onBuy = {
-                            navController.navigate(ItemBuyNow(
-                                itemId = book.id,
-                                itemType = ItemType.Book,
-                                coverImage = book.coverImage,
-                                price = book.price,
-                                title = book.title,
-                            ))
-                        },
-                        onCart = { viewModel.addToCart(book.id) }
+                        onCart = { viewModel.addToCart(book.id) },
+                        isInWishlist = isInWishlist ?: false,
+                        onWishlistClick = { viewModel.toggleWishlist(book.id) }
                     )
                 }
                 else -> {}

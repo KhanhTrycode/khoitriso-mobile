@@ -49,6 +49,7 @@ import androidx.navigation.toRoute
 import com.example.khoitriso.domain.models.Order
 import com.example.khoitriso.ui.detail.BookDetailScreen
 import com.example.khoitriso.ui.detail.CourseDetailScreen
+import com.example.khoitriso.ui.explore.CategoryItemsScreen
 import com.example.khoitriso.ui.explore.ExploreBookScreen
 import com.example.khoitriso.ui.forum.ForumListScreen
 import com.example.khoitriso.ui.forum.ForumDetailScreen
@@ -60,6 +61,8 @@ import com.example.khoitriso.ui.searchscreen.SearchScreen
 import com.example.khoitriso.ui.cart.CartScreen
 import com.example.khoitriso.ui.checkout.CheckoutScreen
 import com.example.khoitriso.ui.explore.ExploreCourseScreen
+import com.example.khoitriso.ui.forum.ForumAskScreen
+import com.example.khoitriso.ui.forum.ForumBookmarksScreen
 import com.example.khoitriso.ui.learning.AssignmentScreen
 import com.example.khoitriso.ui.learning.LearningBookScreen
 import com.example.khoitriso.ui.learning.LearningCourseScreen
@@ -194,10 +197,10 @@ fun NavHostContainer(navController: NavHostController) {
             ForumDetailScreen(navController)
         }
         composable(NavRoute.FORUM_ASK) {
-//            ForumAskScreen(navController)
+            ForumAskScreen(navController)
         }
         composable(NavRoute.FORUM_BOOKMARKS) {
-//            ForumBookmarksScreen(navController)
+            ForumBookmarksScreen(navController)
         }
         composable(NavRoute.NOTIFICATIONS) {
             NotificationScreen(navController)
@@ -208,6 +211,22 @@ fun NavHostContainer(navController: NavHostController) {
         }
         composable(NavRoute.EXPLORE_COURSE) {
             ExploreCourseScreen(navController)
+        }
+
+        composable(
+            NavRoute.CategoryItemsWithArgs,
+            arguments = listOf(
+                navArgument("categoryId") { type = NavType.IntType },
+                navArgument("categoryName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getInt("categoryId") ?: 0
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+            CategoryItemsScreen(
+                categoryId = categoryId,
+                categoryName = categoryName,
+                navController = navController
+            )
         }
 
         // Cart
@@ -227,7 +246,9 @@ fun NavHostContainer(navController: NavHostController) {
 
         composable(
             NavRoute.AssignmentWithArgs,
-            arguments = listOf(navArgument("assignmentId") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("assignmentId") { type = NavType.IntType }
+            )
         ) { backStackEntry ->
             AssignmentScreen(navController)
         }
@@ -246,6 +267,23 @@ fun NavHostContainer(navController: NavHostController) {
             PaymentResultScreen(
                 navController = navController,
                 success = success,
+                orderCode = orderCode
+            )
+        }
+
+        // Payment Processing (Browser + Polling)
+        composable(
+            route = NavRoute.PaymentProcessingWithArgs,
+            arguments = listOf(
+                navArgument("paymentUrl") { type = NavType.StringType },
+                navArgument("orderCode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val paymentUrl = backStackEntry.arguments?.getString("paymentUrl") ?: ""
+            val orderCode = backStackEntry.arguments?.getString("orderCode") ?: ""
+            com.example.khoitriso.ui.payment.PaymentProcessingScreen(
+                navController = navController,
+                paymentUrl = java.net.URLDecoder.decode(paymentUrl, "UTF-8"),
                 orderCode = orderCode
             )
         }

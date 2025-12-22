@@ -3,7 +3,6 @@ package com.example.khoitriso.data.api
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.LessonDto
 import com.example.khoitriso.data.dto.VideoProgressDto
-import com.example.khoitriso.data.dto.LessonDiscussionDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -32,14 +31,15 @@ interface LessonsApi {
         @Body request: VideoProgressDto
     ): Response<ApiRespone<VideoProgressDto>>
 
-    @POST("lessons/{id}/discussions")
-    suspend fun postLessonDiscussion(
+    @POST("lessons/{id}/progress")
+    suspend fun updateLessonProgress(
         @Path("id") id: Int,
-        @Body request: LessonDiscussionDto
-    ): Response<ApiRespone<VideoProgressDto>>
-
-    @GET("lessons/{id}/discussions")
-    suspend fun getLessonDiscussion(
-        @Path("id") id: Int,
+        @Body request: LessonProgressRequest
     ): Response<ApiRespone<VideoProgressDto>>
 }
+
+data class LessonProgressRequest(
+    val WatchTime: Int,
+    val IsCompleted: Boolean,
+    val VideoPosition: Int
+)

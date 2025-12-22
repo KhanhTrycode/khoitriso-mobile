@@ -5,7 +5,6 @@ import com.example.khoitriso.data.dto.request.PagingRequest
 import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.MyResponese
 import com.example.khoitriso.domain.usecase.book.BookUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,28 +26,16 @@ class ExploreBookViewModel @Inject constructor(
     }
 
     private fun getBook() {
-        loadData(
-            _books, MyResponese<Book>(
-                items = MockData.mockBooks,
-                page = 1,
-                pageSize = MockData.mockBooks.size / 2,
-                total = MockData.mockBooks.size,
-                totalPages = 10,
-            ),
+        loadDataWithPage(
+            _books,
             apiCall = {
                 bookUsecase.getBook()
             })
     }
 
     fun changePage(page: Int) {
-        loadData(
-            _books, MyResponese<Book>(
-                items = MockData.mockBooks,
-                page = page,
-                pageSize = MockData.mockBooks.size / 2,
-                total = MockData.mockBooks.size,
-                totalPages = 10
-            ),
+        loadDataWithPage(
+            _books,
             apiCall = {
                 bookUsecase.getBook(
                     PagingRequest(page)

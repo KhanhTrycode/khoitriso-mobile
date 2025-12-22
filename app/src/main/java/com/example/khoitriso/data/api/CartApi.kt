@@ -3,6 +3,7 @@ package com.example.khoitriso.data.api
 import com.example.khoitriso.data.dto.AddToCartRequest
 import com.example.khoitriso.data.dto.ApiRespone
 import com.example.khoitriso.data.dto.CartDto
+import com.example.khoitriso.data.dto.CartItemDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -18,7 +19,7 @@ interface CartApi {
     @POST("cart")
     suspend fun addToCart(
         @Body request: AddToCartRequest
-    ): Response<ApiRespone<CartDto>>
+    ): Response<ApiRespone<CartItemDto>>
 
     @DELETE("cart/{id}")
     suspend fun removeFromCart(

@@ -54,6 +54,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.Book
+import com.example.khoitriso.ui.common.ObserverAsEvent
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
 import com.example.khoitriso.domain.models.Category
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.models.Instructor
@@ -80,65 +84,106 @@ fun HomeScreen(
     val tryCourse by viewModel.tryCourses.collectAsState()
     val myCourse by viewModel.myCourses.collectAsState()
     val user by viewModel.user.collectAsState()
-    LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(paddingValues),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
-    ) {
-        item {
-            HomeHeaderSection(
-                username = user?.fullName ?: "",
-            )
-        }
+    val snackBarState = remember { SnackbarHostState() }
 
-        when (val state = tryCourse) {
-            is UiState.Success -> {
-                item {
-                    PromoBanner(
-                        course = state.data,
-                        onClick = { }
-                    )
+    // Observe navigation events for token expiration
+    ObserverAsEvent(viewModel.navigationEvents) { event ->
+        when (event) {
+            is com.example.khoitriso.ui.behavior.NavigationEvent.NavigateToLogin -> {
+                navController.navigate(com.example.khoitriso.utils.NavRoute.LOGIN) {
+                    popUpTo(0) { inclusive = true } // Clear entire back stack
                 }
             }
-            else -> {}
         }
+    }
 
-        item {
-            when (val state = myCourse) {
+    ObserverAsEvent(viewModel.events) { event ->
+        when (event) {
+            is com.example.khoitriso.utils.UiEvent.ShowSnackbar -> {
+                snackBarState.showSnackbar(event.message)
+            }
+        }
+    }
+
+    androidx.compose.material3.Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackBarState) }
+    ) { padding ->
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            item {
+                HomeHeaderSection(
+                    username = user?.fullName ?: "",
+                )
+            }
+
+            when (val state = tryCourse) {
                 is UiState.Success -> {
-                    ContinueLearningSection(state.data, onCardClick = {})
+                    item {
+                        PromoBanner(
+                            course = state.data,
+                            onClick = { }
+                        )
+                    }
                 }
+
                 else -> {}
             }
-        }
 
-        // 4. Categories (Chip style hiện đại hơn)
-        item {
-            SectionTitle(stringResource(R.string.categories), "", modifier = Modifier.padding(horizontal = 4.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            CategoryList(categoriesState)
-        }
+            item {
+                when (val state = myCourse) {
+                    is UiState.Success -> {
+                        ContinueLearningSection(state.data, onCardClick = {})
+                    }
 
-        // 5. Recommended Books
-        item {
-            SectionTitle(stringResource(R.string.recommended_books), stringResource(R.string.see_more), onClickAction = {
-                navController.navigate(NavRoute.NavSearchTab(SearchType.BOOK))
-            }, modifier = Modifier.padding(horizontal = 4.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            RecommendedBook(recommendedBooks, navController)
-        }
+                    else -> {}
+                }
+            }
 
-        // 6. Trending Courses
-        item {
-            SectionTitle(stringResource(R.string.trending_courses), stringResource(R.string.see_more), onClickAction = {
-                navController.navigate(NavRoute.NavSearchTab(SearchType.COURSE))
-            }, modifier = Modifier.padding(horizontal = 4.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            TrendingCourse(trendingCourses, navController)
+            // 4. Categories (Chip style hiện đại hơn)
+            item {
+                SectionTitle(
+                    stringResource(R.string.categories),
+                    "",
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                CategoryList(categoriesState, navController)
+            }
+
+            // 5. Recommended Books
+            item {
+                SectionTitle(
+                    stringResource(R.string.recommended_books),
+                    stringResource(R.string.see_more),
+                    onClickAction = {
+                        navController.navigate(NavRoute.NavSearchTab(SearchType.BOOK))
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                RecommendedBook(viewModel,recommendedBooks, navController)
+            }
+
+            // 6. Trending Courses
+            item {
+                SectionTitle(
+                    stringResource(R.string.trending_courses),
+                    stringResource(R.string.see_more),
+                    onClickAction = {
+                        navController.navigate(NavRoute.NavSearchTab(SearchType.COURSE))
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TrendingCourse(viewModel,trendingCourses, navController)
+            }
         }
     }
 }
@@ -621,14 +666,15 @@ fun FreeCourse(coursesState: UiState<Course>, navController: NavController) {
 
 
 @Composable
-fun CategoryCard(name: String) {
+fun CategoryCard(name: String, onClick: () -> Unit = {}) {
 
     Card(
         modifier = Modifier
             .shadow(
                 elevation = 2.dp,
                 shape = RoundedCornerShape(20.dp),
-            ),
+            )
+            .clickable(onClick = onClick),
         border = BorderStroke(
             width = 1.dp,
             color = MaterialTheme.colorScheme.onBackground
@@ -651,19 +697,25 @@ fun CategoryCard(name: String) {
 }
 
 @Composable
-fun RowCategoryCard(categoryList: List<Category>) {
+fun RowCategoryCard(categoryList: List<Category>, navController: NavController) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         items(categoryList) { category ->
-            CategoryCard(name = category.name)
+            CategoryCard(
+                name = category.name,
+                onClick = {
+                    // Navigate đến search screen với query là category name
+                    navController.navigate("categoryItems/${category.id}/${category.name}")
+                }
+            )
         }
     }
 }
 
 @Composable
-fun CategoryList(categoriesState: UiState<List<Category>>) {
+fun CategoryList(categoriesState: UiState<List<Category>>, navController: NavController) {
     when (categoriesState) {
         is UiState.Loading -> {
             Box(
@@ -696,13 +748,13 @@ fun CategoryList(categoriesState: UiState<List<Category>>) {
 
         is UiState.Success -> {
             val categories = categoriesState.data
-            RowCategoryCard(categories)
+            RowCategoryCard(categories, navController)
         }
     }
 }
 
 @Composable
-fun TrendingCourse(coursesState: UiState<List<Course>>, navController: NavController) {
+fun TrendingCourse(viewModel: HomeViewModel,coursesState: UiState<List<Course>>, navController: NavController) {
     when (coursesState) {
         is UiState.Loading -> {
             Box(
@@ -735,13 +787,17 @@ fun TrendingCourse(coursesState: UiState<List<Course>>, navController: NavContro
 
         is UiState.Success -> {
             val courses = coursesState.data
-            RowCourseCard(courses, navController)
+            RowCourseCard(
+                courses,
+                navController,
+                onAddToCart = { itemId, itemType -> viewModel.addToCart(itemId, itemType) }
+            )
         }
     }
 }
 
 @Composable
-fun RecommendedBook(booksState: UiState<List<Book>>, navController: NavController) {
+fun RecommendedBook(viewModel: HomeViewModel,booksState: UiState<List<Book>>, navController: NavController) {
     when (booksState) {
         is UiState.Loading -> {
             Box(
@@ -774,7 +830,11 @@ fun RecommendedBook(booksState: UiState<List<Book>>, navController: NavControlle
 
         is UiState.Success -> {
             val books = booksState.data
-            RowBookCard(books, navController)
+            RowBookCard(
+                books,
+                navController,
+                onAddToCart = { itemId, itemType -> viewModel.addToCart(itemId, itemType) }
+            )
         }
     }
 }

@@ -37,6 +37,7 @@ object NavRoute {
     const val CHECKOUT = "checkout"
     val MY_PURCHASES = "myPurchases"
     const val ASSIGNMENT = "assignment"
+    const val CATEGORY_ITEMS = "categoryItems"
     const val CheckoutWithArgs = "$CHECKOUT?itemType={itemType}&itemId={itemId}"
     const val CourseDetailWithArgs = "courseDetail/{courseId}"
     const val LearningCourseWithArgs = "$LEARNING_COURSE/{courseId}"
@@ -46,6 +47,8 @@ object NavRoute {
     const val MyPurchasesWithTab = "myPurchases?tab={tab}"
     const val AssignmentWithArgs = "assignment/{assignmentId}"
     const val PaymentResultWithArgs = "paymentResult?success={success}&orderCode={orderCode}"
+    const val PaymentProcessingWithArgs = "paymentProcessing?paymentUrl={paymentUrl}&orderCode={orderCode}"
+    const val CategoryItemsWithArgs = "$CATEGORY_ITEMS/{categoryId}/{categoryName}"
     fun NavCourseDetail(courseId: Int) = "$COURSE_DETAIL/$courseId"
     fun NavLearningCourse(courseId: Int) = "$LEARNING_COURSE/$courseId"
     fun NavLearningBook(bookId: Int) = "$LEARNING_BOOK/$bookId"
@@ -55,8 +58,12 @@ object NavRoute {
     fun NavMyPurchases(tab: String = "courses") = "myPurchases?tab=$tab"
     fun NavPaymentResult(success: Boolean, orderCode: String?) =
         "paymentResult?success=$success&orderCode=${orderCode ?: ""}"
+    fun NavPaymentProcessing(paymentUrl: String, orderCode: String) =
+        "paymentProcessing?paymentUrl=${java.net.URLEncoder.encode(paymentUrl, "UTF-8")}&orderCode=$orderCode"
     fun NavSearchTab(tab:Int) = "search?tab=$tab" //0 = course, 1 = book
     fun NavCheckOutNow(itemType: Int, itemId: Int) = "$CHECKOUT?itemType=$itemType&itemId=$itemId"
+    fun NavCategoryItems(categoryId: Int, categoryName: String) = 
+        "$CATEGORY_ITEMS/$categoryId/$categoryName"
 }
 
 

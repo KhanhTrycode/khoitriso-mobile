@@ -1,5 +1,8 @@
 package com.example.khoitriso.ui.forum
 
+import android.text.method.LinkMovementMethod
+import android.util.TypedValue
+import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -29,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.text.HtmlCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khoitriso.domain.models.*
@@ -49,25 +55,35 @@ fun ForumListScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     Scaffold(
-        modifier = Modifier.padding(paddingValues)
-//        topBar = {
-//        TopAppBar(title = { Text("Diễn đàn học tập") }, navigationIcon = {
-//            IconButton(onClick = { navController.popBackStack() }) {
-//                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-//            }
-//        }, actions = {
-//            IconButton(onClick = { navController.navigate("forum/bookmarks") }) {
-//                Icon(Icons.Default.Bookmarks, "Bookmarks")
-//            }
-//        })
-//    }, floatingActionButton = {
-//        FloatingActionButton(
-//            onClick = { navController.navigate("forum/ask") },
-//            containerColor = MaterialTheme.colorScheme.primary
-//        ) {
-//            Icon(Icons.Default.Add, "Đặt câu hỏi")
-//        }
-//    }
+        modifier = Modifier.padding(paddingValues),
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.forum_title)) },
+                actions = {
+                    IconButton(
+                        onClick = { navController.navigate(NavRoute.FORUM_BOOKMARKS) }
+                    ) {
+                        Icon(
+                            Icons.Default.Bookmarks, 
+                            stringResource(R.string.view_bookmarks),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(NavRoute.FORUM_ASK) },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    Icons.Default.Add, 
+                    stringResource(R.string.ask_question_fab),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
     ) { paddingValues ->
         when (currentUser) {
             is UiState.Error -> {
@@ -213,15 +229,19 @@ private fun FilterSection(
     isSolvedFilter: Boolean?,
     onSolvedFilterChanged: (Boolean?) -> Unit,
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(12.dp), 
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Search bar
             OutlinedTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
@@ -229,85 +249,97 @@ private fun FilterSection(
                 placeholder = { Text(stringResource(R.string.search_questions_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = {
-                            onSearchTextChange("")
-                            onSearch() // Immediately search for empty string
-                        }) {
-                            Icon(Icons.Default.Clear, null)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (searchText.isNotEmpty()) {
+                            IconButton(onClick = {
+                                onSearchTextChange("")
+                                onSearch()
+                            }, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Default.Clear, null, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                        IconButton(
+                            onClick = { isExpanded = !isExpanded },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                null,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             )
 
-            // Hàng Sắp xếp và Ghim
+            // Quick filters (always visible)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SortDropdown(sortBy = sortBy, onSortByChanged = onSortByChanged)
                 FilterChip(
                     selected = isPinnedFilter == true,
                     onClick = { onPinnedFilterChanged(if (isPinnedFilter == true) null else true) },
-                        label = { Text(stringResource(R.string.pinned)) })
+                    label = { Text(stringResource(R.string.pinned), fontSize = 12.sp) },
+                    modifier = Modifier.height(32.dp)
+                )
+                FilterChip(
+                    selected = isSolvedFilter == true,
+                    onClick = { onSolvedFilterChanged(if (isSolvedFilter == true) null else true) },
+                    label = { Text(stringResource(R.string.resolved), fontSize = 12.sp) },
+                    modifier = Modifier.height(32.dp)
+                )
             }
 
-            // Hàng các bộ lọc khác
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    FilterChip(
-                        selected = selectedCategory == null,
-                        onClick = { onCategorySelected(null) },
-                        label = { Text(stringResource(R.string.all)) })
-                }
-                if (categoriesState is UiState.Success) {
-                    items(categoriesState.data) { category ->
-                        FilterChip(
-                            selected = selectedCategory == category.id,
-                            onClick = { onCategorySelected(category.id) },
-                            label = { Text(category.name) })
+            // Expanded filters
+            if (isExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Categories
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = selectedCategory == null,
+                                onClick = { onCategorySelected(null) },
+                                label = { Text(stringResource(R.string.all), fontSize = 11.sp) },
+                                modifier = Modifier.height(28.dp)
+                            )
+                        }
+                        if (categoriesState is UiState.Success) {
+                            items(categoriesState.data.take(8)) { category ->
+                                FilterChip(
+                                    selected = selectedCategory == category.id,
+                                    onClick = { onCategorySelected(category.id) },
+                                    label = { Text(category.name, fontSize = 11.sp) },
+                                    modifier = Modifier.height(28.dp)
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Tags
+                    if (tagsState is UiState.Success && tagsState.data.isNotEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(tagsState.data.take(8)) { tag ->
+                                FilterChip(
+                                    selected = selectedTag == tag.name,
+                                    onClick = { onTagSelected(if (selectedTag == tag.name) null else tag.name) },
+                                    label = { Text(tag.name, fontSize = 11.sp) },
+                                    modifier = Modifier.height(28.dp)
+                                )
+                            }
+                        }
                     }
                 }
-                item { Spacer(Modifier.width(8.dp)) } // Separator
-                item {
-                    FilterChip(
-                        selected = isSolvedFilter == null,
-                        onClick = { onSolvedFilterChanged(null) },
-                        label = { Text(stringResource(R.string.all)) })
-                }
-                item {
-                    FilterChip(
-                        selected = isSolvedFilter == true,
-                        onClick = { onSolvedFilterChanged(true) },
-                        label = { Text(stringResource(R.string.resolved)) })
-                }
-                item {
-                    FilterChip(
-                        selected = isSolvedFilter == false,
-                        onClick = { onSolvedFilterChanged(false) },
-                        label = { Text(stringResource(R.string.unresolved)) })
-                }
-                if (tagsState is UiState.Success) {
-                    items(tagsState.data.take(10)) { tag ->
-                        FilterChip(
-                            selected = selectedTag == tag.name,
-                            onClick = { onTagSelected(if (selectedTag == tag.name) null else tag.name) },
-                            label = { Text(tag.name) })
-                    }
-                }
-            }
-
-            Button(
-                onClick = onSearch,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = searchText != searchQuery
-            ) {
-                Icon(Icons.Default.Warning, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.filter))
             }
         }
     }
@@ -329,7 +361,7 @@ private fun SortDropdown(sortBy: String?, onSortByChanged: (String) -> Unit) {
         FilterChip(
             selected = sortBy != null,
             onClick = { showSortMenu = true },
-            label = { Text(sortOptions[sortBy] ?: "Sắp xếp") })
+            label = { Text(sortOptions[sortBy] ?: stringResource(R.string.sort_by)) })
         DropdownMenu(
             expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
             sortOptions.forEach { (key, value) ->
@@ -386,40 +418,68 @@ private fun QuestionCard(
     onBookmarkClick: () -> Unit,
     onTagClick: (String) -> Unit,
 ) {
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        QuestionHeader(
-            userName = question.userName,
-            avatar = question.userAvatar,
-            timeAgo = question.createdAt,
-            title = question.title,
-            isPinned = question.isPinned,
-            isSolved = question.isSolved
-        )
-        QuestionTagsRow(tags = question.tags, onTagClick = onTagClick)
-        QuestionContent(question.content)
-        QuestionStatsRow(
-            voteCount = question.voteCount,
-            answerCount = question.answerCount,
-            userVote = userVote,
-            isBookmarked = isBookmarked,
-            onVote = onVote,
-            onBookmarkClick = onBookmarkClick
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuestionHeader(
+                userName = question.userName,
+                avatar = question.userAvatar,
+                timeAgo = question.createdAt,
+                title = question.title,
+                isPinned = question.isPinned,
+                isSolved = question.isSolved
+            )
+            QuestionTagsRow(tags = question.tags, onTagClick = onTagClick)
+            QuestionContent(question.content)
+            QuestionStatsRow(
+                voteCount = question.voteCount,
+                answerCount = question.answerCount,
+                userVote = userVote,
+                isBookmarked = isBookmarked,
+                onVote = onVote,
+                onBookmarkClick = onBookmarkClick
+            )
+        }
     }
 }
 
 @Composable
 private fun QuestionContent(content: String) {
-    Text(
-        content, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-        color =
-            MaterialTheme
-                .colorScheme
-                .onBackground
+    val textColor = MaterialTheme.colorScheme.onBackground.toArgb()
+    val textSizeSp = MaterialTheme.typography.bodyMedium.fontSize.value
+    AndroidView(
+        modifier = Modifier.fillMaxWidth(),
+        factory = { context ->
+            TextView(context).apply {
+                // Cấu hình TextView
+                this.setTextColor(textColor)
+                this.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeSp)
+                // Cho phép click vào link nếu có thẻ <a>
+                this.movementMethod = LinkMovementMethod.getInstance()
+                // Xóa padding mặc định của TextView
+                this.includeFontPadding = false
+            }
+        },
+        update = { textView ->
+            // Render HTML
+            textView.text = HtmlCompat.fromHtml(
+                content,
+                HtmlCompat.FROM_HTML_MODE_COMPACT
+            )
+            textView.setTextColor(textColor)
+        }
     )
 }
 
@@ -449,7 +509,11 @@ private fun QuestionHeader(
         Text(text = userName, style = MaterialTheme.typography.titleSmall)
         Text(text = FormatTimeAgo(timeAgo), style = MaterialTheme.typography.labelMedium)
 
-
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ){
         if (isPinned) {
             Badge(containerColor = MaterialTheme.colorScheme.primary) {
                 Text(

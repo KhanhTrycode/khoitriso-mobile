@@ -155,6 +155,8 @@ dependencies {
     implementation ("io.noties.markwon:html:4.6.2")
     // Hỗ trợ LaTeX (Toán học)
     implementation ("io.noties.markwon:ext-latex:4.6.2")
+    // Hỗ trợ hình ảnh
+    implementation ("io.noties.markwon:image:4.6.2")
     // Hỗ trợ Inline parser (để xử lý text tốt hơn)
     implementation(libs.kotlinx.serialization.json) // Use the latest version
     implementation ("io.noties.markwon:inline-parser:4.6.2")

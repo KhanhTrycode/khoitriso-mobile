@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.ShoppingCartCheckout
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
@@ -19,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,15 +56,42 @@ fun CartScreen(
     viewModel: CartViewModel = hiltViewModel(),
 ) {
     val cartState by viewModel.carts.collectAsState()
-
+    var showClearCartDialog by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         viewModel.loadCart()
     }
+    if (showClearCartDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCartDialog = false },
+            title = {
+                Text(text = "Xóa giỏ hàng?", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text("Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng không?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.clearCart() // Cần thêm hàm này trong ViewModel
+                        showClearCartDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Xóa tất cả")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCartDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface, // Màu nền sạch
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            CenterAlignedTopAppBar( // Canh giữa tiêu đề sang trọng hơn
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         stringResource(R.string.cart_title),
@@ -73,6 +104,18 @@ fun CartScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    // Chỉ hiện nút xóa nếu load thành công và giỏ hàng không rỗng
+                    if (cartState is UiState.Success && (cartState as UiState.Success).data.cartItems.isNotEmpty()) {
+                        IconButton(onClick = { showClearCartDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteSweep, // Icon quét sạch
+                                contentDescription = "Clear Cart",
+                                tint = MaterialTheme.colorScheme.error // Màu đỏ cảnh báo
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

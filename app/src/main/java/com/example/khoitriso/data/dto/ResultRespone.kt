@@ -6,6 +6,7 @@ import com.example.khoitriso.domain.models.MyResponese
 
 data class ResultRespone<T>(
     val Items: List<T>?,
+    val Data: List<T>?, // Alternative field name for some APIs
     val CartItems: List<T>?,
     val Page: Int,
     val PageSize: Int,
@@ -14,7 +15,7 @@ data class ResultRespone<T>(
 )
 
 fun <DTO, DOMAIN> ResultRespone<DTO>.toDomain(transform: (DTO) -> DOMAIN): MyResponese<DOMAIN> = MyResponese(
-    items = this.Items?.map(transform) ?: emptyList(),
+    items = (this.Items ?: this.Data)?.map(transform) ?: emptyList(),
     page = this.Page,
     pageSize = this.PageSize,
     total = this.Total,

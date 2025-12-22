@@ -7,7 +7,6 @@ import com.example.khoitriso.domain.models.Book
 import com.example.khoitriso.domain.models.Course
 import com.example.khoitriso.domain.usecase.book.BookUsecase
 import com.example.khoitriso.domain.usecase.course.CourseUsecase
-import com.example.khoitriso.test.MockData
 import com.example.khoitriso.ui.behavior.BaseViewModel
 import com.example.khoitriso.utils.SearchType
 import com.example.khoitriso.utils.UiState
@@ -91,29 +90,8 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             _rawResults.value = UiState.Loading
 
-            val mockResults = if (_isTestMode) {
-                val foundBooks = MockData.mockBooks.filter {
-                    it.title.contains(query, ignoreCase = true)
-                }
-                val foundCourses = MockData.mockCourses.filter {
-                    it.title.contains(query, ignoreCase = true)
-                }
-                foundBooks + foundCourses
-            } else {
-                emptyList()
-            }
-
-            val booksResult = if (_isTestMode) {
-                Result.success(MockData.mockBookResponse.copy(items = mockResults.filterIsInstance<Book>()))
-            } else {
-                bookUsecase.getBook(PagingRequest(search = query))
-            }
-
-            val coursesResult = if (_isTestMode) {
-                Result.success(MockData.mockCourseResponse.copy(items = mockResults.filterIsInstance<Course>()))
-            } else {
-                courseUsecase.getCourse(PagingRequest(search = query))
-            }
+            val booksResult = bookUsecase.getBook(PagingRequest(search = query))
+            val coursesResult = courseUsecase.getCourse(PagingRequest(search = query))
 
             val foundBooks: List<Book> = booksResult.fold(
                 onSuccess = { response -> response.items },

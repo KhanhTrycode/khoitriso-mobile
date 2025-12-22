@@ -16,10 +16,11 @@ data class AuthUsecase(
     val loadCurrentUserInfo: LoadCurrentUserInfo,
 )
 
-class LoadCurrentUserInfo(private val repo: AuthRepository) {
-    suspend operator fun invoke(
-        userManager: UserManager,
-    ): Result<User> {
+class LoadCurrentUserInfo(
+    private val repo: AuthRepository,
+    private val userManager: UserManager
+) {
+    suspend operator fun invoke(): Result<User> {
         // Try to get user info from UserManager first (local cache)
         val savedUser = userManager.getCurrentUser()
         if (savedUser != null) {
@@ -27,8 +28,12 @@ class LoadCurrentUserInfo(private val repo: AuthRepository) {
             return Result.success(savedUser)
         } else {
             // Chưa có user info trong local, gọi API /auth/me để lấy
-            return  GetMe(repo).invoke()
+            return GetMe(repo).invoke()
         }
+    }
+
+    suspend fun saveUser(user: User) {
+        userManager.saveUser(user)
     }
 }
 
